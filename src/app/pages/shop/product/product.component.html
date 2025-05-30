@@ -1,0 +1,142 @@
+
+
+<!-- دکمه‌ی باز کردن فرم پاپ‌آپ -->
+<button cButton color="primary" (click)="showModal = true">➕ ایجاد محصول</button>
+<button
+  cButton
+  color="danger"
+  [disabled]="selectedProductIds.length === 0"
+  (click)="showDeleteConfirm = true"
+>
+🗑 حذف انتخاب‌شده‌ها ({{ selectedProductIds.length }})
+</button>
+
+
+<!-- Table -->
+
+<table cTable>
+  <thead>
+    <tr>
+      <th>انتخاب</th>
+      <th>شناسه</th>
+      <th>کد کالا</th>
+      <th>نام</th>
+      <th>قیمت</th>
+      <th>عملیات</th>
+    </tr>
+  </thead>
+  <tbody>
+     <tr *ngFor="let row of _productsView">
+      <th> <input type="checkbox" [checked]="isSelected(row.id)" (change)="toggleSelection(row.id)" /> </th>
+      <th>{{row.id}}</th>
+      <th>{{row.productCode}}</th>
+      <th>{{row.name}}</th>
+      <td>{{row.price}}</td>
+         <td>
+          <button class="btn btn-sm btn-warning me-1"    (click)="onEdit(row.id)" > ✏ ویرایش</button>
+        </td>
+    </tr>
+  </tbody>
+</table>
+
+
+<!--nodata banner -->
+
+<div *ngIf="_productsView.length === 0" class="alert alert-info text-center">
+  ❕ هیچ داده‌ای یافت نشد.
+</div>
+
+
+<!--PAgination-->
+<c-pagination aria-label="Page navigation example">
+  <li cPageItem *ngIf="_baseResponse.pageNumber> 2">
+    <button cPageLink aria-label="Previous"  (click)="changePage(1)" ><span aria-hidden="true">&laquo;</span></button>
+  </li>
+  <li cPageItem *ngIf="_baseResponse.pageNumber> 1">
+    <button cPageLink (click)="changePage(_baseResponse.pageNumber-1)" >{{_baseResponse.pageNumber-1}}</button>
+  </li>
+  <li cPageItem >
+    <button cPageLink [ngClass]="'active'" >{{_baseResponse.pageNumber}}</button>
+  </li>
+  <li cPageItem *ngIf="_baseResponse.totalPages > _baseResponse.pageNumber">
+    <button cPageLink (click)="changePage(_baseResponse.pageNumber+1)"   >{{_baseResponse.pageNumber+1}}</button>
+  </li>
+  <li cPageItem *ngIf="_baseResponse.totalPages > _baseResponse.pageNumber+1">
+    <button cPageLink aria-label="Next"  (click)="changePage(_baseResponse.totalPages)" ><span aria-hidden="true">&raquo;</span></button>
+  </li>
+</c-pagination>
+
+
+
+
+
+
+
+
+<!-- مودال فرم افزودن محصول -->
+<c-modal [(visible)]="showModal" size="lg" backdrop="static">
+  <c-modal-header>
+    <h5 class="modal-title">{{ editMode ? 'ویرایش محصول' : 'افزودن محصول جدید' }}</h5>
+    <button type="button" class="btn-close" aria-label="Close" (click)="showModal = false"></button>
+  </c-modal-header>
+
+  <c-modal-body>
+    <!-- فرم داخل مودال -->
+    <form [formGroup]="productForm"  (ngSubmit)="onSubmit1()" class="needs-validation" novalidate cForm cRow>
+
+      <!-- نام -->
+      <c-col [md]="6">
+        <label cLabel for="name">نام محصول</label>
+        <input cFormControl id="name" name="name" type="text" required formControlName="name" />
+        <c-form-feedback [valid]="false">نام را وارد کنید.</c-form-feedback>
+      </c-col>
+
+      <!-- کد کالا -->
+      <c-col [md]="6">
+        <label cLabel for="productCode">کد کالا</label>
+        <input cFormControl id="productCode" name="productCode" type="text" required formControlName="productCode" />
+        <c-form-feedback [valid]="false">کد کالا را وارد کنید.</c-form-feedback>
+      </c-col>
+
+      <!-- قیمت -->
+      <c-col [md]="6">
+        <label cLabel for="price">قیمت</label>
+        <input cFormControl id="price" name="price" type="number" required formControlName="price" />
+        <c-form-feedback [valid]="false">قیمت معتبر وارد کنید.</c-form-feedback>
+      </c-col>
+
+       <!-- counttype -->
+      <c-col [md]="6">
+        <label cLabel for="countTypeId">واحد شمارش</label>
+        <input cFormControl id="countTypeId" name="countTypeId" type="number" required formControlName="countTypeId"  />
+        <c-form-feedback [valid]="false"> واحد شمارش را صحیح وارد کنید.</c-form-feedback>
+      </c-col>
+
+
+    </form>
+  </c-modal-body>
+
+  <c-modal-footer>
+    <!-- دکمه‌های ارسال و بستن -->
+    <button cButton color="secondary" (click)="showModal = false">بستن</button>
+    <button cButton color="primary" type="submit" (click)="onSubmit1()"  [disabled]="!productForm.valid "  >ذخیره</button>
+  </c-modal-footer>
+</c-modal>
+
+
+
+<c-modal [(visible)]="showDeleteConfirm" col="6" backdrop="static">
+  <c-modal-header>
+    <h5 class="modal-title">❗ تأیید حذف</h5>
+    <button type="button" class="btn-close" (click)="showDeleteConfirm = false" aria-label="Close"></button>
+  </c-modal-header>
+
+  <c-modal-body>
+    <p>آیا مطمئن هستید که می‌خواهید <strong>{{ selectedProductIds.length }}</strong> محصول انتخاب‌شده را حذف کنید؟</p>
+  </c-modal-body>
+
+  <c-modal-footer>
+    <button cButton color="secondary" (click)="showDeleteConfirm = false">انصراف</button>
+    <button cButton color="danger" (click)="deleteSelectedProducts()">تأیید حذف</button>
+  </c-modal-footer>
+</c-modal>

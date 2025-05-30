@@ -14,8 +14,12 @@ export const routes: Routes = [
       title: 'Home'
     },
     children: [
-      {
+        {
         path: 'dashboard',
+        loadComponent: () => import('./pages/shop/product/product.component').then(m => m.ProductComponent)
+      },
+      {
+        path: 'dashboardold',
         loadChildren: () => import('./views/dashboard/routes').then((m) => m.routes)
       },
       {

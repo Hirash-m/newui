@@ -38,6 +38,8 @@
               "src/assets"
             ],
             "styles": [
+              "node_modules/bootstrap/dist/css/bootstrap.min.css",
+  "node_modules/bootstrap-rtl/dist/css/bootstrap-rtl.min.css",
               "src/scss/styles.scss"
             ],
             "scripts": [],
@@ -74,6 +76,9 @@
           "defaultConfiguration": "production"
         },
         "serve": {
+           "options": {
+    "proxyConfig": "proxy.conf.json"
+  },
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
