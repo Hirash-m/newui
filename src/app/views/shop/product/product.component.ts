@@ -1,12 +1,20 @@
+import { ToastService } from './../../../services/utilities/toast.service';
 import { ListRequest } from './../../../dto/ListRequestDto';
 import { baseResponse } from './../../../dto/baseResponse';
-import { ProductService } from './../../../services/shop/product.service';
-import { Component, OnInit, Injector } from '@angular/core';
-import { FormBuilder, FormGroup, FormControl, Validators, FormControlDirective, ReactiveFormsModule, FormsModule } from '@angular/forms';
-import { ButtonDirective, ColComponent, FormCheckComponent, FormCheckInputDirective, FormCheckLabelDirective, FormDirective, FormFeedbackComponent, FormLabelDirective, FormSelectDirective, GutterDirective, InputGroupComponent, InputGroupTextDirective, ModalModule, PageItemDirective, PageLinkDirective, PaginationComponent, RowDirective, TableDirective } from '@coreui/angular';
+import { ProductService } from '../../../services/shop/product/product.service';
+import { Component, inject, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup,  Validators,  ReactiveFormsModule, FormsModule } from '@angular/forms';
+
+import { AccordionButtonDirective, AccordionComponent, AccordionItemComponent, ButtonDirective, ColComponent,
+      FormDirective, FormFeedbackComponent, FormLabelDirective,     ModalModule, PageItemDirective, PageLinkDirective,
+       PaginationComponent, RowDirective, TableDirective, TemplateIdDirective } from '@coreui/angular';
+
+
 import { CommonModule } from '@angular/common';
 import { ProductCreateDto, ProductViewDto } from '../../../dto/shop/ProductDto';
-import { ToastService } from '../../../services/utilities/toast.service';
+
+
+
 
 @Component({
 
@@ -14,10 +22,11 @@ import { ToastService } from '../../../services/utilities/toast.service';
   templateUrl: './product.component.html',
   styleUrl: './product.component.scss',
   imports :[TableDirective,CommonModule,PaginationComponent, PageItemDirective,PageLinkDirective
-    ,ButtonDirective,  ColComponent,  FormCheckComponent,  FormCheckInputDirective,  FormCheckLabelDirective,
-  FormDirective,  FormFeedbackComponent,  FormLabelDirective,  FormSelectDirective,  GutterDirective,  InputGroupComponent,  InputGroupTextDirective, RowDirective,
+    ,ButtonDirective,  ColComponent,
+  FormDirective,  FormFeedbackComponent,  FormLabelDirective,  RowDirective,
    FormsModule, ReactiveFormsModule,
-   ModalModule
+   ModalModule,
+    AccordionComponent,    AccordionItemComponent,    TemplateIdDirective,    AccordionButtonDirective
   ]
 })
 export class ProductComponent implements OnInit   {
@@ -31,29 +40,31 @@ export class ProductComponent implements OnInit   {
 
 
 
-  constructor (private toastService: ToastService , private fb: FormBuilder,private productService : ProductService){}
+
+
+  constructor ( private fb: FormBuilder,private productService : ProductService , private toastService: ToastService){}
 
 
   ngOnInit(): void {
 
     this.initForm();
     this.loadProducts();
-      setInterval(() => {
-    this.toastService.show('با موفقیت ثبت شد', 'success');
-  }, 10000);
+
 
   }
+
 
 
   //table of list
 
   loadProducts(): void {
-    this._request.pageSize = 2;
+    this._request.pageSize = 5;
     this.productService.getRecords(this._request).subscribe((res)=>{
       if(res.isSucceeded){
         this._baseResponse = res ;
         this._productsView = res.data;
         console.log(this._baseResponse);
+        //this.ToastService.showToast.success({message:this._baseResponse.message})
       }
 
     })
@@ -76,6 +87,10 @@ export class ProductComponent implements OnInit   {
   });}
 
 
+
+
+
+
 onSubmit1() {
   if (this.productForm.valid) {
 
@@ -84,20 +99,21 @@ onSubmit1() {
       // ویرایش
       this.productService.updateRecord( productData).subscribe(res => {
         if (res.isSucceeded) {
-          console.log('ویرایش انجام شد');
+          this.toastService.showToast.success({message: res.message});
           this.afterSubmit();
         } else {
-          console.log('خطا در ویرایش');
+          this.toastService.showToast.error({message:res.message});
         }
       });
     } else {
       // ایجاد
       this.productService.insertRecord(productData).subscribe(res => {
         if (res.isSucceeded) {
-          console.log('ایجاد انجام شد');
+          this.toastService.showToast.success({message: res.message});
           this.afterSubmit();
         } else {
-          console.log('خطا در ایجاد');
+          this.toastService.showToast.error({message: res.message});
+
         }
       });
     }
@@ -128,7 +144,7 @@ onEdit(productId: number) {
   this.productService.getRecordById(productId).subscribe(res => {
     if (res.isSucceeded && res.singleData) {
       const product = res.singleData;
-
+        console.log(res);
       this.productForm.patchValue({
         id: product.id,
         name: product.name,
@@ -139,7 +155,8 @@ onEdit(productId: number) {
 
       this.showModal = true;
     } else {
-      console.error('محصول پیدا نشد یا خطا در دریافت اطلاعات!');
+      this.toastService.showToast.error({message:'محصول پیدا نشد یا خطا در دریافت اطلاعات!'});
+
     }
   });
 }
@@ -180,13 +197,42 @@ showDeleteConfirm = false;
 deleteSelectedProducts(): void {
   this.productService.deleteRecords(this.selectedProductIds).subscribe(res => {
     if (res.isSucceeded) {
-      console.log('محصولات حذف شدند.');
+      this.toastService.showToast.success({message:res.message});
       this.afterSubmit(); // ریست فرم و بارگذاری مجدد
+      this.selectedProductIds = [];
     } else {
-      console.error('خطا در حذف گروهی');
+      this.toastService.showToast.error({message:'خطا در حذف گروهی'});
     }
     this.showDeleteConfirm = false;
   });
 }
 
+
+searchData = {
+  pageNumber: 1,
+  pageSize: 3,
+  sortBy: 'Id',
+  sortDirection: true,
+  name: '',
+  minPrice: 0,
+  maxPrice: 0
+};
+
+onSearch() {
+  this.productService.searchProducts(this.searchData).subscribe(
+    (result) => {
+      if(result.isSucceeded){
+        this._baseResponse = result;
+        this._productsView = result.data;
+        console.log('نتایج جستجو:', this._productsView);
+      } else {
+        this.toastService.showToast.error({message:'خطا در جستجو'});
+      }
+    },
+    (error) => {
+      console.error('خطا در جستجو', error);
+      this.toastService.showToast.error({message:'خطای ارتباط با سرور'});
+    }
+  );
+}
 }

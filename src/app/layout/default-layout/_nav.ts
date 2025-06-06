@@ -2,8 +2,54 @@ import { INavData } from '@coreui/angular';
 
 export const navItems: INavData[] = [
   {
+    title: true,
+    name: 'main'
+  },
+  {
+    name: 'shop',
+    url: '/shop',
+    iconComponent: { name: 'cil-cart' },
+    children:[{
+
+      name: 'product',
+      url: '/shop/product',
+       badge: {
+      color: 'info',
+      text: 'NEW'
+    },
+      iconComponent: { name: 'cib-codesandbox' }
+
+    },
+
+  {
+
+      name: 'countType',
+      url: '/shop/countType',
+       badge: {
+      color: 'info',
+      text: 'NEW'
+    },
+      iconComponent: { name: 'cib-codesandbox' }
+
+    }
+
+  ]
+  }
+  //template core ui
+
+   ,{
+    title: true,
+    name: 'them'
+  }
+  ,{
+  name: 'template',
+  url: '/template',
+  iconComponent: { name: 'cil-puzzle' },
+    children: [
+
+  {
     name: 'Dashboard',
-    url: '/dashboard',
+    url: '/template/dashboard',
     iconComponent: { name: 'cil-speedometer' },
     badge: {
       color: 'info',
@@ -16,12 +62,12 @@ export const navItems: INavData[] = [
   },
   {
     name: 'Colors',
-    url: '/theme/colors',
+    url: '/template/theme/colors',
     iconComponent: { name: 'cil-drop' }
   },
   {
     name: 'Typography',
-    url: '/theme/typography',
+    url: '/template/theme/typography',
     linkProps: { fragment: 'headings' },
     iconComponent: { name: 'cil-pencil' }
   },
@@ -31,151 +77,151 @@ export const navItems: INavData[] = [
   },
   {
     name: 'Base',
-    url: '/base',
+    url: '/template/base',
     iconComponent: { name: 'cil-puzzle' },
     children: [
       {
         name: 'Accordion',
-        url: '/base/accordion',
+        url: '/template/base/accordion',
         icon: 'nav-icon-bullet'
       },
       {
         name: 'Breadcrumbs',
-        url: '/base/breadcrumbs',
+        url: '/template/base/breadcrumbs',
         icon: 'nav-icon-bullet'
       },
       {
         name: 'Cards',
-        url: '/base/cards',
+        url: '/template/base/cards',
         icon: 'nav-icon-bullet'
       },
       {
         name: 'Carousel',
-        url: '/base/carousel',
+        url: '/template/base/carousel',
         icon: 'nav-icon-bullet'
       },
       {
         name: 'Collapse',
-        url: '/base/collapse',
+        url: '/template/base/collapse',
         icon: 'nav-icon-bullet'
       },
       {
         name: 'List Group',
-        url: '/base/list-group',
+        url: '/template/base/list-group',
         icon: 'nav-icon-bullet'
       },
       {
         name: 'Navs & Tabs',
-        url: '/base/navs',
+        url: '/template/base/navs',
         icon: 'nav-icon-bullet'
       },
       {
         name: 'Pagination',
-        url: '/base/pagination',
+        url: '/template/base/pagination',
         icon: 'nav-icon-bullet'
       },
       {
         name: 'Placeholder',
-        url: '/base/placeholder',
+        url: '/template/base/placeholder',
         icon: 'nav-icon-bullet'
       },
       {
         name: 'Popovers',
-        url: '/base/popovers',
+        url: '/template/base/popovers',
         icon: 'nav-icon-bullet'
       },
       {
         name: 'Progress',
-        url: '/base/progress',
+        url: '/template/base/progress',
         icon: 'nav-icon-bullet'
       },
       {
         name: 'Spinners',
-        url: '/base/spinners',
+        url: '/template/base/spinners',
         icon: 'nav-icon-bullet'
       },
       {
         name: 'Tables',
-        url: '/base/tables',
+        url: '/template/base/tables',
         icon: 'nav-icon-bullet'
       },
       {
         name: 'Tabs',
-        url: '/base/tabs',
+        url: '/template/base/tabs',
         icon: 'nav-icon-bullet'
       },
       {
         name: 'Tooltips',
-        url: '/base/tooltips',
+        url: '/template/base/tooltips',
         icon: 'nav-icon-bullet'
       }
     ]
   },
   {
     name: 'Buttons',
-    url: '/buttons',
+    url: '/template/buttons',
     iconComponent: { name: 'cil-cursor' },
     children: [
       {
         name: 'Buttons',
-        url: '/buttons/buttons',
+        url: '/template/buttons/buttons',
         icon: 'nav-icon-bullet'
       },
       {
         name: 'Button groups',
-        url: '/buttons/button-groups',
+        url: '/template/buttons/button-groups',
         icon: 'nav-icon-bullet'
       },
       {
         name: 'Dropdowns',
-        url: '/buttons/dropdowns',
+        url: '/template/buttons/dropdowns',
         icon: 'nav-icon-bullet'
       }
     ]
   },
   {
     name: 'Forms',
-    url: '/forms',
+    url: '/template/forms',
     iconComponent: { name: 'cil-notes' },
     children: [
       {
         name: 'Form Control',
-        url: '/forms/form-control',
+        url: '/template/forms/form-control',
         icon: 'nav-icon-bullet'
       },
       {
         name: 'Select',
-        url: '/forms/select',
+        url: '/template/forms/select',
         icon: 'nav-icon-bullet'
       },
       {
         name: 'Checks & Radios',
-        url: '/forms/checks-radios',
+        url: '/template/forms/checks-radios',
         icon: 'nav-icon-bullet'
       },
       {
         name: 'Range',
-        url: '/forms/range',
+        url: '/template/forms/range',
         icon: 'nav-icon-bullet'
       },
       {
         name: 'Input Group',
-        url: '/forms/input-group',
+        url: '/template/forms/input-group',
         icon: 'nav-icon-bullet'
       },
       {
         name: 'Floating Labels',
-        url: '/forms/floating-labels',
+        url: '/template/forms/floating-labels',
         icon: 'nav-icon-bullet'
       },
       {
         name: 'Layout',
-        url: '/forms/layout',
+        url: '/template/forms/layout',
         icon: 'nav-icon-bullet'
       },
       {
         name: 'Validation',
-        url: '/forms/validation',
+        url: '/template/forms/validation',
         icon: 'nav-icon-bullet'
       }
     ]
@@ -183,16 +229,16 @@ export const navItems: INavData[] = [
   {
     name: 'Charts',
     iconComponent: { name: 'cil-chart-pie' },
-    url: '/charts'
+    url: '/template/charts'
   },
   {
     name: 'Icons',
     iconComponent: { name: 'cil-star' },
-    url: '/icons',
+    url: '/template/icons',
     children: [
       {
         name: 'CoreUI Free',
-        url: '/icons/coreui-icons',
+        url: '/template/icons/coreui-icons',
         icon: 'nav-icon-bullet',
         badge: {
           color: 'success',
@@ -201,46 +247,46 @@ export const navItems: INavData[] = [
       },
       {
         name: 'CoreUI Flags',
-        url: '/icons/flags',
+        url: '/template/icons/flags',
         icon: 'nav-icon-bullet'
       },
       {
         name: 'CoreUI Brands',
-        url: '/icons/brands',
+        url: '/template/icons/brands',
         icon: 'nav-icon-bullet'
       }
     ]
   },
   {
     name: 'Notifications',
-    url: '/notifications',
+    url: '/template/notifications',
     iconComponent: { name: 'cil-bell' },
     children: [
       {
         name: 'Alerts',
-        url: '/notifications/alerts',
+        url: '/template/notifications/alerts',
         icon: 'nav-icon-bullet'
       },
       {
         name: 'Badges',
-        url: '/notifications/badges',
+        url: '/template/notifications/badges',
         icon: 'nav-icon-bullet'
       },
       {
         name: 'Modal',
-        url: '/notifications/modal',
+        url: '/template/notifications/modal',
         icon: 'nav-icon-bullet'
       },
       {
         name: 'Toast',
-        url: '/notifications/toasts',
+        url: '/template/notifications/toasts',
         icon: 'nav-icon-bullet'
       }
     ]
   },
   {
     name: 'Widgets',
-    url: '/widgets',
+    url: '/template/widgets',
     iconComponent: { name: 'cil-calculator' },
     badge: {
       color: 'info',
@@ -253,27 +299,27 @@ export const navItems: INavData[] = [
   },
   {
     name: 'Pages',
-    url: '/login',
+    url: '/template/login',
     iconComponent: { name: 'cil-star' },
     children: [
       {
         name: 'Login',
-        url: '/login',
+        url: '/template/login',
         icon: 'nav-icon-bullet'
       },
       {
         name: 'Register',
-        url: '/register',
+        url: '/template/register',
         icon: 'nav-icon-bullet'
       },
       {
         name: 'Error 404',
-        url: '/404',
+        url: '/template/404',
         icon: 'nav-icon-bullet'
       },
       {
         name: 'Error 500',
-        url: '/500',
+        url: '/template/500',
         icon: 'nav-icon-bullet'
       }
     ]
@@ -289,4 +335,6 @@ export const navItems: INavData[] = [
     iconComponent: { name: 'cil-description' },
     attributes: { target: '_blank' }
   }
+]
+}
 ];
