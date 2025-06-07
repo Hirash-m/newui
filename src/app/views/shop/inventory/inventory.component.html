@@ -20,14 +20,20 @@
       <th>انتخاب</th>
       <th>شناسه</th>
       <th>نام</th>
+      <th>وضعیت</th>
       <th>عملیات</th>
     </tr>
   </thead>
   <tbody>
      <tr *ngFor="let row of _objectsView">
-      <th> <input type="checkbox" [checked]="isSelected(row.id)" (change)="toggleSelection(row.id)" /> </th>
-      <th>{{row.id}}</th>
-      <th>{{row.name}}</th>
+      <td> <input type="checkbox" [checked]="isSelected(row.id)" (change)="toggleSelection(row.id)" /> </td>
+      <td>{{row.id}}</td>
+      <td>{{row.name}}</td>
+      <td>
+        <span [class.text-success]="row.active" [class.text-danger]="!row.active">
+          {{ row.active ? 'فعال' : 'غیرفعال' }}
+        </span>
+      </td>
          <td>
           <button class="btn btn-sm btn-warning me-1"    (click)="onEdit(row.id)" > ✏ ویرایش</button>
         </td>
@@ -135,7 +141,22 @@
       </c-col>
 
 
-
+      <c-col [md]="6">
+        <div class="form-check mt-4">
+          <input
+            class="form-check-input"
+            type="checkbox"
+            id="active"
+            formControlName="active"
+          />
+          <label class="form-check-label" for="active">
+            وضعیت (فعال / غیرفعال)
+          </label>
+        </div>
+        <c-form-feedback [valid]="false">وضعیت را مشخص کنید.</c-form-feedback>
+      </c-col>
+      
+ 
 
 
 

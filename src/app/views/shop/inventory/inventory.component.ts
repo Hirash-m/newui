@@ -16,54 +16,53 @@ import {
 // DTOs & Services
 import { baseResponse } from 'src/app/dto/baseResponse';
 import { ListRequest } from 'src/app/dto/ListRequestDto';
-import { CountTypeDto } from 'src/app/dto/shop/CountTypeDto';
-import { CountTypeService } from 'src/app/services/shop/countType/count-type.service';
+import { InventoryDto } from 'src/app/dto/shop/InventoryDto';
+import { InventoryService } from 'src/app/services/shop/inventory/inventory.service';
 import { ToastService } from 'src/app/services/utilities/toast.service';
 
-// ---------------------------
-// Component Definition
-// ---------------------------
-@Component({
-  selector: 'app-count-type',
-  imports: [
-    // UI modules
-    CommonModule, TableDirective, PaginationComponent, PageItemDirective, PageLinkDirective,
-    ButtonDirective, ColComponent, FormDirective, FormFeedbackComponent,
-    FormLabelDirective, RowDirective, ModalModule,
 
-    // Form modules
-    FormsModule, ReactiveFormsModule,
+@Component({
+  selector: 'app-inventory',
+  imports: [
+        // UI modules
+        CommonModule, TableDirective, PaginationComponent, PageItemDirective, PageLinkDirective,
+        ButtonDirective, ColComponent, FormDirective, FormFeedbackComponent,
+        FormLabelDirective, RowDirective, ModalModule,
+    
+        // Form modules
+        FormsModule, ReactiveFormsModule,
   ],
-  templateUrl: './count-type.component.html',
-  styleUrl: './count-type.component.scss'
+  templateUrl: './inventory.component.html',
+  styleUrl: './inventory.component.scss'
 })
-export class CountTypeComponent implements OnInit {
+export class InventoryComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private countTypeService: CountTypeService,
+    private ObjectService: InventoryService ,
     private toastService: ToastService
   ) {}
 
-  // ---------------------------
+
+    // ---------------------------
   // Properties
   // ---------------------------
 
   _request = new ListRequest();
-  _objectsView: CountTypeDto[] = [];
+  _objectsView: InventoryDto[] = [];
   _baseResponse = new baseResponse;
 
-  // فرم
-  ObjectForm!: FormGroup;
+    // فرم
+    ObjectForm!: FormGroup;
 
-  // وضعیت مدال
-  showModal = false;
+    // وضعیت مدال
+    showModal = false;
+  
+    // وضعیت ویرایش
+    editMode = false;
+    editingId: number | null = null;
 
-  // وضعیت ویرایش
-  editMode = false;
-  editingId: number | null = null;
-
-  // آیتم‌های انتخاب‌شده
+      // آیتم‌های انتخاب‌شده
   selectedIds: number[] = [];
 
   // نمایش تایید حذف
@@ -77,6 +76,7 @@ export class CountTypeComponent implements OnInit {
     this.loadDataTable();
   }
 
+
   // ---------------------------
   // Init Form
   // ---------------------------
@@ -84,10 +84,11 @@ export class CountTypeComponent implements OnInit {
     this.ObjectForm = this.fb.group({
       id: [null],
       name: ['', Validators.required],
+      active:[true ,Validators.required ]
     });
   }
 
-  // ---------------------------
+ // ---------------------------
   // CRUD Methods
   // ---------------------------
 
@@ -95,7 +96,7 @@ export class CountTypeComponent implements OnInit {
   loadDataTable(): void {
     this._request.pageSize = 5;
 
-    this.countTypeService.getRecords(this._request).subscribe((res) => {
+    this.ObjectService.getRecords(this._request).subscribe((res) => {
       if (res.isSucceeded) {
         this._baseResponse = res;
         this._objectsView = res.data;
@@ -105,14 +106,16 @@ export class CountTypeComponent implements OnInit {
     });
   }
 
+
+  
   // ایجاد / ویرایش داده
   onSubmit1() {
     if (this.ObjectForm.valid) {
-      const ObjectData: CountTypeDto = this.ObjectForm.value;
+      const ObjectData: InventoryDto = this.ObjectForm.value;
 
       if (this.editMode && this.editingId != null) {
         // در حالت ویرایش
-        this.countTypeService.updateRecord(ObjectData).subscribe(res => {
+        this.ObjectService.updateRecord(ObjectData).subscribe(res => {
           if (res.isSucceeded) {
             this.toastService.showToast.success({ message: res.message });
             this.afterSubmit();
@@ -122,7 +125,7 @@ export class CountTypeComponent implements OnInit {
         });
       } else {
         // در حالت ایجاد
-        this.countTypeService.insertRecord(ObjectData).subscribe(res => {
+        this.ObjectService.insertRecord(ObjectData).subscribe(res => {
           if (res.isSucceeded) {
             this.toastService.showToast.success({ message: res.message });
             this.afterSubmit();
@@ -133,6 +136,7 @@ export class CountTypeComponent implements OnInit {
       }
     }
   }
+
 
   // عملیات پس از ثبت یا ویرایش
   afterSubmit() {
@@ -148,7 +152,7 @@ export class CountTypeComponent implements OnInit {
     this.editMode = true;
     this.editingId = ObjectId;
 
-    this.countTypeService.getRecordById(ObjectId).subscribe(res => {
+    this.ObjectService.getRecordById(ObjectId).subscribe(res => {
       if (res.isSucceeded && res.singleData) {
         const Object = res.singleData;
 
@@ -192,7 +196,7 @@ export class CountTypeComponent implements OnInit {
   // Delete Operation
   // ---------------------------
   deleteSelectedRecords(): void {
-    this.countTypeService.deleteRecords(this.selectedIds).subscribe(res => {
+    this.ObjectService.deleteRecords(this.selectedIds).subscribe(res => {
       if (res.isSucceeded) {
         this.toastService.showToast.success({ message: res.message });
         this.afterSubmit(); // ریست فرم و بارگذاری مجدد
@@ -203,5 +207,4 @@ export class CountTypeComponent implements OnInit {
       this.showDeleteConfirm = false;
     });
   }
-
 }

@@ -32,6 +32,19 @@ export const navItems: INavData[] = [
       iconComponent: { name: 'cib-codesandbox' }
 
     }
+    ,
+
+  {
+
+      name: 'inventory',
+      url: '/shop/inventory',
+       badge: {
+      color: 'info',
+      text: 'NEW'
+    },
+      iconComponent: { name: 'cib-codesandbox' }
+
+    }
 
   ]
   }

@@ -25,6 +25,13 @@ export const routes: Routes = [
         data: {
           title: ' واحد شمارش '
         }
+      },
+      {
+        path: 'inventory',
+        loadComponent: () => import('./inventory/inventory.component').then(m => m.InventoryComponent),
+        data: {
+          title: ' انبار'
+        }
       }
     ]
   }
