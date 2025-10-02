@@ -3,6 +3,6 @@ export class UserDto {
     fullName!: string;
     username!: string;
     email!: string;
-    passwordHash!: string;
+    Password!: string;
 }
   

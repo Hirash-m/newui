@@ -73,8 +73,12 @@ export class UserComponent {
   initForm() {
     this.ObjectForm = this.fb.group({
       id: [null],
-      name: ['', Validators.required],
-      active:[true ,Validators.required ]
+      username: ['', Validators.required],
+      email: ['', Validators.required ],
+      Password: ['', Validators.required],
+      fullName: ['', Validators.required],
+     
+      
     });
   }
 
@@ -148,9 +152,10 @@ export class UserComponent {
 
         this.ObjectForm.patchValue({
           id: Object.id,
+          username : Object.username ,
           fullname: Object.fullName,
           email : Object.email,
-          passwordHash : Object.passwordHash
+          Password : Object.Password
 
         });
 

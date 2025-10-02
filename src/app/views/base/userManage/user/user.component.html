@@ -32,7 +32,7 @@
       <td>{{row.id}}</td>
       <td>{{row.username}}</td>
       <td>   {{row.email}}   </td>
-      <td>   {{row.passwordHash}}   </td>
+      <td>   {{row.Password}}   </td>
       <td>   {{row.fullName}}   </td>
          <td>
           <button class="btn btn-sm btn-warning me-1"    (click)="onEdit(row.id)" > ✏ ویرایش</button>
@@ -135,13 +135,29 @@
 
       <!-- نام -->
       <c-col [md]="6">
-        <label cLabel for="name">نام </label>
-        <input cFormControl id="name" name="name" type="text" required formControlName="name" />
-        <c-form-feedback [valid]="false">نام را وارد کنید.</c-form-feedback>
+        <label cLabel for="username">نام کاربری </label>
+        <input cFormControl id="username" name="username" type="text" required formControlName="username">
+        <c-form-feedback [valid]="false">نام کاربری را وارد کنید.</c-form-feedback>
       </c-col>
 
+      <c-col [md]="6">
+        <label cLabel for="email">ایمیل </label>
+        <input cFormControl id="email" name="email" type="email" required formControlName="email">
+        <c-form-feedback [valid]="false">ایمیل را وارد کنید.</c-form-feedback>
+      </c-col>
+      <c-col [md]="6">
+        <label cLabel for="fullName">نام کامل </label>
+        <input cFormControl id="fullName" name="fullName" type="text" required formControlName="fullName">
+        <c-form-feedback [valid]="false">ایمیل را وارد کنید.</c-form-feedback>
+      </c-col>
 
       <c-col [md]="6">
+        <label cLabel for="Password">کلمه عبور </label>
+        <input cFormControl id="Password" name="Password" type="Password" required formControlName="Password">
+        <c-form-feedback [valid]="false">کلمه عبور  را وارد کنید.</c-form-feedback>
+      </c-col>
+
+      <!-- <c-col [md]="6">
         <div class="form-check mt-4">
           <input
             class="form-check-input"
@@ -155,7 +171,7 @@
         </div>
         <c-form-feedback [valid]="false">وضعیت را مشخص کنید.</c-form-feedback>
       </c-col>
-      
+       -->
  
 
 
