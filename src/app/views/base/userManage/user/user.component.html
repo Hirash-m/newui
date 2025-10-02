@@ -1,0 +1,190 @@
+
+
+<!-- دکمه‌ی باز کردن فرم پاپ‌آپ -->
+<button cButton color="primary" (click)="showModal = true">➕ ایجاد </button>
+<button
+  cButton
+  color="danger"
+  [disabled]="selectedIds.length === 0"
+  (click)="showDeleteConfirm = true"
+>
+🗑 حذف انتخاب‌شده‌ها ({{ selectedIds.length }})
+</button>
+
+
+<!-- Table -->
+
+<table cTable>
+  <thead>
+    <tr>
+      <th>انتخاب</th>
+      <th>شناسه</th>
+      <th>نام کاربری</th>
+      <th>ایمیل</th>
+      <th>کلمه عبور</th>
+      <th>نام کامل </th>
+      <th>عملیات</th>
+    </tr>
+  </thead>
+  <tbody>
+     <tr *ngFor="let row of _objectsView">
+      <td> <input type="checkbox" [checked]="isSelected(row.id)" (change)="toggleSelection(row.id)" /> </td>
+      <td>{{row.id}}</td>
+      <td>{{row.username}}</td>
+      <td>   {{row.email}}   </td>
+      <td>   {{row.passwordHash}}   </td>
+      <td>   {{row.fullName}}   </td>
+         <td>
+          <button class="btn btn-sm btn-warning me-1"    (click)="onEdit(row.id)" > ✏ ویرایش</button>
+        </td>
+    </tr>
+  </tbody>
+</table>
+
+
+
+<!--nodata banner -->
+
+<div *ngIf="_objectsView.length === 0" class="alert alert-info text-center">
+  ❕ هیچ داده‌ای یافت نشد.
+</div>
+
+
+
+<div class="d-flex justify-content-between align-items-center mt-3">
+
+  <!-- خود pagination -->
+  <c-pagination aria-label="Page navigation example">
+    <li cPageItem *ngIf="_baseResponse.pageNumber > 3">
+      <button cPageLink aria-label="First" (click)="changePage(1)">
+        <span aria-hidden="true">&laquo;</span>
+      </button>
+    </li>
+
+    <li cPageItem *ngIf="_baseResponse.pageNumber > 1">
+      <button cPageLink aria-label="Previous" (click)="changePage(_baseResponse.pageNumber - 1)">
+        <span aria-hidden="true">&lt;</span>
+      </button>
+    </li>
+
+    <li cPageItem *ngIf="_baseResponse.pageNumber > 2">
+      <button cPageLink (click)="changePage(_baseResponse.pageNumber - 2)">
+        {{ _baseResponse.pageNumber - 2 }}
+      </button>
+    </li>
+
+    <li cPageItem *ngIf="_baseResponse.pageNumber > 1">
+      <button cPageLink (click)="changePage(_baseResponse.pageNumber - 1)">
+        {{ _baseResponse.pageNumber - 1 }}
+      </button>
+    </li>
+
+    <li cPageItem>
+      <button cPageLink class="active" disabled>
+        {{ _baseResponse.pageNumber }}
+      </button>
+    </li>
+
+    <li cPageItem *ngIf="_baseResponse.totalPages > _baseResponse.pageNumber">
+      <button cPageLink (click)="changePage(_baseResponse.pageNumber + 1)">
+        {{ _baseResponse.pageNumber + 1 }}
+      </button>
+    </li>
+
+    <li cPageItem *ngIf="_baseResponse.totalPages > _baseResponse.pageNumber + 1">
+      <button cPageLink (click)="changePage(_baseResponse.pageNumber + 2)">
+        {{ _baseResponse.pageNumber + 2 }}
+      </button>
+    </li>
+
+    <li cPageItem *ngIf="_baseResponse.totalPages > _baseResponse.pageNumber">
+      <button cPageLink aria-label="Next" (click)="changePage(_baseResponse.pageNumber + 1)">
+        <span aria-hidden="true">&gt;</span>
+      </button>
+    </li>
+
+    <li cPageItem *ngIf="_baseResponse.totalPages > _baseResponse.pageNumber + 2">
+      <button cPageLink aria-label="Last" (click)="changePage(_baseResponse.totalPages)">
+        <span aria-hidden="true">&raquo;</span>
+      </button>
+    </li>
+  </c-pagination>
+
+  <!-- اطلاعات رکورد -->
+  <div class="text-muted">
+    <strong>{{_baseResponse.totalRecords}}</strong> رکورد در <strong>{{_baseResponse.totalPages}}</strong> صفحه
+  </div>
+
+</div>
+
+
+
+
+
+
+<!-- مودال فرم افزودن محصول -->
+<c-modal [(visible)]="showModal" size="lg" backdrop="static">
+  <c-modal-header>
+    <h5 class="modal-title">{{ editMode ? 'ویرایش ' : 'افزودن' }}</h5>
+    <button type="button" class="btn-close" aria-label="Close" (click)="showModal = false"></button>
+  </c-modal-header>
+
+  <c-modal-body>
+    <!-- فرم داخل مودال -->
+    <form [formGroup]="ObjectForm"  (ngSubmit)="onSubmit1()" class="needs-validation" novalidate cForm cRow>
+
+      <!-- نام -->
+      <c-col [md]="6">
+        <label cLabel for="name">نام </label>
+        <input cFormControl id="name" name="name" type="text" required formControlName="name" />
+        <c-form-feedback [valid]="false">نام را وارد کنید.</c-form-feedback>
+      </c-col>
+
+
+      <c-col [md]="6">
+        <div class="form-check mt-4">
+          <input
+            class="form-check-input"
+            type="checkbox"
+            id="active"
+            formControlName="active"
+          />
+          <label class="form-check-label" for="active">
+            وضعیت (فعال / غیرفعال)
+          </label>
+        </div>
+        <c-form-feedback [valid]="false">وضعیت را مشخص کنید.</c-form-feedback>
+      </c-col>
+      
+ 
+
+
+
+
+    </form>
+  </c-modal-body>
+
+  <c-modal-footer>
+    <!-- دکمه‌های ارسال و بستن -->
+    <button cButton color="secondary" (click)="showModal = false">بستن</button>
+    <button cButton color="primary" type="submit" (click)="onSubmit1()"  [disabled]="!ObjectForm.valid "  >ذخیره</button>
+  </c-modal-footer>
+</c-modal>
+
+
+
+<c-modal [(visible)]="showDeleteConfirm" col="6" backdrop="static">
+  <c-modal-header>
+    <h5 class="modal-title">❗ تأیید حذف</h5>
+    <button type="button" class="btn-close" (click)="showDeleteConfirm = false" aria-label="Close"></button>
+  </c-modal-header>
+
+  <c-modal-body>
+    <p>آیا مطمئن هستید که می‌خواهید <strong>{{ selectedIds.length }}</strong> محصول انتخاب‌شده را حذف کنید؟</p>
+  </c-modal-body>
+
+  <c-modal-footer>
+    <button cButton color="secondary" (click)="showDeleteConfirm = false">انصراف</button>
+    <button cButton color="danger" (click)="deleteSelectedRecords()">تأیید حذف</button>
+  </c-modal-footer>
+</c-modal>
