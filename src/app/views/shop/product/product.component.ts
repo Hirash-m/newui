@@ -63,9 +63,12 @@ export class ProductComponent implements OnInit   {
       if(res.isSucceeded){
         this._baseResponse = res ;
         this._productsView = res.data;
-        console.log(this._baseResponse);
+       // console.log(this._baseResponse);
         //this.ToastService.showToast.success({message:this._baseResponse.message})
       }
+     else {
+      this.toastService.showToast.success(res)
+     }
 
     })
   }

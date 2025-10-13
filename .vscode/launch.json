@@ -1,13 +1,26 @@
 {
-  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "ng serve",
-      "type": "chrome",
+      "type": "node",
       "request": "launch",
-      "preLaunchTask": "npm: start",
-      "url": "http://localhost:4200/"
+      "name": "Debug Angular with npm.cmd",
+      "cwd": "${workspaceFolder}",
+      "runtimeExecutable": "D:/node/node-v22.16.0-win-x64/npm.cmd",
+      "runtimeArgs": ["run", "start"],
+      "sourceMaps": true,
+      "webRoot": "${workspaceFolder}",
+      "sourceMapPathOverrides": {
+        "webpack:/*": "${workspaceFolder}/*",
+        "/*": "${workspaceFolder}/*"
+      },
+      "port": 9229,
+      "console": "integratedTerminal",
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "Compiled successfully",
+        "uriFormat": "http://localhost:4300"
+      }
     }
   ]
 }

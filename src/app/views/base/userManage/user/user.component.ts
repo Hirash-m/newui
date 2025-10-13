@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonDirective, ColComponent, FormDirective, FormFeedbackComponent, FormLabelDirective, ModalModule, PageItemDirective, PageLinkDirective, PaginationComponent, RowDirective, TableDirective } from '@coreui/angular';
-import { UserDto } from 'src/app/dto/base/UserDto';
+import { PermissionDto, RoleDto, UserCreateFormData, UserDto } from 'src/app/dto/base/UserDto';
 import { baseResponse } from 'src/app/dto/baseResponse';
 import { ListRequest } from 'src/app/dto/ListRequestDto';
 import { UserManageService } from 'src/app/services/base/userManage/user-manage.service';
@@ -38,6 +38,10 @@ export class UserComponent {
   // Properties
   // ---------------------------
 
+
+  roles: RoleDto[] = []; // لیست نقش‌ها
+  permissions: PermissionDto[] = []; // لیست دسترسی‌ها
+  selectedPermissionIds: number[] = []; // IDهای دسترسی‌های انتخاب‌شده
   _request = new ListRequest();
   _objectsView: UserDto[] = [];
   _baseResponse = new baseResponse;
@@ -64,6 +68,7 @@ export class UserComponent {
   ngOnInit(): void {
     this.initForm();
     this.loadDataTable();
+    this.loadCreateFormData();
   }
 
 
@@ -77,7 +82,7 @@ export class UserComponent {
       email: ['', Validators.required ],
       Password: ['', Validators.required],
       fullName: ['', Validators.required],
-     
+      roleIds: [[]]
       
     });
   }
@@ -101,7 +106,41 @@ export class UserComponent {
   }
 
 
+
+  loadCreateFormData(): void {
+    this.ObjectService.getCreateForm().subscribe(res => {
+        if (res.isSucceeded && res.singleData) {
+            const formData = res.singleData as unknown as UserCreateFormData;
+            this.roles = formData.roles || [];
+            // this.permissions = formData.permissions || [];
+        } else {
+            this.toastService.showToast.error({ message: res.message });
+        }
+    });
+}
+
   
+
+
+
+toggleRole(event: Event, roleId: number): void {
+  const input = event.target as HTMLInputElement;
+  const roleIds = this.ObjectForm.get('roleIds')?.value || [];
+
+  if (input.checked) {
+      roleIds.push(roleId);
+  } else {
+      const index = roleIds.indexOf(roleId);
+      if (index > -1) {
+          roleIds.splice(index, 1);
+      }
+  }
+
+  this.ObjectForm.get('roleIds')?.setValue(roleIds);
+}
+
+
+
   // ایجاد / ویرایش داده
   onSubmit1() {
     if (this.ObjectForm.valid) {
@@ -155,7 +194,8 @@ export class UserComponent {
           username : Object.username ,
           fullname: Object.fullName,
           email : Object.email,
-          Password : Object.Password
+          Password : Object.Password,
+          roleIds: Object.roleIds || []
 
         });
 

@@ -5,7 +5,7 @@ import { ToastService } from '../../utilities/toast.service';
 import { ListRequest } from 'src/app/dto/ListRequestDto';
 import { catchError, Observable, throwError } from 'rxjs';
 import { baseResponse } from 'src/app/dto/baseResponse';
-import {UserDto} from 'src/app/dto/base/UserDto';
+import {UserCreateFormData, UserDto} from 'src/app/dto/base/UserDto';
 import { BaseService } from '../../utilities/base.service';
 
 @Injectable({
@@ -45,6 +45,23 @@ export class UserManageService  extends BaseService{
       );
     }
   
+
+      // ==========================================================================
+  // 📥 Get template create fields
+  // ==========================================================================
+ 
+  getCreateForm(): Observable<baseResponse<UserCreateFormData>> {
+    return this.http.get<baseResponse<UserCreateFormData>>(
+        `${this.apiurl}/api/User/getcreateform`,
+        { headers: this.getJsonHeaders() }
+    ).pipe(
+        catchError(error => {
+            this.toast.showToast.error({ message: error });
+            return throwError(() => error);
+        })
+    );
+}
+
 
 
       // ==========================================================================

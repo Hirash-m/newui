@@ -1,0 +1,17 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+	  {
+		"label": "npm: start",
+		"type": "shell",
+		"command": "npm.cmd",
+		"args": ["start"],
+		"group": {
+		  "kind": "build",
+		  "isDefault": true
+		},
+		"problemMatcher": ["$tsc"],
+		"detail": "Run ng serve using npm.cmd"
+	  }
+	]
+  }
