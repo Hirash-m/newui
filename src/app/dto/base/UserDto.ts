@@ -3,7 +3,7 @@ export class UserDto {
     fullName!: string;
     username!: string;
     email!: string;
-    Password!: string;
+    Password: string = "";
     roleIds: number[] = [];
 }
   

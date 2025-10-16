@@ -117,14 +117,17 @@ export class UserManageService  extends BaseService{
   // 🔍 Get Record By ID
   // ==========================================================================
   getRecordById(id: number): Observable<baseResponse<UserDto>> {
-    return this.http.get<baseResponse<UserDto>>(
+    var result = this.http.get<baseResponse<UserDto>>(
       `${this.apiurl}/api/User/getById/?id=${id}`,
       { headers: this.getJsonHeaders() }
+
     ).pipe(
       catchError(error => {
         this.toast.showToast.error({ message: error });
         return throwError(() => error);
       })
     );
+ console.log(result.subscribe.toString);
+    return result ;
   }
 }

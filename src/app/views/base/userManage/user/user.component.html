@@ -153,7 +153,7 @@
 
       <c-col [md]="6">
         <label cLabel for="Password">کلمه عبور </label>
-        <input cFormControl id="Password" name="Password" type="Password" required formControlName="Password">
+        <input cFormControl id="Password" name="Password" type="Password"  formControlName="Password">
         <c-form-feedback [valid]="false">کلمه عبور  را وارد کنید.</c-form-feedback>
       </c-col>
 
@@ -182,7 +182,7 @@
 
   <c-modal-footer>
     <!-- دکمه‌های ارسال و بستن -->
-    <button cButton color="secondary" (click)="showModal = false">بستن</button>
+    <button cButton color="secondary" (click)="closeModal()" >بستن</button>
     <button cButton color="primary" type="submit" (click)="onSubmit1()"  [disabled]="!ObjectForm.valid "  >ذخیره</button>
   </c-modal-footer>
 </c-modal>
