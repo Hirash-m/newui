@@ -1,7 +1,7 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, inject, input } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-
+import { Router } from '@angular/router';
 import {
   AvatarComponent,
   BadgeComponent,
@@ -126,4 +126,20 @@ export class DefaultHeaderComponent extends HeaderComponent {
     { id: 4, title: 'Angular Version', value: 100, color: 'success' }
   ];
 
+
+
+
+  // added by  hirash
+
+
+    private router = inject(Router);
+
+  // ...
+
+  logout(event: Event) {
+  event.preventDefault(); // جلوگیری از پرش صفحه
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  this.router.navigate(['/login']);
+}
 }
