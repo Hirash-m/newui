@@ -1,0 +1,581 @@
+﻿===== FILE: src\app\views\shop\product\product.component.ts =====
+import { ToastService } from './../../../services/utilities/toast.service';
+import { ListRequest } from './../../../dto/ListRequestDto';
+import { baseResponse } from './../../../dto/baseResponse';
+import { ProductService } from '../../../services/shop/product/product.service';
+import { Component, inject, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup,  Validators,  ReactiveFormsModule, FormsModule } from '@angular/forms';
+
+import { AccordionButtonDirective, AccordionComponent, AccordionItemComponent, ButtonDirective, ColComponent,
+      FormDirective, FormFeedbackComponent, FormLabelDirective,     ModalModule, PageItemDirective, PageLinkDirective,
+       PaginationComponent, RowDirective, TableDirective, TemplateIdDirective } from '@coreui/angular';
+
+
+import { CommonModule } from '@angular/common';
+import { ProductCreateDto, ProductViewDto } from '../../../dto/shop/ProductDto';
+
+
+
+
+@Component({
+
+  selector: 'app-product',
+  templateUrl: './product.component.html',
+  styleUrl: './product.component.scss',
+  imports :[TableDirective,CommonModule,PaginationComponent, PageItemDirective,PageLinkDirective
+    ,ButtonDirective,  ColComponent,
+  FormDirective,  FormFeedbackComponent,  FormLabelDirective,  RowDirective,
+   FormsModule, ReactiveFormsModule,
+   ModalModule,
+    AccordionComponent,    AccordionItemComponent,    TemplateIdDirective,    AccordionButtonDirective
+  ]
+})
+export class ProductComponent implements OnInit   {
+
+  _request = new ListRequest();
+  _productsView: ProductViewDto[]=[];
+  _baseResponse = new baseResponse;
+
+
+
+
+
+
+
+
+  constructor ( private fb: FormBuilder,private productService : ProductService , private toastService: ToastService){}
+
+
+  ngOnInit(): void {
+
+    this.initForm();
+    this.loadProducts();
+
+
+  }
+
+
+
+  //table of list
+
+  loadProducts(): void {
+    this._request.pageSize = 5;
+    this.productService.getRecords(this._request).subscribe((res)=>{
+      if(res.isSucceeded){
+        this._baseResponse = res ;
+        this._productsView = res.data;
+       // console.log(this._baseResponse);
+        //this.ToastService.showToast.success({message:this._baseResponse.message})
+      }
+     else {
+      this.toastService.showToast.success(res)
+     }
+
+    })
+  }
+
+
+
+
+//form create
+    showModal = false;
+    productForm!: FormGroup;
+
+    initForm() {
+  this.productForm = this.fb.group({
+    id: [null],
+    name:['',Validators.required],
+    productCode:['',Validators.required],
+    price:[0,Validators.required],
+    countTypeId:[0,Validators.required],
+  });}
+
+
+
+
+
+
+onSubmit1() {
+  if (this.productForm.valid) {
+
+     const productData : ProductCreateDto = this.productForm.value;
+    if (this.editMode && this.editingProductId != null) {
+      // ÙˆÛŒØ±Ø§ÛŒØ´
+      this.productService.updateRecord( productData).subscribe(res => {
+        if (res.isSucceeded) {
+          this.toastService.showToast.success({message: res.message});
+          this.afterSubmit();
+        } else {
+          this.toastService.showToast.error({message:res.message});
+        }
+      });
+    } else {
+      // Ø§ÛŒØ¬Ø§Ø¯
+      this.productService.insertRecord(productData).subscribe(res => {
+        if (res.isSucceeded) {
+          this.toastService.showToast.success({message: res.message});
+          this.afterSubmit();
+        } else {
+          this.toastService.showToast.error({message: res.message});
+
+        }
+      });
+    }
+  }
+}
+
+
+afterSubmit() {
+  this.loadProducts();
+  this.showModal = false;
+  this.productForm.reset();
+  this.editMode = false;
+  this.editingProductId = null;
+}
+
+// edit product
+
+
+
+editMode = false;
+editingProductId: number | null = null;
+
+
+onEdit(productId: number) {
+  this.editMode = true;
+  this.editingProductId = productId;
+
+  this.productService.getRecordById(productId).subscribe(res => {
+    if (res.isSucceeded && res.singleData) {
+      const product = res.singleData;
+        console.log(res);
+      this.productForm.patchValue({
+        id: product.id,
+        name: product.name,
+        productCode: product.productCode,
+        price: product.price,
+        countTypeId: product.countTypeId
+      });
+
+      this.showModal = true;
+    } else {
+      this.toastService.showToast.error({message:'Ù…Ø­ØµÙˆÙ„ Ù¾ÛŒØ¯Ø§ Ù†Ø´Ø¯ ÛŒØ§ Ø®Ø·Ø§ Ø¯Ø± Ø¯Ø±ÛŒØ§ÙØª Ø§Ø·Ù„Ø§Ø¹Ø§Øª!'});
+
+    }
+  });
+}
+
+
+
+
+
+
+//change page
+  changePage(pagenumber: number){
+    this._request.pageNumber = pagenumber;
+    this.loadProducts();
+
+  }
+
+
+
+  //remove products
+  selectedProductIds: number[] = [];
+
+isSelected(productId: number): boolean {
+  return this.selectedProductIds.includes(productId);
+}
+
+toggleSelection(productId: number): void {
+  const index = this.selectedProductIds.indexOf(productId);
+  if (index > -1) {
+    this.selectedProductIds.splice(index, 1);
+  } else {
+    this.selectedProductIds.push(productId);
+  }
+}
+
+
+showDeleteConfirm = false;
+
+deleteSelectedProducts(): void {
+  this.productService.deleteRecords(this.selectedProductIds).subscribe(res => {
+    if (res.isSucceeded) {
+      this.toastService.showToast.success({message:res.message});
+      this.afterSubmit(); // Ø±ÛŒØ³Øª ÙØ±Ù… Ùˆ Ø¨Ø§Ø±Ú¯Ø°Ø§Ø±ÛŒ Ù…Ø¬Ø¯Ø¯
+      this.selectedProductIds = [];
+    } else {
+      this.toastService.showToast.error({message:'Ø®Ø·Ø§ Ø¯Ø± Ø­Ø°Ù Ú¯Ø±ÙˆÙ‡ÛŒ'});
+    }
+    this.showDeleteConfirm = false;
+  });
+}
+
+
+searchData = {
+  pageNumber: 1,
+  pageSize: 3,
+  sortBy: 'Id',
+  sortDirection: true,
+  name: '',
+  minPrice: 0,
+  maxPrice: 0
+};
+
+onSearch() {
+  this.productService.searchProducts(this.searchData).subscribe(
+    (result) => {
+      if(result.isSucceeded){
+        this._baseResponse = result;
+        this._productsView = result.data;
+        console.log('Ù†ØªØ§ÛŒØ¬ Ø¬Ø³ØªØ¬Ùˆ:', this._productsView);
+      } else {
+        this.toastService.showToast.error({message:'Ø®Ø·Ø§ Ø¯Ø± Ø¬Ø³ØªØ¬Ùˆ'});
+      }
+    },
+    (error) => {
+      console.error('Ø®Ø·Ø§ Ø¯Ø± Ø¬Ø³ØªØ¬Ùˆ', error);
+      this.toastService.showToast.error({message:'Ø®Ø·Ø§ÛŒ Ø§Ø±ØªØ¨Ø§Ø· Ø¨Ø§ Ø³Ø±ÙˆØ±'});
+    }
+  );
+}
+}
+
+
+===== FILE: src\app\views\shop\routes.ts =====
+import { Routes } from '@angular/router';
+
+export const routes: Routes = [
+  {
+    path: '',
+    data: {
+      title: 'shop'
+    },
+    children: [
+      {
+        path: '',
+        redirectTo: 'coreui-icons',
+        pathMatch: 'full'
+      },
+      {
+        path: 'product',
+        loadComponent: () => import('./product/product.component').then(m => m.ProductComponent),
+        data: {
+          title: 'Ù„ÛŒØ³Øª Ù…Ø­ØµÙˆÙ„Ø§Øª '
+        }
+      },
+      {
+        path: 'countType',
+        loadComponent: () => import('./count-type/count-type.component').then(m => m.CountTypeComponent),
+        data: {
+          title: ' ÙˆØ§Ø­Ø¯ Ø´Ù…Ø§Ø±Ø´ '
+        }
+      },
+      {
+        path: 'inventory',
+        loadComponent: () => import('./inventory/inventory.component').then(m => m.InventoryComponent),
+        data: {
+          title: ' Ø§Ù†Ø¨Ø§Ø±'
+        }
+      }
+    ]
+  }
+];
+
+
+===== FILE: src\app\views\utilities\toast-container\toast-container.component.html =====
+<p>toast-container works!</p>
+
+
+===== FILE: src\app\views\utilities\toast-container\toast-container.component.scss =====
+
+
+===== FILE: src\app\views\utilities\toast-container\toast-container.component.spec.ts =====
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+
+import { ToastContainerComponent } from './toast-container.component';
+
+describe('ToastContainerComponent', () => {
+  let component: ToastContainerComponent;
+  let fixture: ComponentFixture<ToastContainerComponent>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [ToastContainerComponent]
+    })
+    .compileComponents();
+
+    fixture = TestBed.createComponent(ToastContainerComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+});
+
+
+===== FILE: src\app\views\utilities\toast-container\toast-container.component.ts =====
+// toast-container.component.ts
+import { Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import {
+  ToasterComponent,
+  ToastComponent,
+  ToastHeaderComponent,
+  ToastBodyComponent,
+} from '@coreui/angular';
+import { ToastService } from './../../../services/utilities/toast.service';
+import { NgFor } from '@angular/common';
+
+@Component({
+  selector: 'app-toast-container',
+  standalone: true,
+  imports: [
+    CommonModule,
+    ToasterComponent,
+    ToastComponent,
+    ToastHeaderComponent,
+    ToastBodyComponent,
+    NgFor,
+  ],
+  template: `
+    <c-toaster [placement]="'top-end'" class="p-3" position="fixed">
+      <c-toast
+        *ngFor="let toast of toastService.toasts()"
+        [autohide]="true"
+        [delay]="toast.duration"
+        [color]="mapTypeToColor(toast.type)"
+        [visible]="true"
+        (visibleChange)="onVisibleChange(toast.id, $event)"
+      >
+        <c-toast-header>
+          <strong class="me-auto">{{ toast.title }}</strong>
+        </c-toast-header>
+        <c-toast-body>
+          {{ toast.message }}
+        </c-toast-body>
+      </c-toast>
+    </c-toaster>
+  `,
+})
+export class ToastContainerComponent {
+  toastService = inject(ToastService);
+
+  mapTypeToColor(type: string) {
+    switch (type) {
+      case 'success': return 'success';
+      case 'error': return 'danger';
+      case 'warning': return 'warning';
+      default: return 'info';
+    }
+  }
+
+  onVisibleChange(id: number, visible: boolean) {
+    if (!visible) {
+      this.toastService.removeToast(id);
+    }
+  }
+}
+
+
+===== FILE: src\app\views\utilities\toast-container\toast-sample-icon.component.ts =====
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'toast-sample-icon',
+  template: `<svg
+    class="rounded me-2"
+    width="20"
+    height="20"
+    xmlns="http://www.w3.org/2000/svg"
+    preserveAspectRatio="xMidYMid slice"
+    focusable="false"
+    role="img"
+  >
+    <rect width="100%" height="100%" fill="#007aff"></rect>
+  </svg>`,
+  standalone: true
+})
+export class ToastSampleIconComponent {}
+
+
+===== FILE: src\app\app.component.spec.ts =====
+import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { AppComponent } from './app.component';
+
+describe('AppComponent', () => {
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [
+        AppComponent
+      ],
+      providers: [provideRouter([])]
+    }).compileComponents();
+  });
+
+  it('should create the app', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    const app = fixture.componentInstance;
+    expect(app).toBeTruthy();
+  });
+
+  it(`should have as title 'CoreUI Angular Admin Template'`, () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    const app = fixture.componentInstance;
+    expect(app.title).toEqual('CoreUI Angular Admin Template');
+  });
+});
+
+
+===== FILE: src\app\app.component.ts =====
+import { Component, DestroyRef, inject, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Title } from '@angular/platform-browser';
+import { ActivatedRoute, NavigationEnd, Router, RouterOutlet } from '@angular/router';
+import { delay, filter, map, tap } from 'rxjs/operators';
+
+import { ColorModeService } from '@coreui/angular';
+import { IconSetService } from '@coreui/icons-angular';
+import { iconSubset } from './icons/icon-subset';
+
+@Component({
+    selector: 'app-root',
+    template: '<router-outlet />',
+    imports: [RouterOutlet]
+})
+export class AppComponent implements OnInit {
+  title = 'CRM';
+
+  readonly #destroyRef: DestroyRef = inject(DestroyRef);
+  readonly #activatedRoute: ActivatedRoute = inject(ActivatedRoute);
+  readonly #router = inject(Router);
+  readonly #titleService = inject(Title);
+
+  readonly #colorModeService = inject(ColorModeService);
+  readonly #iconSetService = inject(IconSetService);
+
+  constructor() {
+    this.#titleService.setTitle(this.title);
+    // iconSet singleton
+    this.#iconSetService.icons = { ...iconSubset };
+    this.#colorModeService.localStorageItemName.set('coreui-free-angular-admin-template-theme-default');
+    this.#colorModeService.eventName.set('ColorSchemeChange');
+  }
+
+  ngOnInit(): void {
+
+    this.#router.events.pipe(
+        takeUntilDestroyed(this.#destroyRef)
+      ).subscribe((evt) => {
+      if (!(evt instanceof NavigationEnd)) {
+        return;
+      }
+    });
+
+    this.#activatedRoute.queryParams
+      .pipe(
+        delay(1),
+        map(params => <string>params['theme']?.match(/^[A-Za-z0-9\s]+/)?.[0]),
+        filter(theme => ['dark', 'light', 'auto'].includes(theme)),
+        tap(theme => {
+          this.#colorModeService.colorMode.set(theme);
+        }),
+        takeUntilDestroyed(this.#destroyRef)
+      )
+      .subscribe();
+  }
+}
+
+
+===== FILE: src\app\app.config.ts =====
+import { ApplicationConfig, importProvidersFrom } from '@angular/core';
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import {authInterceptor} from './core/interceptors/auth.interceptor';
+import {
+  provideRouter,
+  withEnabledBlockingInitialNavigation,
+  withHashLocation,
+  withInMemoryScrolling,
+  withRouterConfig,
+  withViewTransitions
+} from '@angular/router';
+
+import { DropdownModule, SidebarModule } from '@coreui/angular';
+import { IconSetService } from '@coreui/icons-angular';
+import { routes } from './app.routes';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideRouter(routes,
+      withRouterConfig({
+        onSameUrlNavigation: 'reload'
+      }),
+      withInMemoryScrolling({
+        scrollPositionRestoration: 'top',
+        anchorScrolling: 'enabled'
+      }),
+      withEnabledBlockingInitialNavigation(),
+      withViewTransitions(),
+      withHashLocation()
+    ),
+    importProvidersFrom(SidebarModule, DropdownModule),
+    IconSetService,
+    provideAnimationsAsync(),
+    provideHttpClient(withInterceptors([authInterceptor]))
+  ]
+};
+
+
+===== FILE: src\app\app.routes.ts =====
+import { Routes } from '@angular/router';
+import { DefaultLayoutComponent } from './layout';
+import { authGuard } from './services/auth/login/auth.guard';
+
+export const routes: Routes = [
+  {
+    path: '',
+    redirectTo: 'dashboard',
+    pathMatch: 'full'
+  },
+  {
+    path: '',
+    component: DefaultLayoutComponent,
+     canActivate: [authGuard],
+    data: {
+      title: 'Home'
+    },
+    children: [
+      {
+        path: 'shop',
+        loadChildren: () => import ('./views/shop/routes').then((m) => m.routes)
+
+      }
+      ,
+      {
+        path: 'base',
+        loadChildren: () => import ('./views/base/routes').then((m) => m.routes)
+
+      }
+      ,
+      {
+        path: 'dashboard',
+        loadComponent: () => import('./views/shop/product/product.component').then(m => m.ProductComponent)
+      },
+      {
+        path: 'template',
+        loadChildren: () => import('./views/template/routes').then((m) => m.routes)
+      }
+    ]
+  } ,
+    // ðŸ‘‡ Ù…Ø³ÛŒØ± Ù„Ø§Ú¯ÛŒÙ† Ø¬Ø¯Ø§ Ø¨Ø§Ø´Ù‡ Ø¨Ø¯ÙˆÙ† Ú¯Ø§Ø±Ø¯
+  {
+    path: 'login',
+    loadComponent: () => import('./views/base/login/loginForm/login/login.component').then(m => m.LoginComponent)
+  }
+];
+
+

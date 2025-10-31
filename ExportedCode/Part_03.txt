@@ -1,0 +1,801 @@
+﻿===== FILE: src\app\layout\default-layout\default-header\default-header.component.scss =====
+
+
+===== FILE: src\app\layout\default-layout\default-header\default-header.component.spec.ts =====
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ReactiveFormsModule } from '@angular/forms';
+import { RouterTestingModule } from '@angular/router/testing';
+import {
+  AvatarModule,
+  BadgeModule,
+  BreadcrumbModule,
+  ButtonGroupModule,
+  DropdownModule,
+  GridModule,
+  HeaderModule,
+  NavModule,
+  ProgressModule,
+  SidebarModule
+} from '@coreui/angular';
+import { IconModule, IconSetService } from '@coreui/icons-angular';
+import { iconSubset } from '../../../icons/icon-subset';
+import { DefaultHeaderComponent } from './default-header.component';
+
+describe('DefaultHeaderComponent', () => {
+  let component: DefaultHeaderComponent;
+  let fixture: ComponentFixture<DefaultHeaderComponent>;
+  let iconSetService: IconSetService;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+    imports: [GridModule, HeaderModule, IconModule, NavModule, BadgeModule, AvatarModule, DropdownModule, BreadcrumbModule, RouterTestingModule, SidebarModule, ProgressModule, ButtonGroupModule, ReactiveFormsModule, DefaultHeaderComponent],
+    providers: [IconSetService]
+})
+      .compileComponents();
+  });
+
+  beforeEach(() => {
+    iconSetService = TestBed.inject(IconSetService);
+    iconSetService.icons = { ...iconSubset };
+
+    fixture = TestBed.createComponent(DefaultHeaderComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+});
+
+
+===== FILE: src\app\layout\default-layout\default-header\default-header.component.ts =====
+import { NgTemplateOutlet } from '@angular/common';
+import { Component, computed, inject, input } from '@angular/core';
+import { RouterLink, RouterLinkActive } from '@angular/router';
+import { Router } from '@angular/router';
+import {
+  AvatarComponent,
+  BadgeComponent,
+  BreadcrumbRouterComponent,
+  ColorModeService,
+  ContainerComponent,
+  DropdownComponent,
+  DropdownDividerDirective,
+  DropdownHeaderDirective,
+  DropdownItemDirective,
+  DropdownMenuDirective,
+  DropdownToggleDirective,
+  HeaderComponent,
+  HeaderNavComponent,
+  HeaderTogglerDirective,
+  NavItemComponent,
+  NavLinkDirective,
+  SidebarToggleDirective
+} from '@coreui/angular';
+
+import { IconDirective } from '@coreui/icons-angular';
+
+@Component({
+    selector: 'app-default-header',
+    templateUrl: './default-header.component.html',
+  imports: [ContainerComponent, HeaderTogglerDirective, SidebarToggleDirective, IconDirective, HeaderNavComponent, NavItemComponent, NavLinkDirective, RouterLink, RouterLinkActive, NgTemplateOutlet, BreadcrumbRouterComponent, DropdownComponent, DropdownToggleDirective, AvatarComponent, DropdownMenuDirective, DropdownHeaderDirective, DropdownItemDirective, BadgeComponent, DropdownDividerDirective]
+})
+export class DefaultHeaderComponent extends HeaderComponent {
+
+  readonly #colorModeService = inject(ColorModeService);
+  readonly colorMode = this.#colorModeService.colorMode;
+
+  readonly colorModes = [
+    { name: 'light', text: 'Light', icon: 'cilSun' },
+    { name: 'dark', text: 'Dark', icon: 'cilMoon' },
+    { name: 'auto', text: 'Auto', icon: 'cilContrast' }
+  ];
+
+  readonly icons = computed(() => {
+    const currentMode = this.colorMode();
+    return this.colorModes.find(mode => mode.name === currentMode)?.icon ?? 'cilSun';
+  });
+
+  constructor() {
+    super();
+  }
+
+  sidebarId = input('sidebar1');
+
+  public newMessages = [
+    {
+      id: 0,
+      from: 'Jessica Williams',
+      avatar: '7.jpg',
+      status: 'success',
+      title: 'Urgent: System Maintenance Tonight',
+      time: 'Just now',
+      link: 'apps/email/inbox/message',
+      message: 'Attention team, we\'ll be conducting critical system maintenance tonight from 10 PM to 2 AM. Plan accordingly...'
+    },
+    {
+      id: 1,
+      from: 'Richard Johnson',
+      avatar: '6.jpg',
+      status: 'warning',
+      title: 'Project Update: Milestone Achieved',
+      time: '5 minutes ago',
+      link: 'apps/email/inbox/message',
+      message: 'Kudos on hitting sales targets last quarter! Let\'s keep the momentum. New goals, new victories ahead...'
+    },
+    {
+      id: 2,
+      from: 'Angela Rodriguez',
+      avatar: '5.jpg',
+      status: 'danger',
+      title: 'Social Media Campaign Launch',
+      time: '1:52 PM',
+      link: 'apps/email/inbox/message',
+      message: 'Exciting news! Our new social media campaign goes live tomorrow. Brace yourselves for engagement...'
+    },
+    {
+      id: 3,
+      from: 'Jane Lewis',
+      avatar: '4.jpg',
+      status: 'info',
+      title: 'Inventory Checkpoint',
+      time: '4:03 AM',
+      link: 'apps/email/inbox/message',
+      message: 'Team, it\'s time for our monthly inventory check. Accurate counts ensure smooth operations. Let\'s nail it...'
+    },
+    {
+      id: 3,
+      from: 'Ryan Miller',
+      avatar: '4.jpg',
+      status: 'info',
+      title: 'Customer Feedback Results',
+      time: '3 days ago',
+      link: 'apps/email/inbox/message',
+      message: 'Our latest customer feedback is in. Let\'s analyze and discuss improvements for an even better service...'
+    }
+  ];
+
+  public newNotifications = [
+    { id: 0, title: 'New user registered', icon: 'cilUserFollow', color: 'success' },
+    { id: 1, title: 'User deleted', icon: 'cilUserUnfollow', color: 'danger' },
+    { id: 2, title: 'Sales report is ready', icon: 'cilChartPie', color: 'info' },
+    { id: 3, title: 'New client', icon: 'cilBasket', color: 'primary' },
+    { id: 4, title: 'Server overloaded', icon: 'cilSpeedometer', color: 'warning' }
+  ];
+
+  public newStatus = [
+    { id: 0, title: 'CPU Usage', value: 25, color: 'info', details: '348 Processes. 1/4 Cores.' },
+    { id: 1, title: 'Memory Usage', value: 70, color: 'warning', details: '11444GB/16384MB' },
+    { id: 2, title: 'SSD 1 Usage', value: 90, color: 'danger', details: '243GB/256GB' }
+  ];
+
+  public newTasks = [
+    { id: 0, title: 'Upgrade NPM', value: 0, color: 'info' },
+    { id: 1, title: 'ReactJS Version', value: 25, color: 'danger' },
+    { id: 2, title: 'VueJS Version', value: 50, color: 'warning' },
+    { id: 3, title: 'Add new layouts', value: 75, color: 'info' },
+    { id: 4, title: 'Angular Version', value: 100, color: 'success' }
+  ];
+
+
+
+
+  // added by  hirash
+
+
+    private router = inject(Router);
+
+  // ...
+
+  logout(event: Event) {
+  event.preventDefault(); // Ø¬Ù„ÙˆÚ¯ÛŒØ±ÛŒ Ø§Ø² Ù¾Ø±Ø´ ØµÙØ­Ù‡
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  this.router.navigate(['/login']);
+}
+}
+
+
+===== FILE: src\app\layout\default-layout\default-layout.component.html =====
+<!--sidebar-->
+<c-sidebar
+  #sidebar1="cSidebar"
+  class="d-print-none sidebar sidebar-fixed border-end"
+  colorScheme="dark"
+  id="sidebar1"
+  visible
+>
+  <c-sidebar-header class="border-bottom">
+    <c-sidebar-brand [routerLink]="[]">
+      <svg [class]="{icon: false}" cIcon class="sidebar-brand-full" height="32" name="logo" title="CoreUI Logo"></svg>
+      <svg cIcon class="sidebar-brand-narrow" height="32" name="signet" title="CoreUI Logo"></svg>
+    </c-sidebar-brand>
+  </c-sidebar-header>
+
+  <ng-scrollbar pointerEventsMethod="scrollbar" visibility="hover">
+    <c-sidebar-nav [navItems]="navItems" dropdownMode="close" compact />
+  </ng-scrollbar>
+
+  @if (!sidebar1.narrow) {
+    <c-sidebar-footer cSidebarToggle="sidebar1" class="border-top d-none d-lg-flex" toggle="unfoldable" style="cursor: pointer;">
+      <button cSidebarToggler aria-label="Toggle sidebar fold"></button>
+    </c-sidebar-footer>
+  }
+</c-sidebar>
+
+<!--main-->
+<div class="wrapper d-flex flex-column min-vh-100">
+  <!--app-header-->
+
+  <app-default-header
+    [cShadowOnScroll]="'sm'"
+    class="mb-4 d-print-none header header-sticky p-0 shadow-sm"
+    position="sticky"
+    sidebarId="sidebar1"
+  />
+
+  <!--app-body-->
+  <div class="body flex-grow-1">
+    <c-container breakpoint="lg" class="h-auto px-4">
+      <app-toast-container />
+
+      <router-outlet />
+
+
+    </c-container>
+  </div>
+  <!--app footer-->
+  <app-default-footer />
+
+
+</div>
+
+
+===== FILE: src\app\layout\default-layout\default-layout.component.scss =====
+:host::ng-deep {
+  .ng-scrollbar {
+    --scrollbar-padding: 1px;
+    --scrollbar-size: 5px;
+    --scrollbar-thumb-color: var(--cui-gray-500, #aab3c5);
+    --scrollbar-thumb-hover-color: var(--cui-gray-400, #cfd4de);
+    --scrollbar-hover-size: calc(var(--scrollbar-size) * 1.5);
+    --scrollbar-border-radius: 5px;
+  }
+
+  .ng-scroll-content {
+    display: flex;
+    min-height: 100%;
+  }
+
+  //.sidebar-nav {
+  //  scrollbar-color: var(--cui-gray-500, #444) transparent;
+  //}
+}
+
+// ng-scrollbar css variables
+//.cui-scrollbar {
+//  --scrollbar-border-radius: 7px;
+//  --scrollbar-padding: 1px;
+//  --scrollbar-viewport-margin: 0;
+//  --scrollbar-track-color: transparent;
+//  --scrollbar-wrapper-color: transparent;
+//  --scrollbar-thumb-color: rgba(0, 0, 0, 0.2);
+//  --scrollbar-thumb-hover-color: var(--scrollbar-thumb-color);
+//  --scrollbar-size: 5px;
+//  --scrollbar-hover-size: var(--scrollbar-size);
+//  --scrollbar-thumb-transition: height ease-out 150ms, width ease-out 150ms;
+//  --scrollbar-track-transition: height ease-out 150ms, width ease-out 150ms;
+//}
+
+
+===== FILE: src\app\layout\default-layout\default-layout.component.ts =====
+
+import {  Component } from '@angular/core';
+import { RouterLink, RouterOutlet } from '@angular/router';
+import { NgScrollbar } from 'ngx-scrollbar';
+import {ToastContainerComponent} from './../../views/utilities/toast-container/toast-container.component'
+import { IconDirective } from '@coreui/icons-angular';
+import {
+  ContainerComponent,
+  ShadowOnScrollDirective,
+  SidebarBrandComponent,
+  SidebarComponent,
+  SidebarFooterComponent,
+  SidebarHeaderComponent,
+  SidebarNavComponent,
+  SidebarToggleDirective,
+  SidebarTogglerDirective,
+  ToasterComponent
+} from '@coreui/angular';
+
+import { DefaultFooterComponent, DefaultHeaderComponent } from './';
+import { navItems } from './_nav';
+
+
+
+function isOverflown(element: HTMLElement) {
+  return (
+    element.scrollHeight > element.clientHeight ||
+    element.scrollWidth > element.clientWidth
+  );
+}
+
+@Component({
+  selector: 'app-dashboard',
+  templateUrl: './default-layout.component.html',
+  styleUrls: ['./default-layout.component.scss'],
+  imports: [
+    SidebarComponent,
+    SidebarHeaderComponent,
+    SidebarBrandComponent,
+    SidebarNavComponent,
+    SidebarFooterComponent,
+    SidebarToggleDirective,
+    SidebarTogglerDirective,
+    ContainerComponent,
+    DefaultFooterComponent,
+    DefaultHeaderComponent,
+    IconDirective,
+    NgScrollbar,
+    RouterOutlet,
+    RouterLink,
+    ShadowOnScrollDirective,
+    ToastContainerComponent
+  ]
+})
+export class DefaultLayoutComponent   {
+  public navItems = [...navItems];
+
+
+}
+
+
+===== FILE: src\app\layout\default-layout\index.ts =====
+export * from './default-footer/default-footer.component';
+export * from './default-header/default-header.component';
+export * from './default-layout.component';
+
+
+===== FILE: src\app\layout\default-layout\_nav.ts =====
+import { INavData } from '@coreui/angular';
+
+export const navItems: INavData[] = [
+  {
+    title: true,
+    name: 'main'
+  },
+
+  //base group 
+
+
+  {
+    name: 'base',
+    url: '/base',
+    iconComponent: { name: 'cil-cart' },
+    children: [{
+
+      name: 'user',
+      url: '/base/user',
+      badge: {
+        color: 'info',
+        text: 'NEW'
+      },
+      iconComponent: { name: 'cib-codesandbox' }
+
+    }
+
+    ]
+  } ,
+
+
+
+  // shop
+  {
+    name: 'shop',
+    url: '/shop',
+    iconComponent: { name: 'cil-cart' },
+    children: [{
+
+      name: 'product',
+      url: '/shop/product',
+      badge: {
+        color: 'info',
+        text: 'NEW'
+      },
+      iconComponent: { name: 'cib-codesandbox' }
+
+    },
+
+    {
+
+      name: 'countType',
+      url: '/shop/countType',
+      badge: {
+        color: 'info',
+        text: 'NEW'
+      },
+      iconComponent: { name: 'cib-codesandbox' }
+
+    }
+      ,
+
+    {
+
+      name: 'inventory',
+      url: '/shop/inventory',
+      badge: {
+        color: 'info',
+        text: 'NEW'
+      },
+      iconComponent: { name: 'cib-codesandbox' }
+
+    }
+
+    ]
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  //template core ui
+
+  , {
+    title: true,
+    name: 'them'
+  }
+  , {
+    name: 'template',
+    url: '/template',
+    iconComponent: { name: 'cil-puzzle' },
+    children: [
+
+      {
+        name: 'Dashboard',
+        url: '/template/dashboard',
+        iconComponent: { name: 'cil-speedometer' },
+        badge: {
+          color: 'info',
+          text: 'NEW'
+        }
+      },
+      {
+        title: true,
+        name: 'Theme'
+      },
+      {
+        name: 'Colors',
+        url: '/template/theme/colors',
+        iconComponent: { name: 'cil-drop' }
+      },
+      {
+        name: 'Typography',
+        url: '/template/theme/typography',
+        linkProps: { fragment: 'headings' },
+        iconComponent: { name: 'cil-pencil' }
+      },
+      {
+        name: 'Components',
+        title: true
+      },
+      {
+        name: 'Base',
+        url: '/template/base',
+        iconComponent: { name: 'cil-puzzle' },
+        children: [
+          {
+            name: 'Accordion',
+            url: '/template/base/accordion',
+            icon: 'nav-icon-bullet'
+          },
+          {
+            name: 'Breadcrumbs',
+            url: '/template/base/breadcrumbs',
+            icon: 'nav-icon-bullet'
+          },
+          {
+            name: 'Cards',
+            url: '/template/base/cards',
+            icon: 'nav-icon-bullet'
+          },
+          {
+            name: 'Carousel',
+            url: '/template/base/carousel',
+            icon: 'nav-icon-bullet'
+          },
+          {
+            name: 'Collapse',
+            url: '/template/base/collapse',
+            icon: 'nav-icon-bullet'
+          },
+          {
+            name: 'List Group',
+            url: '/template/base/list-group',
+            icon: 'nav-icon-bullet'
+          },
+          {
+            name: 'Navs & Tabs',
+            url: '/template/base/navs',
+            icon: 'nav-icon-bullet'
+          },
+          {
+            name: 'Pagination',
+            url: '/template/base/pagination',
+            icon: 'nav-icon-bullet'
+          },
+          {
+            name: 'Placeholder',
+            url: '/template/base/placeholder',
+            icon: 'nav-icon-bullet'
+          },
+          {
+            name: 'Popovers',
+            url: '/template/base/popovers',
+            icon: 'nav-icon-bullet'
+          },
+          {
+            name: 'Progress',
+            url: '/template/base/progress',
+            icon: 'nav-icon-bullet'
+          },
+          {
+            name: 'Spinners',
+            url: '/template/base/spinners',
+            icon: 'nav-icon-bullet'
+          },
+          {
+            name: 'Tables',
+            url: '/template/base/tables',
+            icon: 'nav-icon-bullet'
+          },
+          {
+            name: 'Tabs',
+            url: '/template/base/tabs',
+            icon: 'nav-icon-bullet'
+          },
+          {
+            name: 'Tooltips',
+            url: '/template/base/tooltips',
+            icon: 'nav-icon-bullet'
+          }
+        ]
+      },
+      {
+        name: 'Buttons',
+        url: '/template/buttons',
+        iconComponent: { name: 'cil-cursor' },
+        children: [
+          {
+            name: 'Buttons',
+            url: '/template/buttons/buttons',
+            icon: 'nav-icon-bullet'
+          },
+          {
+            name: 'Button groups',
+            url: '/template/buttons/button-groups',
+            icon: 'nav-icon-bullet'
+          },
+          {
+            name: 'Dropdowns',
+            url: '/template/buttons/dropdowns',
+            icon: 'nav-icon-bullet'
+          }
+        ]
+      },
+      {
+        name: 'Forms',
+        url: '/template/forms',
+        iconComponent: { name: 'cil-notes' },
+        children: [
+          {
+            name: 'Form Control',
+            url: '/template/forms/form-control',
+            icon: 'nav-icon-bullet'
+          },
+          {
+            name: 'Select',
+            url: '/template/forms/select',
+            icon: 'nav-icon-bullet'
+          },
+          {
+            name: 'Checks & Radios',
+            url: '/template/forms/checks-radios',
+            icon: 'nav-icon-bullet'
+          },
+          {
+            name: 'Range',
+            url: '/template/forms/range',
+            icon: 'nav-icon-bullet'
+          },
+          {
+            name: 'Input Group',
+            url: '/template/forms/input-group',
+            icon: 'nav-icon-bullet'
+          },
+          {
+            name: 'Floating Labels',
+            url: '/template/forms/floating-labels',
+            icon: 'nav-icon-bullet'
+          },
+          {
+            name: 'Layout',
+            url: '/template/forms/layout',
+            icon: 'nav-icon-bullet'
+          },
+          {
+            name: 'Validation',
+            url: '/template/forms/validation',
+            icon: 'nav-icon-bullet'
+          }
+        ]
+      },
+      {
+        name: 'Charts',
+        iconComponent: { name: 'cil-chart-pie' },
+        url: '/template/charts'
+      },
+      {
+        name: 'Icons',
+        iconComponent: { name: 'cil-star' },
+        url: '/template/icons',
+        children: [
+          {
+            name: 'CoreUI Free',
+            url: '/template/icons/coreui-icons',
+            icon: 'nav-icon-bullet',
+            badge: {
+              color: 'success',
+              text: 'FREE'
+            }
+          },
+          {
+            name: 'CoreUI Flags',
+            url: '/template/icons/flags',
+            icon: 'nav-icon-bullet'
+          },
+          {
+            name: 'CoreUI Brands',
+            url: '/template/icons/brands',
+            icon: 'nav-icon-bullet'
+          }
+        ]
+      },
+      {
+        name: 'Notifications',
+        url: '/template/notifications',
+        iconComponent: { name: 'cil-bell' },
+        children: [
+          {
+            name: 'Alerts',
+            url: '/template/notifications/alerts',
+            icon: 'nav-icon-bullet'
+          },
+          {
+            name: 'Badges',
+            url: '/template/notifications/badges',
+            icon: 'nav-icon-bullet'
+          },
+          {
+            name: 'Modal',
+            url: '/template/notifications/modal',
+            icon: 'nav-icon-bullet'
+          },
+          {
+            name: 'Toast',
+            url: '/template/notifications/toasts',
+            icon: 'nav-icon-bullet'
+          }
+        ]
+      },
+      {
+        name: 'Widgets',
+        url: '/template/widgets',
+        iconComponent: { name: 'cil-calculator' },
+        badge: {
+          color: 'info',
+          text: 'NEW'
+        }
+      },
+      {
+        title: true,
+        name: 'Extras'
+      },
+      {
+        name: 'Pages',
+        url: '/template/login',
+        iconComponent: { name: 'cil-star' },
+        children: [
+          {
+            name: 'Login',
+            url: '/template/login',
+            icon: 'nav-icon-bullet'
+          },
+          {
+            name: 'Register',
+            url: '/template/register',
+            icon: 'nav-icon-bullet'
+          },
+          {
+            name: 'Error 404',
+            url: '/template/404',
+            icon: 'nav-icon-bullet'
+          },
+          {
+            name: 'Error 500',
+            url: '/template/500',
+            icon: 'nav-icon-bullet'
+          }
+        ]
+      },
+      {
+        title: true,
+        name: 'Links',
+        class: 'mt-auto'
+      },
+      {
+        name: 'Docs',
+        url: 'https://coreui.io/angular/docs/',
+        iconComponent: { name: 'cil-description' },
+        attributes: { target: '_blank' }
+      }
+    ]
+  }
+];
+
+
+===== FILE: src\app\layout\index.ts =====
+export * from './default-layout';
+
+
+===== FILE: src\app\services\auth\login\auth.guard.ts =====
+import { inject } from '@angular/core';
+import { CanActivateFn, Router } from '@angular/router';
+
+export const authGuard: CanActivateFn = (route, state) => {
+  const router = inject(Router);
+
+  // ðŸ‘‡ Ø¨Ø±Ø±Ø³ÛŒ Ù„Ø§Ú¯ÛŒÙ† Ø¨ÙˆØ¯Ù†
+  const isLoggedIn = !!localStorage.getItem('token'); // ÛŒØ§ Ù‡Ø± Ù†Ø´Ø§Ù†Ù‡â€ŒØ§ÛŒ Ú©Ù‡ Ø°Ø®ÛŒØ±Ù‡ Ú©Ø±Ø¯ÛŒ
+
+  if (!isLoggedIn) {
+    // Ø§Ú¯Ø± Ù„Ø§Ú¯ÛŒÙ† Ù†ÛŒØ³ØªØŒ Ø¨Ø±Ù‡ Ø¨Ù‡ ØµÙØ­Ù‡ login
+    router.navigate(['/login']); // Ù…Ø³ÛŒØ± Ù„Ø§Ú¯ÛŒÙ† Ù¾Ø±ÙˆÚ˜Ù‡â€ŒØª
+    return false;
+  }
+
+  return true;
+};
+
+
+===== FILE: src\app\services\auth\login\auth.service.spec.ts =====
+import { TestBed } from '@angular/core/testing';
+
+import { AuthService } from './auth.service';
+
+describe('AuthService', () => {
+  let service: AuthService;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({});
+    service = TestBed.inject(AuthService);
+  });
+
+  it('should be created', () => {
+    expect(service).toBeTruthy();
+  });
+});
+
+

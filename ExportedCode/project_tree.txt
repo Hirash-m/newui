@@ -1,0 +1,128 @@
+﻿.github
++-- ISSUE_TEMPLATE
+|   +-- bug_report.md
+|   +-- feature_request.md
++-- CODE_OF_CONDUCT.md
++-- COMMIT_CONVENTION.md
++-- CONTRIBUTING.md
++-- SUPPORT.md
+src
++-- app
+|   +-- core
+|   |   +-- interceptors
+|   |   |   +-- auth.interceptor.ts
+|   +-- dto
+|   |   +-- base
+|   |   |   +-- UserDto.ts
+|   |   +-- shop
+|   |   |   +-- CountTypeDto.ts
+|   |   |   +-- InventoryDto.ts
+|   |   |   +-- ProductDto.ts
+|   |   +-- baseResponse.ts
+|   |   +-- ListRequestDto.ts
+|   |   +-- metadataField.ts
+|   +-- icons
+|   |   +-- icon-subset.ts
+|   |   +-- logo.ts
+|   |   +-- signet.ts
+|   +-- layout
+|   |   +-- default-layout
+|   |   |   +-- default-footer
+|   |   |   |   +-- default-footer.component.html
+|   |   |   |   +-- default-footer.component.scss
+|   |   |   |   +-- default-footer.component.spec.ts
+|   |   |   |   +-- default-footer.component.ts
+|   |   |   +-- default-header
+|   |   |   |   +-- default-header.component.html
+|   |   |   |   +-- default-header.component.scss
+|   |   |   |   +-- default-header.component.spec.ts
+|   |   |   |   +-- default-header.component.ts
+|   |   |   +-- default-layout.component.html
+|   |   |   +-- default-layout.component.scss
+|   |   |   +-- default-layout.component.ts
+|   |   |   +-- index.ts
+|   |   |   +-- _nav.ts
+|   |   +-- index.ts
+|   +-- services
+|   |   +-- auth
+|   |   |   +-- login
+|   |   |   |   +-- auth.guard.ts
+|   |   |   |   +-- auth.service.spec.ts
+|   |   |   |   +-- auth.service.ts
+|   |   |   +-- userManage
+|   |   |   |   +-- user-manage.service.spec.ts
+|   |   |   |   +-- user-manage.service.ts
+|   |   |   +-- countType
+|   |   |   |   +-- count-type.service.spec.ts
+|   |   |   |   +-- count-type.service.ts
+|   |   |   +-- inventory
+|   |   |   |   +-- inventory.service.spec.ts
+|   |   |   |   +-- inventory.service.ts
+|   |   |   +-- product
+|   |   |   |   +-- product.service.spec.ts
+|   |   |   |   +-- product.service.ts
+|   |   +-- utilities
+|   |   |   +-- base.service.spec.ts
+|   |   |   +-- base.service.ts
+|   |   |   +-- toast.service.spec.ts
+|   |   |   +-- toast.service.ts
+|   +-- views
+|   |   |   |   +-- loginForm
+|   |   |   |   |   +-- login
+|   |   |   |   |   |   +-- login.component.html
+|   |   |   |   |   |   +-- login.component.scss
+|   |   |   |   |   |   +-- login.component.spec.ts
+|   |   |   |   |   |   +-- login.component.ts
+|   |   |   |   +-- user
+|   |   |   |   |   +-- user.component.html
+|   |   |   |   |   +-- user.component.scss
+|   |   |   |   |   +-- user.component.spec.ts
+|   |   |   |   |   +-- user.component.ts
+|   |   |   +-- routes.ts
+|   |   |   +-- count-type
+|   |   |   |   +-- count-type.component.html
+|   |   |   |   +-- count-type.component.scss
+|   |   |   |   +-- count-type.component.spec.ts
+|   |   |   |   +-- count-type.component.ts
+|   |   |   |   +-- inventory.component.html
+|   |   |   |   +-- inventory.component.scss
+|   |   |   |   +-- inventory.component.spec.ts
+|   |   |   |   +-- inventory.component.ts
+|   |   |   |   +-- product.component.html
+|   |   |   |   +-- product.component.scss
+|   |   |   |   +-- product.component.spec.ts
+|   |   |   |   +-- product.component.ts
+|   |   |   +-- toast-container
+|   |   |   |   +-- toast-container.component.html
+|   |   |   |   +-- toast-container.component.scss
+|   |   |   |   +-- toast-container.component.spec.ts
+|   |   |   |   +-- toast-container.component.ts
+|   |   |   |   +-- toast-sample-icon.component.ts
+|   +-- app.component.spec.ts
+|   +-- app.component.ts
+|   +-- app.config.ts
+|   +-- app.routes.ts
++-- scss
+|   +-- styles.scss
+|   +-- _charts.scss
+|   +-- _custom.scss
+|   +-- _examples.scss
+|   +-- _fixes.scss
+|   +-- _scrollbar.scss
+|   +-- _theme.scss
++-- utilities
+|   +-- path.ts
++-- declarations.d.ts
++-- index.html
++-- main.ts
++-- test.ts
+angular.json
+CHANGELOG.md
+karma.conf.js
+package-lock.json
+package.json
+proxy.conf.json
+README.md
+tsconfig.app.json
+tsconfig.json
+tsconfig.spec.json

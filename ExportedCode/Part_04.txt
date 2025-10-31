@@ -1,0 +1,648 @@
+﻿===== FILE: src\app\services\auth\login\auth.service.ts =====
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable, catchError, map, throwError } from 'rxjs';
+import { ToastService } from '../../utilities/toast.service';
+import { Domain } from '../../../../utilities/path';
+import { baseResponse } from '../../../dto/baseResponse';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class AuthService {
+  private apiUrl = `${Domain}/api/Auth`;
+
+  constructor(private http: HttpClient, private toast: ToastService) { }
+
+  /** ØªØ§Ø¨Ø¹ Ù„Ø§Ú¯ÛŒÙ† */
+  login(email: string, password: string): Observable<any> {
+    const body = { email, password };
+
+    return this.http.post<baseResponse<any>>(`${this.apiUrl}/login`, body, {
+      headers: new HttpHeaders({ 'Content-Type': 'application/json' })
+    }).pipe(
+      map(response => {
+        if (response.isSucceeded && response.singleData?.token) {
+          // Ø°Ø®ÛŒØ±Ù‡ ØªÙˆÚ©Ù† Ø¯Ø± localStorage
+          localStorage.setItem('token', response.singleData.token);
+          localStorage.setItem('user', JSON.stringify(response.singleData));
+        }
+        return response;
+      }),
+      catchError(error => {
+        this.toast.showToast.error({ message: 'Ø®Ø·Ø§ Ø¯Ø± ÙˆØ±ÙˆØ¯ Ø¨Ù‡ Ø³ÛŒØ³ØªÙ…' });
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /** Ø®Ø±ÙˆØ¬ Ø§Ø² Ø³ÛŒØ³ØªÙ… */
+  logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+  }
+
+  /** Ø¨Ø±Ø±Ø³ÛŒ Ù„Ø§Ú¯ÛŒÙ† Ø¨ÙˆØ¯Ù† Ú©Ø§Ø±Ø¨Ø± */
+  isLoggedIn(): boolean {
+    return !!localStorage.getItem('token');
+  }
+
+  /** Ú¯Ø±ÙØªÙ† ØªÙˆÚ©Ù† Ø°Ø®ÛŒØ±Ù‡â€ŒØ´Ø¯Ù‡ */
+  getToken(): string | null {
+    return localStorage.getItem('token');
+  }
+}
+
+
+===== FILE: src\app\services\base\userManage\user-manage.service.spec.ts =====
+import { TestBed } from '@angular/core/testing';
+
+import { UserManageService } from './user-manage.service';
+
+describe('UserManageService', () => {
+  let service: UserManageService;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({});
+    service = TestBed.inject(UserManageService);
+  });
+
+  it('should be created', () => {
+    expect(service).toBeTruthy();
+  });
+});
+
+
+===== FILE: src\app\services\base\userManage\user-manage.service.ts =====
+import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { Domain } from 'src/utilities/path';
+import { ToastService } from '../../utilities/toast.service';
+import { ListRequest } from 'src/app/dto/ListRequestDto';
+import { catchError, Observable, throwError } from 'rxjs';
+import { baseResponse } from 'src/app/dto/baseResponse';
+import {UserCreateFormData, UserDto} from 'src/app/dto/base/UserDto';
+import { BaseService } from '../../utilities/base.service';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class UserManageService  extends BaseService{
+
+  
+    // ðŸ”§ API Base URL
+    private apiurl = Domain;
+
+    // ðŸ“¦ Inject HTTP client and toast notification service
+    constructor(
+      private http: HttpClient,
+      private toast: ToastService
+    ) {
+      super();
+    }
+
+
+  // ==========================================================================
+  // ðŸ“¥ Get List of Records
+  // ==========================================================================
+ 
+    getRecords(request: ListRequest): Observable<baseResponse<UserDto>> {
+      const requestPayload = request;
+  
+      return this.http.post<baseResponse<UserDto>>(
+        `${this.apiurl}/api/User/GetAll`,
+        requestPayload,
+        { headers: this.getJsonHeaders() }
+      ).pipe(
+        catchError(error => {
+          this.toast.showToast.error({ message: error });
+          return throwError(() => error);
+        })
+      );
+    }
+  
+
+      // ==========================================================================
+  // ðŸ“¥ Get template create fields
+  // ==========================================================================
+ 
+  getCreateForm(): Observable<baseResponse<UserCreateFormData>> {
+    return this.http.get<baseResponse<UserCreateFormData>>(
+        `${this.apiurl}/api/User/getcreateform`,
+        { headers: this.getJsonHeaders() }
+    ).pipe(
+        catchError(error => {
+            this.toast.showToast.error({ message: error });
+            return throwError(() => error);
+        })
+    );
+}
+
+
+
+      // ==========================================================================
+  // âž• Insert New Record
+  // ==========================================================================
+  insertRecord(insertData: UserDto): Observable<baseResponse<UserDto>> {
+    return this.http.post<baseResponse<any>>(
+      `${this.apiurl}/api/User/create`,
+      insertData,
+      { headers: this.getJsonHeaders() }
+    ).pipe(
+      catchError(error => {
+        this.toast.showToast.error({ message: error });
+        return throwError(() => error);
+      })
+    );
+  }
+
+
+    // ==========================================================================
+  // ðŸ—‘ï¸ Delete Records by IDs
+  // ==========================================================================
+  deleteRecords(ids: number[]): Observable<baseResponse<any>> {
+    return this.http.post<baseResponse<any>>(
+      `${this.apiurl}/api/User/delete`,
+      ids,
+      { headers: this.getJsonHeaders() }
+    ).pipe(
+      catchError(error => {
+        this.toast.showToast.error({ message: error });
+        return throwError(() => error);
+      })
+    );
+  }
+
+  // ==========================================================================
+  // ðŸ“ Update Existing Record
+  // ==========================================================================
+  updateRecord(updateData: UserDto): Observable<baseResponse<UserDto>> {
+    return this.http.post<baseResponse<UserDto>>(
+      `${this.apiurl}/api/User/update`,
+      updateData,
+      { headers: this.getJsonHeaders() }
+    ).pipe(
+      catchError(error => {
+        this.toast.showToast.error({ message: error });
+        return throwError(() => error);
+      })
+    );
+  }
+
+    // ==========================================================================
+  // ðŸ” Get Record By ID
+  // ==========================================================================
+  getRecordById(id: number): Observable<baseResponse<UserDto>> {
+    var result = this.http.get<baseResponse<UserDto>>(
+      `${this.apiurl}/api/User/getById/?id=${id}`,
+      { headers: this.getJsonHeaders() }
+
+    ).pipe(
+      catchError(error => {
+        this.toast.showToast.error({ message: error });
+        return throwError(() => error);
+      })
+    );
+ console.log(result.subscribe.toString);
+    return result ;
+  }
+}
+
+
+===== FILE: src\app\services\shop\countType\count-type.service.spec.ts =====
+import { TestBed } from '@angular/core/testing';
+
+import { CountTypeService } from './count-type.service';
+
+describe('CountTypeService', () => {
+  let service: CountTypeService;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({});
+    service = TestBed.inject(CountTypeService);
+  });
+
+  it('should be created', () => {
+    expect(service).toBeTruthy();
+  });
+});
+
+
+===== FILE: src\app\services\shop\countType\count-type.service.ts =====
+// Angular Imports
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+
+// Shared & Utility Imports
+import { ToastService } from '../../utilities/toast.service';
+import { BaseService } from '../../utilities/base.service';
+import { Domain } from 'src/utilities/path';
+
+// DTO Imports
+import { CountTypeDto } from './../../../dto/shop/CountTypeDto';
+import { ListRequest } from 'src/app/dto/ListRequestDto';
+import { baseResponse } from 'src/app/dto/baseResponse';
+
+// RxJS Imports
+import { catchError, Observable, throwError } from 'rxjs';
+
+
+// ==========================================================================
+// â¬‡ï¸ Service Definition: CountTypeService
+// ==========================================================================
+@Injectable({
+  providedIn: 'root'
+})
+export class CountTypeService extends BaseService {
+
+  // ðŸ”§ API Base URL
+  private apiurl = Domain;
+
+  // ðŸ“¦ Inject HTTP client and toast notification service
+  constructor(
+    private http: HttpClient,
+    private toast: ToastService
+  ) {
+    super();
+  }
+
+  // ==========================================================================
+  // ðŸ“¥ Get List of Records
+  // ==========================================================================
+  getRecords(request: ListRequest): Observable<baseResponse<CountTypeDto>> {
+    const requestPayload = request;
+
+    return this.http.post<baseResponse<CountTypeDto>>(
+      `${this.apiurl}/api/CountType/GetAll`,
+      requestPayload,
+      { headers: this.getJsonHeaders() }
+    ).pipe(
+      catchError(error => {
+        this.toast.showToast.error({ message: error });
+        return throwError(() => error);
+      })
+    );
+  }
+
+  // ==========================================================================
+  // âž• Insert New Record
+  // ==========================================================================
+  insertRecord(insertData: CountTypeDto): Observable<baseResponse<CountTypeDto>> {
+    return this.http.post<baseResponse<any>>(
+      `${this.apiurl}/api/CountType/create`,
+      insertData,
+      { headers: this.getJsonHeaders() }
+    ).pipe(
+      catchError(error => {
+        this.toast.showToast.error({ message: error });
+        return throwError(() => error);
+      })
+    );
+  }
+
+  // ==========================================================================
+  // ðŸ—‘ï¸ Delete Records by IDs
+  // ==========================================================================
+  deleteRecords(ids: number[]): Observable<baseResponse<any>> {
+    return this.http.post<baseResponse<any>>(
+      `${this.apiurl}/api/CountType/delete`,
+      ids,
+      { headers: this.getJsonHeaders() }
+    ).pipe(
+      catchError(error => {
+        this.toast.showToast.error({ message: error });
+        return throwError(() => error);
+      })
+    );
+  }
+
+  // ==========================================================================
+  // ðŸ“ Update Existing Record
+  // ==========================================================================
+  updateRecord(updateData: CountTypeDto): Observable<baseResponse<CountTypeDto>> {
+    return this.http.post<baseResponse<CountTypeDto>>(
+      `${this.apiurl}/api/CountType/update`,
+      updateData,
+      { headers: this.getJsonHeaders() }
+    ).pipe(
+      catchError(error => {
+        this.toast.showToast.error({ message: error });
+        return throwError(() => error);
+      })
+    );
+  }
+
+  // ==========================================================================
+  // ðŸ” Get Record By ID
+  // ==========================================================================
+  getRecordById(id: number): Observable<baseResponse<CountTypeDto>> {
+    return this.http.get<baseResponse<CountTypeDto>>(
+      `${this.apiurl}/api/CountType/getById/?id=${id}`,
+      { headers: this.getJsonHeaders() }
+    ).pipe(
+      catchError(error => {
+        this.toast.showToast.error({ message: error });
+        return throwError(() => error);
+      })
+    );
+  }
+
+}
+
+
+===== FILE: src\app\services\shop\inventory\inventory.service.spec.ts =====
+import { TestBed } from '@angular/core/testing';
+
+import { InventoryService } from './inventory.service';
+
+describe('InventoryService', () => {
+  let service: InventoryService;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({});
+    service = TestBed.inject(InventoryService);
+  });
+
+  it('should be created', () => {
+    expect(service).toBeTruthy();
+  });
+});
+
+
+===== FILE: src\app\services\shop\inventory\inventory.service.ts =====
+import { Injectable } from '@angular/core';
+import { BaseService } from '../../utilities/base.service';
+import { Domain } from 'src/utilities/path';
+import { HttpClient } from '@angular/common/http';
+import { ToastService } from '../../utilities/toast.service';
+import { ListRequest } from 'src/app/dto/ListRequestDto';
+import { catchError, Observable, throwError } from 'rxjs';
+import { baseResponse } from 'src/app/dto/baseResponse';
+import {InventoryDto} from 'src/app/dto/shop/InventoryDto'
+
+@Injectable({
+  providedIn: 'root'
+})
+export class InventoryService extends BaseService {
+
+    // ðŸ”§ API Base URL
+    private apiurl = Domain;
+
+    // ðŸ“¦ Inject HTTP client and toast notification service
+    constructor(
+      private http: HttpClient,
+      private toast: ToastService
+    ) {
+      super();
+    }
+
+
+  // ==========================================================================
+  // ðŸ“¥ Get List of Records
+  // ==========================================================================
+ 
+    getRecords(request: ListRequest): Observable<baseResponse<InventoryDto>> {
+      const requestPayload = request;
+  
+      return this.http.post<baseResponse<InventoryDto>>(
+        `${this.apiurl}/api/inv/GetAll`,
+        requestPayload,
+        { headers: this.getJsonHeaders() }
+      ).pipe(
+        catchError(error => {
+          this.toast.showToast.error({ message: error });
+          return throwError(() => error);
+        })
+      );
+    }
+  
+
+
+      // ==========================================================================
+  // âž• Insert New Record
+  // ==========================================================================
+  insertRecord(insertData: InventoryDto): Observable<baseResponse<InventoryDto>> {
+    return this.http.post<baseResponse<any>>(
+      `${this.apiurl}/api/inv/create`,
+      insertData,
+      { headers: this.getJsonHeaders() }
+    ).pipe(
+      catchError(error => {
+        this.toast.showToast.error({ message: error });
+        return throwError(() => error);
+      })
+    );
+  }
+
+
+    // ==========================================================================
+  // ðŸ—‘ï¸ Delete Records by IDs
+  // ==========================================================================
+  deleteRecords(ids: number[]): Observable<baseResponse<any>> {
+    return this.http.post<baseResponse<any>>(
+      `${this.apiurl}/api/inv/delete`,
+      ids,
+      { headers: this.getJsonHeaders() }
+    ).pipe(
+      catchError(error => {
+        this.toast.showToast.error({ message: error });
+        return throwError(() => error);
+      })
+    );
+  }
+
+  // ==========================================================================
+  // ðŸ“ Update Existing Record
+  // ==========================================================================
+  updateRecord(updateData: InventoryDto): Observable<baseResponse<InventoryDto>> {
+    return this.http.post<baseResponse<InventoryDto>>(
+      `${this.apiurl}/api/inv/update`,
+      updateData,
+      { headers: this.getJsonHeaders() }
+    ).pipe(
+      catchError(error => {
+        this.toast.showToast.error({ message: error });
+        return throwError(() => error);
+      })
+    );
+  }
+
+    // ==========================================================================
+  // ðŸ” Get Record By ID
+  // ==========================================================================
+  getRecordById(id: number): Observable<baseResponse<InventoryDto>> {
+    return this.http.get<baseResponse<InventoryDto>>(
+      `${this.apiurl}/api/inv/getById/?id=${id}`,
+      { headers: this.getJsonHeaders() }
+    ).pipe(
+      catchError(error => {
+        this.toast.showToast.error({ message: error });
+        return throwError(() => error);
+      })
+    );
+  }
+
+
+}
+
+
+===== FILE: src\app\services\shop\product\product.service.spec.ts =====
+import { TestBed } from '@angular/core/testing';
+
+import { ProductService } from '../product/product.service';
+
+describe('ProductService', () => {
+  let service: ProductService;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({});
+    service = TestBed.inject(ProductService);
+  });
+
+  it('should be created', () => {
+    expect(service).toBeTruthy();
+  });
+});
+
+
+===== FILE: src\app\services\shop\product\product.service.ts =====
+import { ToastService } from '../../utilities/toast.service';
+import { ListRequest } from '../../../dto/ListRequestDto';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Domain } from '../../../../utilities/path';
+import { Injectable } from '@angular/core';
+import { baseResponse } from '../../../dto/baseResponse';
+import { catchError, map, Observable, throwError } from 'rxjs';
+import { ProductCreateDto, ProductViewDto } from '../../../dto/shop/ProductDto';
+import { BaseService } from '../../utilities/base.service';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class ProductService extends BaseService {
+  private apiurl = Domain;
+
+  constructor(private http: HttpClient, private toast: ToastService) {
+    super();
+  }
+
+
+  /** Ø¯Ø±ÛŒØ§ÙØª Ù„ÛŒØ³Øª Ø¯Ø§Ø¯Ù‡â€ŒÙ‡Ø§ */
+  getRecords(request: ListRequest): Observable<baseResponse<ProductViewDto>> {
+    const requestPayload = request;
+
+
+
+    return this.http.post<baseResponse<ProductViewDto>>(`${this.apiurl}/api/product/GetAll`, requestPayload, { headers: this.getJsonHeaders() }).pipe(
+      catchError(error => {
+        this.toast.showToast.error({ message: 'Ø®Ø·Ø§ Ø¯Ø± ØªØ±Ø§Ú©Ù†Ø´ ' });
+
+        return throwError(() => error);
+      })
+    )
+      ;
+  }
+
+
+  /** Ø§ÙØ²ÙˆØ¯Ù† Ù…Ø­ØµÙˆÙ„ */
+  insertRecord(productData: ProductCreateDto): Observable<baseResponse<ProductCreateDto>> {
+
+    return this.http.post<baseResponse<any>>(`${this.apiurl}/api/product/create`, productData, { headers: this.getJsonHeaders() }).pipe(
+      catchError(error => {
+        this.toast.showToast.error({ message: 'Ø®Ø·Ø§ Ø¯Ø± ØªØ±Ø§Ú©Ù†Ø´ ' });
+
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /** Ø­Ø°Ù Ù…Ø­ØµÙˆÙ„ */
+  deleteRecords(ids: number[]): Observable<baseResponse<any>> {
+
+    return this.http.post<baseResponse<any>>(`${this.apiurl}/api/product/delete`, ids, { headers: this.getJsonHeaders() }).pipe(
+      catchError(error => {
+        this.toast.showToast.error({ message: 'Ø®Ø·Ø§ Ø¯Ø± ØªØ±Ø§Ú©Ù†Ø´ ' });
+
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /** ÙˆÛŒØ±Ø§ÛŒØ´ Ù…Ø­ØµÙˆÙ„ */
+  updateRecord(productData: ProductCreateDto): Observable<baseResponse<ProductCreateDto>> {
+
+    return this.http.post<baseResponse<ProductCreateDto>>(`${this.apiurl}/api/product/update`, productData, { headers: this.getJsonHeaders() }).pipe(
+      catchError(error => {
+        this.toast.showToast.error({ message: 'Ø®Ø·Ø§ Ø¯Ø± ØªØ±Ø§Ú©Ù†Ø´ ' });
+
+        return throwError(() => error);
+      })
+    );
+  }
+  /** Ø¯Ø±ÛŒØ§ÙØª Ù…Ø­ØµÙˆÙ„ Ø¨Ø± Ø§Ø³Ø§Ø³ Ø´Ù†Ø§Ø³Ù‡ */
+  getRecordById(id: number): Observable<baseResponse<ProductCreateDto>> {
+
+    return this.http.get<baseResponse<ProductCreateDto>>(`${this.apiurl}/api/product/getById/?id=${id}`, { headers: this.getJsonHeaders() }).pipe(
+      catchError(error => {
+        this.toast.showToast.error({ message: 'Ø®Ø·Ø§ Ø¯Ø± ØªØ±Ø§Ú©Ù†Ø´ ' });
+
+        return throwError(() => error);
+      })
+    );
+  }
+
+
+  getSelectOptions(serviceName: string): Observable<any[]> {
+    return this.http.get<any>(`${serviceName}`).pipe(
+      map(response => Array.isArray(response) ? response : [])
+    );
+  }
+
+  /** Ø¬Ø³ØªØ¬ÙˆÛŒ Ù…Ø­ØµÙˆÙ„ Ø¨Ø§ Ù¾Ø§Ø±Ø§Ù…ØªØ±Ù‡Ø§ */
+  searchProducts(request: ListRequest): Observable<baseResponse<ProductViewDto>> {
+
+
+    return this.http.post<baseResponse<ProductViewDto>>(`${this.apiurl}/api/product/search`, request, { headers: this.getJsonHeaders() }).pipe(
+      catchError(error => {
+        this.toast.showToast.error({ message: 'Ø®Ø·Ø§ Ø¯Ø± ØªØ±Ø§Ú©Ù†Ø´ ' });
+
+        return throwError(() => error);
+      })
+    );
+  }
+
+}
+
+
+===== FILE: src\app\services\utilities\base.service.spec.ts =====
+import { TestBed } from '@angular/core/testing';
+
+import { BaseService } from './base.service';
+
+describe('BaseService', () => {
+  let service: BaseService;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({});
+    service = TestBed.inject(BaseService);
+  });
+
+  it('should be created', () => {
+    expect(service).toBeTruthy();
+  });
+});
+
+
+===== FILE: src\app\services\utilities\base.service.ts =====
+import { HttpHeaders } from '@angular/common/http';
+
+export abstract class BaseService {
+  protected getJsonHeaders(): HttpHeaders {
+    return new HttpHeaders({
+      'accept': 'application/json',
+      'Content-Type': 'application/json'
+    });
+  }
+}
+
+
