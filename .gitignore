@@ -5,7 +5,7 @@
 /tmp
 /out-tsc
 /bazel-out
-
+/MyFrameWork
 # Node
 /node_modules
 npm-debug.log
@@ -13,7 +13,7 @@ yarn-error.log
 
 # profiling files
 chrome-profiler-events*.json
-
+/MyFrameWork/*
 # IDEs and editors
 .idea/
 .project
