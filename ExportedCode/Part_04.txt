@@ -87,125 +87,9 @@ import { BaseService } from '../../utilities/base.service';
 @Injectable({
   providedIn: 'root'
 })
-export class UserManageService  extends BaseService{
+export class UserManageService  extends BaseService<UserDto, UserDto>{
+  protected endpoint = '/api/user';
 
-  
-    // ðŸ”§ API Base URL
-    private apiurl = Domain;
-
-    // ðŸ“¦ Inject HTTP client and toast notification service
-    constructor(
-      private http: HttpClient,
-      private toast: ToastService
-    ) {
-      super();
-    }
-
-
-  // ==========================================================================
-  // ðŸ“¥ Get List of Records
-  // ==========================================================================
- 
-    getRecords(request: ListRequest): Observable<baseResponse<UserDto>> {
-      const requestPayload = request;
-  
-      return this.http.post<baseResponse<UserDto>>(
-        `${this.apiurl}/api/User/GetAll`,
-        requestPayload,
-        { headers: this.getJsonHeaders() }
-      ).pipe(
-        catchError(error => {
-          this.toast.showToast.error({ message: error });
-          return throwError(() => error);
-        })
-      );
-    }
-  
-
-      // ==========================================================================
-  // ðŸ“¥ Get template create fields
-  // ==========================================================================
- 
-  getCreateForm(): Observable<baseResponse<UserCreateFormData>> {
-    return this.http.get<baseResponse<UserCreateFormData>>(
-        `${this.apiurl}/api/User/getcreateform`,
-        { headers: this.getJsonHeaders() }
-    ).pipe(
-        catchError(error => {
-            this.toast.showToast.error({ message: error });
-            return throwError(() => error);
-        })
-    );
-}
-
-
-
-      // ==========================================================================
-  // âž• Insert New Record
-  // ==========================================================================
-  insertRecord(insertData: UserDto): Observable<baseResponse<UserDto>> {
-    return this.http.post<baseResponse<any>>(
-      `${this.apiurl}/api/User/create`,
-      insertData,
-      { headers: this.getJsonHeaders() }
-    ).pipe(
-      catchError(error => {
-        this.toast.showToast.error({ message: error });
-        return throwError(() => error);
-      })
-    );
-  }
-
-
-    // ==========================================================================
-  // ðŸ—‘ï¸ Delete Records by IDs
-  // ==========================================================================
-  deleteRecords(ids: number[]): Observable<baseResponse<any>> {
-    return this.http.post<baseResponse<any>>(
-      `${this.apiurl}/api/User/delete`,
-      ids,
-      { headers: this.getJsonHeaders() }
-    ).pipe(
-      catchError(error => {
-        this.toast.showToast.error({ message: error });
-        return throwError(() => error);
-      })
-    );
-  }
-
-  // ==========================================================================
-  // ðŸ“ Update Existing Record
-  // ==========================================================================
-  updateRecord(updateData: UserDto): Observable<baseResponse<UserDto>> {
-    return this.http.post<baseResponse<UserDto>>(
-      `${this.apiurl}/api/User/update`,
-      updateData,
-      { headers: this.getJsonHeaders() }
-    ).pipe(
-      catchError(error => {
-        this.toast.showToast.error({ message: error });
-        return throwError(() => error);
-      })
-    );
-  }
-
-    // ==========================================================================
-  // ðŸ” Get Record By ID
-  // ==========================================================================
-  getRecordById(id: number): Observable<baseResponse<UserDto>> {
-    var result = this.http.get<baseResponse<UserDto>>(
-      `${this.apiurl}/api/User/getById/?id=${id}`,
-      { headers: this.getJsonHeaders() }
-
-    ).pipe(
-      catchError(error => {
-        this.toast.showToast.error({ message: error });
-        return throwError(() => error);
-      })
-    );
- console.log(result.subscribe.toString);
-    return result ;
-  }
 }
 
 
@@ -253,99 +137,8 @@ import { catchError, Observable, throwError } from 'rxjs';
 @Injectable({
   providedIn: 'root'
 })
-export class CountTypeService extends BaseService {
-
-  // ðŸ”§ API Base URL
-  private apiurl = Domain;
-
-  // ðŸ“¦ Inject HTTP client and toast notification service
-  constructor(
-    private http: HttpClient,
-    private toast: ToastService
-  ) {
-    super();
-  }
-
-  // ==========================================================================
-  // ðŸ“¥ Get List of Records
-  // ==========================================================================
-  getRecords(request: ListRequest): Observable<baseResponse<CountTypeDto>> {
-    const requestPayload = request;
-
-    return this.http.post<baseResponse<CountTypeDto>>(
-      `${this.apiurl}/api/CountType/GetAll`,
-      requestPayload,
-      { headers: this.getJsonHeaders() }
-    ).pipe(
-      catchError(error => {
-        this.toast.showToast.error({ message: error });
-        return throwError(() => error);
-      })
-    );
-  }
-
-  // ==========================================================================
-  // âž• Insert New Record
-  // ==========================================================================
-  insertRecord(insertData: CountTypeDto): Observable<baseResponse<CountTypeDto>> {
-    return this.http.post<baseResponse<any>>(
-      `${this.apiurl}/api/CountType/create`,
-      insertData,
-      { headers: this.getJsonHeaders() }
-    ).pipe(
-      catchError(error => {
-        this.toast.showToast.error({ message: error });
-        return throwError(() => error);
-      })
-    );
-  }
-
-  // ==========================================================================
-  // ðŸ—‘ï¸ Delete Records by IDs
-  // ==========================================================================
-  deleteRecords(ids: number[]): Observable<baseResponse<any>> {
-    return this.http.post<baseResponse<any>>(
-      `${this.apiurl}/api/CountType/delete`,
-      ids,
-      { headers: this.getJsonHeaders() }
-    ).pipe(
-      catchError(error => {
-        this.toast.showToast.error({ message: error });
-        return throwError(() => error);
-      })
-    );
-  }
-
-  // ==========================================================================
-  // ðŸ“ Update Existing Record
-  // ==========================================================================
-  updateRecord(updateData: CountTypeDto): Observable<baseResponse<CountTypeDto>> {
-    return this.http.post<baseResponse<CountTypeDto>>(
-      `${this.apiurl}/api/CountType/update`,
-      updateData,
-      { headers: this.getJsonHeaders() }
-    ).pipe(
-      catchError(error => {
-        this.toast.showToast.error({ message: error });
-        return throwError(() => error);
-      })
-    );
-  }
-
-  // ==========================================================================
-  // ðŸ” Get Record By ID
-  // ==========================================================================
-  getRecordById(id: number): Observable<baseResponse<CountTypeDto>> {
-    return this.http.get<baseResponse<CountTypeDto>>(
-      `${this.apiurl}/api/CountType/getById/?id=${id}`,
-      { headers: this.getJsonHeaders() }
-    ).pipe(
-      catchError(error => {
-        this.toast.showToast.error({ message: error });
-        return throwError(() => error);
-      })
-    );
-  }
+export class CountTypeService extends BaseService<CountTypeDto , CountTypeDto> {
+protected  endpoint= '/api/counttype';
 
 }
 
@@ -383,105 +176,10 @@ import {InventoryDto} from 'src/app/dto/shop/InventoryDto'
 @Injectable({
   providedIn: 'root'
 })
-export class InventoryService extends BaseService {
+export class InventoryService extends BaseService<InventoryDto , InventoryDto> {
 
-    // ðŸ”§ API Base URL
-    private apiurl = Domain;
-
-    // ðŸ“¦ Inject HTTP client and toast notification service
-    constructor(
-      private http: HttpClient,
-      private toast: ToastService
-    ) {
-      super();
-    }
-
-
-  // ==========================================================================
-  // ðŸ“¥ Get List of Records
-  // ==========================================================================
- 
-    getRecords(request: ListRequest): Observable<baseResponse<InventoryDto>> {
-      const requestPayload = request;
-  
-      return this.http.post<baseResponse<InventoryDto>>(
-        `${this.apiurl}/api/inv/GetAll`,
-        requestPayload,
-        { headers: this.getJsonHeaders() }
-      ).pipe(
-        catchError(error => {
-          this.toast.showToast.error({ message: error });
-          return throwError(() => error);
-        })
-      );
-    }
-  
-
-
-      // ==========================================================================
-  // âž• Insert New Record
-  // ==========================================================================
-  insertRecord(insertData: InventoryDto): Observable<baseResponse<InventoryDto>> {
-    return this.http.post<baseResponse<any>>(
-      `${this.apiurl}/api/inv/create`,
-      insertData,
-      { headers: this.getJsonHeaders() }
-    ).pipe(
-      catchError(error => {
-        this.toast.showToast.error({ message: error });
-        return throwError(() => error);
-      })
-    );
-  }
-
-
-    // ==========================================================================
-  // ðŸ—‘ï¸ Delete Records by IDs
-  // ==========================================================================
-  deleteRecords(ids: number[]): Observable<baseResponse<any>> {
-    return this.http.post<baseResponse<any>>(
-      `${this.apiurl}/api/inv/delete`,
-      ids,
-      { headers: this.getJsonHeaders() }
-    ).pipe(
-      catchError(error => {
-        this.toast.showToast.error({ message: error });
-        return throwError(() => error);
-      })
-    );
-  }
-
-  // ==========================================================================
-  // ðŸ“ Update Existing Record
-  // ==========================================================================
-  updateRecord(updateData: InventoryDto): Observable<baseResponse<InventoryDto>> {
-    return this.http.post<baseResponse<InventoryDto>>(
-      `${this.apiurl}/api/inv/update`,
-      updateData,
-      { headers: this.getJsonHeaders() }
-    ).pipe(
-      catchError(error => {
-        this.toast.showToast.error({ message: error });
-        return throwError(() => error);
-      })
-    );
-  }
-
-    // ==========================================================================
-  // ðŸ” Get Record By ID
-  // ==========================================================================
-  getRecordById(id: number): Observable<baseResponse<InventoryDto>> {
-    return this.http.get<baseResponse<InventoryDto>>(
-      `${this.apiurl}/api/inv/getById/?id=${id}`,
-      { headers: this.getJsonHeaders() }
-    ).pipe(
-      catchError(error => {
-        this.toast.showToast.error({ message: error });
-        return throwError(() => error);
-      })
-    );
-  }
-
+  protected endpoint='/api/inv';
+   
 
 }
 
@@ -519,84 +217,17 @@ import { BaseService } from '../../utilities/base.service';
 @Injectable({
   providedIn: 'root'
 })
-export class ProductService extends BaseService {
+export class ProductService extends BaseService<ProductViewDto, ProductCreateDto> {
+  protected endpoint='/api/product';
   private apiurl = Domain;
 
-  constructor(private http: HttpClient, private toast: ToastService) {
-    super();
-  }
-
-
-  /** Ø¯Ø±ÛŒØ§ÙØª Ù„ÛŒØ³Øª Ø¯Ø§Ø¯Ù‡â€ŒÙ‡Ø§ */
-  getRecords(request: ListRequest): Observable<baseResponse<ProductViewDto>> {
-    const requestPayload = request;
 
 
 
-    return this.http.post<baseResponse<ProductViewDto>>(`${this.apiurl}/api/product/GetAll`, requestPayload, { headers: this.getJsonHeaders() }).pipe(
-      catchError(error => {
-        this.toast.showToast.error({ message: 'Ø®Ø·Ø§ Ø¯Ø± ØªØ±Ø§Ú©Ù†Ø´ ' });
-
-        return throwError(() => error);
-      })
-    )
-      ;
-  }
 
 
-  /** Ø§ÙØ²ÙˆØ¯Ù† Ù…Ø­ØµÙˆÙ„ */
-  insertRecord(productData: ProductCreateDto): Observable<baseResponse<ProductCreateDto>> {
 
-    return this.http.post<baseResponse<any>>(`${this.apiurl}/api/product/create`, productData, { headers: this.getJsonHeaders() }).pipe(
-      catchError(error => {
-        this.toast.showToast.error({ message: 'Ø®Ø·Ø§ Ø¯Ø± ØªØ±Ø§Ú©Ù†Ø´ ' });
-
-        return throwError(() => error);
-      })
-    );
-  }
-
-  /** Ø­Ø°Ù Ù…Ø­ØµÙˆÙ„ */
-  deleteRecords(ids: number[]): Observable<baseResponse<any>> {
-
-    return this.http.post<baseResponse<any>>(`${this.apiurl}/api/product/delete`, ids, { headers: this.getJsonHeaders() }).pipe(
-      catchError(error => {
-        this.toast.showToast.error({ message: 'Ø®Ø·Ø§ Ø¯Ø± ØªØ±Ø§Ú©Ù†Ø´ ' });
-
-        return throwError(() => error);
-      })
-    );
-  }
-
-  /** ÙˆÛŒØ±Ø§ÛŒØ´ Ù…Ø­ØµÙˆÙ„ */
-  updateRecord(productData: ProductCreateDto): Observable<baseResponse<ProductCreateDto>> {
-
-    return this.http.post<baseResponse<ProductCreateDto>>(`${this.apiurl}/api/product/update`, productData, { headers: this.getJsonHeaders() }).pipe(
-      catchError(error => {
-        this.toast.showToast.error({ message: 'Ø®Ø·Ø§ Ø¯Ø± ØªØ±Ø§Ú©Ù†Ø´ ' });
-
-        return throwError(() => error);
-      })
-    );
-  }
-  /** Ø¯Ø±ÛŒØ§ÙØª Ù…Ø­ØµÙˆÙ„ Ø¨Ø± Ø§Ø³Ø§Ø³ Ø´Ù†Ø§Ø³Ù‡ */
-  getRecordById(id: number): Observable<baseResponse<ProductCreateDto>> {
-
-    return this.http.get<baseResponse<ProductCreateDto>>(`${this.apiurl}/api/product/getById/?id=${id}`, { headers: this.getJsonHeaders() }).pipe(
-      catchError(error => {
-        this.toast.showToast.error({ message: 'Ø®Ø·Ø§ Ø¯Ø± ØªØ±Ø§Ú©Ù†Ø´ ' });
-
-        return throwError(() => error);
-      })
-    );
-  }
-
-
-  getSelectOptions(serviceName: string): Observable<any[]> {
-    return this.http.get<any>(`${serviceName}`).pipe(
-      map(response => Array.isArray(response) ? response : [])
-    );
-  }
+ 
 
   /** Ø¬Ø³ØªØ¬ÙˆÛŒ Ù…Ø­ØµÙˆÙ„ Ø¨Ø§ Ù¾Ø§Ø±Ø§Ù…ØªØ±Ù‡Ø§ */
   searchProducts(request: ListRequest): Observable<baseResponse<ProductViewDto>> {
@@ -615,34 +246,112 @@ export class ProductService extends BaseService {
 
 
 ===== FILE: src\app\services\utilities\base.service.spec.ts =====
-import { TestBed } from '@angular/core/testing';
-
+// src/app/services/utilities/mock-base.service.ts
+import { Injectable } from '@angular/core';
 import { BaseService } from './base.service';
 
-describe('BaseService', () => {
-  let service: BaseService;
+@Injectable()
+export class MockBaseService extends BaseService<any, any> {
+  protected endpoint = '/api/test'; // ÙÙ‚Ø· Ø¨Ø±Ø§ÛŒ Ú©Ø§Ù…Ù¾Ø§ÛŒÙ„ Ø´Ø¯Ù†
 
-  beforeEach(() => {
-    TestBed.configureTestingModule({});
-    service = TestBed.inject(BaseService);
-  });
-
-  it('should be created', () => {
-    expect(service).toBeTruthy();
-  });
-});
-
+  constructor() {
+    super(null!, null!); // HttpClient Ùˆ ToastService Ø±Ùˆ null Ù…ÛŒâ€ŒØ°Ø§Ø±ÛŒÙ… Ú†ÙˆÙ† ØªØ³Øª ÙˆØ§Ø­Ø¯ Ù‡Ø³Øª
+  }
+}
 
 ===== FILE: src\app\services\utilities\base.service.ts =====
-import { HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { Observable, catchError, throwError } from 'rxjs';
+import { ToastService } from './toast.service'; // ÙØ±Ø¶ Ú©Ù†ÛŒØ¯ Ø§ÛŒÙ† Ø±Ùˆ Ø¯Ø§Ø±ÛŒØ¯
+import { baseResponse } from '../../dto/baseResponse'; // Ù†ÙˆØ¹ response Ø¹Ù…ÙˆÙ…ÛŒ
+import { ListRequest } from '../../dto/ListRequestDto'; // Ù†ÙˆØ¹ request Ù„ÛŒØ³Øª
+import { Domain } from '../../../utilities/path'; // URL Ù¾Ø§ÛŒÙ‡
 
-export abstract class BaseService {
+@Injectable({
+  providedIn: 'root'
+})
+export abstract class BaseService<TViewDto, TCreateDto = TViewDto> { // generics Ø¨Ø±Ø§ÛŒ Ù†ÙˆØ¹ view Ùˆ create
+  protected apiUrl = Domain; // URL Ù¾Ø§ÛŒÙ‡
+  protected abstract endpoint: string; // Ù‡Ø± Ø³Ø±ÙˆÛŒØ³ Ø®Ø§Øµ Ø§ÛŒÙ† Ø±Ùˆ Ù…Ø´Ø®Øµ Ú©Ù†Ù‡ (Ù…Ø«Ù„ '/api/User')
+
+  constructor(protected http: HttpClient, protected toast: ToastService) {}
+
   protected getJsonHeaders(): HttpHeaders {
     return new HttpHeaders({
       'accept': 'application/json',
       'Content-Type': 'application/json'
     });
   }
-}
 
+  // Ù…ØªØ¯ Ø¹Ù…ÙˆÙ…ÛŒ Ø¨Ø±Ø§ÛŒ Ù„ÛŒØ³Øª
+  getRecords(request: ListRequest): Observable<baseResponse<TViewDto>> {
+    return this.http.post<baseResponse<TViewDto>>(
+      `${this.apiUrl}${this.endpoint}/GetAll`,
+      request,
+      { headers: this.getJsonHeaders() }
+    ).pipe(
+      catchError(error => this.handleError(error))
+    );
+  }
+
+  // Ù…ØªØ¯ Ø¹Ù…ÙˆÙ…ÛŒ Ø¨Ø±Ø§ÛŒ Ø§ÛŒØ¬Ø§Ø¯
+  insertRecord(data: TCreateDto): Observable<baseResponse<TCreateDto>> {
+    return this.http.post<baseResponse<TCreateDto>>(
+      `${this.apiUrl}${this.endpoint}/create`,
+      data,
+      { headers: this.getJsonHeaders() }
+    ).pipe(
+      catchError(error => this.handleError(error))
+    );
+  }
+
+  // Ù…ØªØ¯ Ø¹Ù…ÙˆÙ…ÛŒ Ø¨Ø±Ø§ÛŒ Ø­Ø°Ù
+  deleteRecords(ids: number[]): Observable<baseResponse<any>> {
+    return this.http.post<baseResponse<any>>(
+      `${this.apiUrl}${this.endpoint}/delete`,
+      ids,
+      { headers: this.getJsonHeaders() }
+    ).pipe(
+      catchError(error => this.handleError(error))
+    );
+  }
+
+  // Ù…ØªØ¯ Ø¹Ù…ÙˆÙ…ÛŒ Ø¨Ø±Ø§ÛŒ Ø¨Ø±ÙˆØ²Ø±Ø³Ø§Ù†ÛŒ
+  updateRecord(data: TCreateDto): Observable<baseResponse<TCreateDto>> {
+    return this.http.post<baseResponse<TCreateDto>>(
+      `${this.apiUrl}${this.endpoint}/update`,
+      data,
+      { headers: this.getJsonHeaders() }
+    ).pipe(
+      catchError(error => this.handleError(error))
+    );
+  }
+
+  // Ù…ØªØ¯ Ø¹Ù…ÙˆÙ…ÛŒ Ø¨Ø±Ø§ÛŒ Ø¯Ø±ÛŒØ§ÙØª ØªÚ© Ø±Ú©ÙˆØ±Ø¯
+  getRecordById(id: number): Observable<baseResponse<TCreateDto>> {
+    return this.http.get<baseResponse<TCreateDto>>(
+      `${this.apiUrl}${this.endpoint}/getById/?id=${id}`,
+      { headers: this.getJsonHeaders() }
+    ).pipe(
+      catchError(error => this.handleError(error))
+    );
+  }
+
+  // Ù‡Ù†Ø¯Ù„Ø± Ø¹Ù…ÙˆÙ…ÛŒ Ø®Ø·Ø§
+  protected handleError(error: any): Observable<never> {
+    this.toast.showToast.error({ message: 'Ø®Ø·Ø§ Ø¯Ø± ØªØ±Ø§Ú©Ù†Ø´' });
+    return throwError(() => error);
+  }
+
+
+  getCreateForm<TForm>(): Observable<baseResponse<TForm>> {
+    return this.http.get<baseResponse<TForm>>(
+      `${this.apiUrl}${this.endpoint}/getcreateform`,
+      { headers: this.getJsonHeaders() }
+    ).pipe(
+      catchError(error => this.handleError(error))
+    );
+  }
+}
 

@@ -369,23 +369,50 @@ For general troubleshooting or help getting started:
 
 
 ===== FILE: src\app\core\interceptors\auth.interceptor.ts =====
-// auth.interceptor.ts
-import { HttpEvent, HttpHandlerFn, HttpRequest } from '@angular/common/http';
-import { Observable } from 'rxjs';
+// src/app/core/interceptors/auth.interceptor.ts
+import { HttpEvent, HttpHandlerFn, HttpRequest, HttpErrorResponse } from '@angular/common/http';
+import { Observable, throwError } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+import { inject } from '@angular/core';
+import { Router } from '@angular/router';
+import { ToastService } from '../../services/utilities/toast.service';
 
 export function authInterceptor(req: HttpRequest<unknown>, next: HttpHandlerFn): Observable<HttpEvent<unknown>> {
   const token = localStorage.getItem('token');
+  const toast = inject(ToastService);
+  const router = inject(Router);
 
+  let cloned = req;
   if (token) {
-    const cloned = req.clone({
+    cloned = req.clone({
       headers: req.headers.set('Authorization', `Bearer ${token}`)
     });
-    return next(cloned);
   }
 
-  return next(req);
-}
+  return next(cloned).pipe(
+    catchError((error: HttpErrorResponse) => {
+      let message = 'Ø®Ø·Ø§ÛŒ Ù†Ø§Ø´Ù†Ø§Ø®ØªÙ‡';
 
+      if (error.status === 401) {
+        message = 'Ù„Ø·ÙØ§Ù‹ ÙˆØ§Ø±Ø¯ Ø­Ø³Ø§Ø¨ Ú©Ø§Ø±Ø¨Ø±ÛŒ Ø®ÙˆØ¯ Ø´ÙˆÛŒØ¯.';
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        router.navigate(['/login']);
+      } else if (error.status === 403) {
+        message = 'Ø´Ù…Ø§ Ø¯Ø³ØªØ±Ø³ÛŒ Ù„Ø§Ø²Ù… Ø¨Ø±Ø§ÛŒ Ø§ÛŒÙ† Ø¹Ù…Ù„ÛŒØ§Øª Ø±Ø§ Ù†Ø¯Ø§Ø±ÛŒØ¯.';
+      } else if (error.status === 404) {
+        message = 'Ù…ÙˆØ±Ø¯ Ù…ÙˆØ±Ø¯ Ù†Ø¸Ø± ÛŒØ§ÙØª Ù†Ø´Ø¯.';
+      } else if (error.status === 500) {
+        message = 'Ø®Ø·Ø§ÛŒ Ø³Ø±ÙˆØ± Ø±Ø® Ø¯Ø§Ø¯Ù‡ Ø§Ø³Øª.';
+      } else {
+        message = error.error?.errors?.[0] || error.message || 'Ø®Ø·Ø§ Ø¯Ø± Ø§Ø±ØªØ¨Ø§Ø· Ø¨Ø§ Ø³Ø±ÙˆØ±';
+      }
+
+      toast.showToast.error({ message });
+      return throwError(() => error);
+    })
+  );
+}
 
 ===== FILE: src\app\dto\base\UserDto.ts =====
 export class UserDto {
