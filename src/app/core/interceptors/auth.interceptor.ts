@@ -1,17 +1,20 @@
-// src/app/core/interceptors/auth.interceptor.ts
 import { HttpEvent, HttpHandlerFn, HttpRequest, HttpErrorResponse } from '@angular/common/http';
+import { inject } from '@angular/core';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { ToastService } from '../../services/utilities/toast.service';
+import { ApiResult } from 'src/app/dto/api-result';
 
-export function authInterceptor(req: HttpRequest<unknown>, next: HttpHandlerFn): Observable<HttpEvent<unknown>> {
-  const token = localStorage.getItem('token');
+export function authInterceptor(
+  req: HttpRequest<unknown>,
+  next: HttpHandlerFn
+): Observable<HttpEvent<unknown>> {
   const toast = inject(ToastService);
   const router = inject(Router);
 
   let cloned = req;
+  const token = localStorage.getItem('token');
   if (token) {
     cloned = req.clone({
       headers: req.headers.set('Authorization', `Bearer ${token}`)
@@ -20,24 +23,37 @@ export function authInterceptor(req: HttpRequest<unknown>, next: HttpHandlerFn):
 
   return next(cloned).pipe(
     catchError((error: HttpErrorResponse) => {
-      let message = 'خطای ناشناخته';
+      // 1. اگر پاسخ JSON با ساختار ApiResult بود
+      if (error.error && typeof error.error === 'object') {
+        const apiResult = error.error as ApiResult;
 
+        // فقط اگر ساختار ApiResult داشت
+        if ('isSucceeded' in apiResult) {
+          if (!apiResult.isSucceeded) {
+            toast.handleApiResponse(apiResult);
+          }
+
+          // 401: لاگ‌اوت خودکار
+          if (apiResult.statusCode === 401 || error.status === 401) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            router.navigate(['/login']);
+          }
+
+          return throwError(() => error);
+        }
+      }
+
+      // 2. اگر ApiResult نبود → خطای خام HTTP
+      toast.handleHttpError(error);
+
+      // 401 خام
       if (error.status === 401) {
-        message = 'لطفاً وارد حساب کاربری خود شوید.';
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         router.navigate(['/login']);
-      } else if (error.status === 403) {
-        message = 'شما دسترسی لازم برای این عملیات را ندارید.';
-      } else if (error.status === 404) {
-        message = 'مورد مورد نظر یافت نشد.';
-      } else if (error.status === 500) {
-        message = 'خطای سرور رخ داده است.';
-      } else {
-        message = error.error?.errors?.[0] || error.message || 'خطا در ارتباط با سرور';
       }
 
-      toast.showToast.error({ message });
       return throwError(() => error);
     })
   );

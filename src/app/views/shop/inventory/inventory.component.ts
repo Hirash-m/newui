@@ -100,8 +100,6 @@ export class InventoryComponent implements OnInit {
       if (res.isSucceeded) {
         this._baseResponse = res;
         this._objectsView = res.data;
-        console.log(this._baseResponse);
-        // this.toastService.showToast.success({message:this._baseResponse.message})
       }
     });
   }
@@ -117,20 +115,16 @@ export class InventoryComponent implements OnInit {
         // در حالت ویرایش
         this.ObjectService.updateRecord(ObjectData).subscribe(res => {
           if (res.isSucceeded) {
-            this.toastService.showToast.success({ message: res.message });
             this.afterSubmit();
           } else {
-            this.toastService.showToast.error({ message: res.message });
           }
         });
       } else {
         // در حالت ایجاد
         this.ObjectService.insertRecord(ObjectData).subscribe(res => {
           if (res.isSucceeded) {
-            this.toastService.showToast.success({ message: res.message });
             this.afterSubmit();
           } else {
-            this.toastService.showToast.error({ message: res.message });
           }
         });
       }
@@ -163,7 +157,7 @@ export class InventoryComponent implements OnInit {
 
         this.showModal = true;
       } else {
-        this.toastService.showToast.error({ message: 'مورد پیدا نشد یا خطا در دریافت اطلاعات!' });
+        this.toastService.error( 'مورد پیدا نشد یا خطا در دریافت اطلاعات!' );
       }
     });
   }
@@ -198,11 +192,11 @@ export class InventoryComponent implements OnInit {
   deleteSelectedRecords(): void {
     this.ObjectService.deleteRecords(this.selectedIds).subscribe(res => {
       if (res.isSucceeded) {
-        this.toastService.showToast.success({ message: res.message });
+   
         this.afterSubmit(); // ریست فرم و بارگذاری مجدد
         this.selectedIds = [];
       } else {
-        this.toastService.showToast.error({ message: 'خطا در حذف گروهی' });
+        this.toastService.error('خطا در حذف گروهی' );
       }
       this.showDeleteConfirm = false;
     });

@@ -63,11 +63,10 @@ export class ProductComponent implements OnInit   {
       if(res.isSucceeded){
         this._baseResponse = res ;
         this._productsView = res.data;
-       // console.log(this._baseResponse);
-        //this.ToastService.showToast.success({message:this._baseResponse.message})
+
       }
      else {
-      this.toastService.showToast.success(res)
+      
      }
 
     })
@@ -102,20 +101,20 @@ onSubmit1() {
       // ویرایش
       this.productService.updateRecord( productData).subscribe(res => {
         if (res.isSucceeded) {
-          this.toastService.showToast.success({message: res.message});
+          
           this.afterSubmit();
         } else {
-          this.toastService.showToast.error({message:res.message});
+         
         }
       });
     } else {
       // ایجاد
       this.productService.insertRecord(productData).subscribe(res => {
         if (res.isSucceeded) {
-          this.toastService.showToast.success({message: res.message});
+         
           this.afterSubmit();
         } else {
-          this.toastService.showToast.error({message: res.message});
+       
 
         }
       });
@@ -158,7 +157,7 @@ onEdit(productId: number) {
 
       this.showModal = true;
     } else {
-      this.toastService.showToast.error({message:'محصول پیدا نشد یا خطا در دریافت اطلاعات!'});
+      this.toastService.error('محصول پیدا نشد یا خطا در دریافت اطلاعات!');
 
     }
   });
@@ -200,11 +199,11 @@ showDeleteConfirm = false;
 deleteSelectedProducts(): void {
   this.productService.deleteRecords(this.selectedProductIds).subscribe(res => {
     if (res.isSucceeded) {
-      this.toastService.showToast.success({message:res.message});
+     
       this.afterSubmit(); // ریست فرم و بارگذاری مجدد
       this.selectedProductIds = [];
     } else {
-      this.toastService.showToast.error({message:'خطا در حذف گروهی'});
+      this.toastService.error('خطا در حذف گروهی');
     }
     this.showDeleteConfirm = false;
   });
@@ -229,12 +228,12 @@ onSearch() {
         this._productsView = result.data;
         console.log('نتایج جستجو:', this._productsView);
       } else {
-        this.toastService.showToast.error({message:'خطا در جستجو'});
+        this.toastService.error('خطا در جستجو');
       }
     },
     (error) => {
       console.error('خطا در جستجو', error);
-      this.toastService.showToast.error({message:'خطای ارتباط با سرور'});
+      this.toastService.error('خطای ارتباط با سرور');
     }
   );
 }

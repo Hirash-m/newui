@@ -1,3 +1,4 @@
 {
-    "window.title": "${folderName}"
+    "window.title": "${folderName}",
+    "liveServer.settings.port": 5501
 }

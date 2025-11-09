@@ -18,6 +18,7 @@ src
 |   |   |   +-- CountTypeDto.ts
 |   |   |   +-- InventoryDto.ts
 |   |   |   +-- ProductDto.ts
+|   |   +-- api-result.ts
 |   |   +-- baseResponse.ts
 |   |   +-- ListRequestDto.ts
 |   |   +-- metadataField.ts

@@ -8,7 +8,7 @@ $rootDir = $PSScriptRoot
 $outDir  = Join-Path $rootDir "ExportedCode"
 $include = @("*.ts", "*.html", "*.scss", "*.css", "*.json", "*.js", "*.config", "*.md")
 $excludeDirs = @(".angular", "dist", "node_modules", "coverage", "e2e",
-                 ".git", ".vs", ".vscode", "bin", "obj", "packages")
+                 ".git", ".vs", ".vscode", "bin", "obj", "packages","DOC")
 
 # حذف و ساخت پوشه خروجی
 if (Test-Path $outDir) { Remove-Item -Path $outDir -Recurse -Force }

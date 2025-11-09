@@ -2,7 +2,7 @@
 // src/app/dto/baseResponse.ts
 export class baseResponse<T> {
     isSucceeded!: boolean;
-    message!: string;
+    message?: string;
     data!: T[];
     singleData!:T;
     totalRecords!: number;
@@ -636,5 +636,8 @@ export class DefaultFooterComponent extends FooterComponent {
     </div>
   </c-dropdown>
 </ng-template>
+
+
+===== FILE: src\app\layout\default-layout\default-header\default-header.component.scss =====
 
 

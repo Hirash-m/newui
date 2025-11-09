@@ -369,23 +369,66 @@ For general troubleshooting or help getting started:
 
 
 ===== FILE: src\app\core\interceptors\auth.interceptor.ts =====
-// auth.interceptor.ts
-import { HttpEvent, HttpHandlerFn, HttpRequest } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { HttpEvent, HttpHandlerFn, HttpRequest, HttpErrorResponse } from '@angular/common/http';
+import { inject } from '@angular/core';
+import { Observable, throwError } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+import { Router } from '@angular/router';
+import { ToastService } from '../../services/utilities/toast.service';
+import { ApiResult } from 'src/app/dto/api-result';
 
-export function authInterceptor(req: HttpRequest<unknown>, next: HttpHandlerFn): Observable<HttpEvent<unknown>> {
+export function authInterceptor(
+  req: HttpRequest<unknown>,
+  next: HttpHandlerFn
+): Observable<HttpEvent<unknown>> {
+  const toast = inject(ToastService);
+  const router = inject(Router);
+
+  let cloned = req;
   const token = localStorage.getItem('token');
-
   if (token) {
-    const cloned = req.clone({
+    cloned = req.clone({
       headers: req.headers.set('Authorization', `Bearer ${token}`)
     });
-    return next(cloned);
   }
 
-  return next(req);
-}
+  return next(cloned).pipe(
+    catchError((error: HttpErrorResponse) => {
+      // 1. Ø§Ú¯Ø± Ù¾Ø§Ø³Ø® JSON Ø¨Ø§ Ø³Ø§Ø®ØªØ§Ø± ApiResult Ø¨ÙˆØ¯
+      if (error.error && typeof error.error === 'object') {
+        const apiResult = error.error as ApiResult;
 
+        // ÙÙ‚Ø· Ø§Ú¯Ø± Ø³Ø§Ø®ØªØ§Ø± ApiResult Ø¯Ø§Ø´Øª
+        if ('isSucceeded' in apiResult) {
+          if (!apiResult.isSucceeded) {
+            toast.handleApiResponse(apiResult);
+          }
+
+          // 401: Ù„Ø§Ú¯â€ŒØ§ÙˆØª Ø®ÙˆØ¯Ú©Ø§Ø±
+          if (apiResult.statusCode === 401 || error.status === 401) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            router.navigate(['/login']);
+          }
+
+          return throwError(() => error);
+        }
+      }
+
+      // 2. Ø§Ú¯Ø± ApiResult Ù†Ø¨ÙˆØ¯ â†’ Ø®Ø·Ø§ÛŒ Ø®Ø§Ù… HTTP
+      toast.handleHttpError(error);
+
+      // 401 Ø®Ø§Ù…
+      if (error.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        router.navigate(['/login']);
+      }
+
+      return throwError(() => error);
+    })
+  );
+}
 
 ===== FILE: src\app\dto\base\UserDto.ts =====
 export class UserDto {
@@ -451,4 +494,18 @@ export class ProductCreateDto {
 
 }
 
+
+===== FILE: src\app\dto\api-result.ts =====
+export interface ApiResult<T = any> {
+    isSucceeded: boolean;
+    statusCode?: number;
+    message?: string;
+    errors?: string[];
+    data: T[];
+    singleData: T;
+    totalRecords: number;
+    totalPages: number;
+    pageNumber: number;
+    pageSize: number;
+  }
 

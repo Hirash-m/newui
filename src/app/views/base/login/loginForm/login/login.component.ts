@@ -56,7 +56,7 @@ export class LoginComponent {
 
   onLogin() {
     if (!this.email || !this.password) {
-      this.toast.showToast.error({ message: 'ایمیل و رمز عبور را وارد کنید.' });
+ 
       return;
     }
 
@@ -66,15 +66,15 @@ export class LoginComponent {
       next: (res) => {
         this.loading = false;
         if (res.isSucceeded) {
-          this.toast.showToast.success({ message: 'ورود با موفقیت انجام شد' });
+
           this.router.navigate(['/dashboard']);
         } else {
-          this.toast.showToast.error({ message: res.message || 'ورود ناموفق بود' });
+     
         }
       },
       error: (err) => {
         this.loading = false;
-        this.toast.showToast.error({ message: 'خطا در برقراری ارتباط با سرور' });
+      
       }
     });
   }

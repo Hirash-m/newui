@@ -1,181 +1,4 @@
-﻿===== FILE: src\app\services\utilities\toast.service.spec.ts =====
-import { TestBed } from '@angular/core/testing';
-
-import { ToastService } from './toast.service';
-
-describe('ToastService', () => {
-  let service: ToastService;
-
-  beforeEach(() => {
-    TestBed.configureTestingModule({});
-    service = TestBed.inject(ToastService);
-  });
-
-  it('should be created', () => {
-    expect(service).toBeTruthy();
-  });
-});
-
-
-===== FILE: src\app\services\utilities\toast.service.ts =====
-// toast.service.ts
-import { Injectable, signal } from '@angular/core';
-
-export type ToastType = 'success' | 'error' | 'warning' | 'info';
-
-export interface ToastData {
-  id: number;
-  title: string;
-  message: string;
-  type: ToastType;
-  duration?: number; // Ø¨Ù‡ Ù…ÛŒÙ„ÛŒâ€ŒØ«Ø§Ù†ÛŒÙ‡
-}
-
-@Injectable({ providedIn: 'root' })
-export class ToastService {
-  private counter = 0;
-  toasts = signal<ToastData[]>([]);
-
-  private defaultConfigs: Record<ToastType, { title: string; message: string; duration: number }> = {
-    success: { title: 'Ø¹Ù…Ù„ÛŒØ§Øª Ù…ÙˆÙÙ‚', message: 'Ø¨Ø§ Ù…ÙˆÙÙ‚ÛŒØª Ø§Ù†Ø¬Ø§Ù… Ø´Ø¯.', duration: 5000 },
-    error: { title: 'Ø®Ø·Ø§', message: 'Ù…Ø´Ú©Ù„ÛŒ Ù¾ÛŒØ´ Ø¢Ù…Ø¯Ù‡.', duration: 5000 },
-    warning: { title: 'Ø§Ø®Ø·Ø§Ø±', message: 'Ù„Ø·ÙØ§Ù‹ Ø¨Ø§ Ø¯Ù‚Øª Ø§Ø¯Ø§Ù…Ù‡ Ø¯Ù‡ÛŒØ¯.', duration: 5000 },
-    info: { title: 'Ø§Ø·Ù„Ø§Ø¹Ø§Øª', message: 'ÛŒÚ© Ù¾ÛŒØ§Ù… Ø§Ø·Ù„Ø§Ø¹Ø§ØªÛŒ.', duration: 5000 },
-  };
-
-  // Ù…ØªØ¯ Ø§ØµÙ„ÛŒ
-  private pushToast(type: ToastType, overrides: Partial<Omit<ToastData, 'id' | 'type'>> = {}) {
-    const id = this.counter++;
-    const defaults = this.defaultConfigs[type];
-
-    const toast: ToastData = {
-      id,
-      type,
-      title: overrides.title ?? defaults.title,
-      message: overrides.message ?? defaults.message,
-      duration: overrides.duration ?? defaults.duration,
-    };
-
-    this.toasts.update((list) => [...list, toast]);
-    setTimeout(() => this.removeToast(id), toast.duration);
-  }
-
-  // âœ… ØªÙˆØ§Ø¨Ø¹ shortcut
-  showToast = {
-    success: (overrides?: Partial<Omit<ToastData, 'id' | 'type'>>) =>
-      this.pushToast('success', overrides),
-    error: (overrides?: Partial<Omit<ToastData, 'id' | 'type'>>) =>
-      this.pushToast('error', overrides),
-    warning: (overrides?: Partial<Omit<ToastData, 'id' | 'type'>>) =>
-      this.pushToast('warning', overrides),
-    info: (overrides?: Partial<Omit<ToastData, 'id' | 'type'>>) =>
-      this.pushToast('info', overrides),
-  };
-
-  removeToast(id: number) {
-    this.toasts.update((list) => list.filter((t) => t.id !== id));
-  }
-}
-
-
-===== FILE: src\app\views\base\login\loginForm\login\login.component.html =====
-<div class="bg-light dark:bg-transparent min-vh-100 d-flex flex-row align-items-center">
-  <c-container breakpoint="md">
-    <c-row class="justify-content-center">
-      <c-col lg="10" xl="8">
-        <c-card-group>
-          <c-card class="p-4">
-            <c-card-body>
-              <form cForm (ngSubmit)="onLogin()">
-                <h1>ÙˆØ±ÙˆØ¯ Ø¨Ù‡ Ø³ÛŒØ³ØªÙ…</h1>
-                <p class="text-body-secondary">Ù„Ø·ÙØ§Ù‹ Ø§Ø·Ù„Ø§Ø¹Ø§Øª Ú©Ø§Ø±Ø¨Ø±ÛŒ Ø®ÙˆØ¯ Ø±Ø§ ÙˆØ§Ø±Ø¯ Ú©Ù†ÛŒØ¯</p>
-
-                <c-input-group class="mb-3">
-                  <span cInputGroupText>
-                    <svg cIcon name="cilUser"></svg>
-                  </span>
-                  <input
-                    type="email"
-                    autoComplete="username"
-                    cFormControl
-                    placeholder="Ø§ÛŒÙ…ÛŒÙ„"
-                    [(ngModel)]="email"
-                    name="email"
-                    required
-                  />
-                </c-input-group>
-
-                <c-input-group class="mb-4">
-                  <span cInputGroupText>
-                    <svg cIcon name="cilLockLocked"></svg>
-                  </span>
-                  <input
-                    type="password"
-                    autoComplete="current-password"
-                    cFormControl
-                    placeholder="Ø±Ù…Ø² Ø¹Ø¨ÙˆØ±"
-                    [(ngModel)]="password"
-                    name="password"
-                    required
-                  />
-                </c-input-group>
-
-                <c-row>
-                  <c-col xs="12" class="text-center">
-                    <button
-                      cButton
-                      class="px-4"
-                      color="primary"
-                      type="submit"
-                      [disabled]="loading"
-                    >
-                      {{ loading ? 'Ø¯Ø± Ø­Ø§Ù„ ÙˆØ±ÙˆØ¯...' : 'ÙˆØ±ÙˆØ¯' }}
-                    </button>
-                  </c-col>
-                </c-row>
-
-                <!--
-                <c-row class="mt-3">
-                  <c-col class="text-right" xs="6">
-                    <button cButton class="px-0" color="link" type="button">
-                      ÙØ±Ø§Ù…ÙˆØ´ÛŒ Ø±Ù…Ø² Ø¹Ø¨ÙˆØ±ØŸ
-                    </button>
-                  </c-col>
-                </c-row>
-                -->
-              </form>
-            </c-card-body>
-          </c-card>
-
-          <!--
-          <c-card [ngStyle]="{'minWidth.%': 44}" class="text-white bg-primary py-5">
-            <c-card-body class="text-center">
-              <div>
-                <h2>Ø«Ø¨Øªâ€ŒÙ†Ø§Ù…</h2>
-                <p>
-                  Ø¨Ø±Ø§ÛŒ Ø§Ø³ØªÙØ§Ø¯Ù‡ Ø§Ø² Ø§Ù…Ú©Ø§Ù†Ø§Øª Ø³Ø§Ù…Ø§Ù†Ù‡ØŒ ÛŒÚ© Ø­Ø³Ø§Ø¨ Ú©Ø§Ø±Ø¨Ø±ÛŒ Ø¬Ø¯ÛŒØ¯ Ø§ÛŒØ¬Ø§Ø¯ Ú©Ù†ÛŒØ¯.
-                </p>
-                <button
-                  [active]="true"
-                  cButton
-                  class="mt-3"
-                  color="primary"
-                  routerLink="/register"
-                >
-                  Ø«Ø¨Øªâ€ŒÙ†Ø§Ù… Ú©Ù†ÛŒØ¯
-                </button>
-              </div>
-            </c-card-body>
-          </c-card>
-          -->
-        </c-card-group>
-      </c-col>
-    </c-row>
-  </c-container>
-</div>
-
-
-===== FILE: src\app\views\base\login\loginForm\login\login.component.scss =====
+﻿===== FILE: src\app\views\base\login\loginForm\login\login.component.scss =====
 
 
 ===== FILE: src\app\views\base\login\loginForm\login\login.component.spec.ts =====
@@ -274,7 +97,7 @@ export class LoginComponent {
 
   onLogin() {
     if (!this.email || !this.password) {
-      this.toast.showToast.error({ message: 'Ø§ÛŒÙ…ÛŒÙ„ Ùˆ Ø±Ù…Ø² Ø¹Ø¨ÙˆØ± Ø±Ø§ ÙˆØ§Ø±Ø¯ Ú©Ù†ÛŒØ¯.' });
+ 
       return;
     }
 
@@ -284,15 +107,15 @@ export class LoginComponent {
       next: (res) => {
         this.loading = false;
         if (res.isSucceeded) {
-          this.toast.showToast.success({ message: 'ÙˆØ±ÙˆØ¯ Ø¨Ø§ Ù…ÙˆÙÙ‚ÛŒØª Ø§Ù†Ø¬Ø§Ù… Ø´Ø¯' });
+
           this.router.navigate(['/dashboard']);
         } else {
-          this.toast.showToast.error({ message: res.message || 'ÙˆØ±ÙˆØ¯ Ù†Ø§Ù…ÙˆÙÙ‚ Ø¨ÙˆØ¯' });
+     
         }
       },
       error: (err) => {
         this.loading = false;
-        this.toast.showToast.error({ message: 'Ø®Ø·Ø§ Ø¯Ø± Ø¨Ø±Ù‚Ø±Ø§Ø±ÛŒ Ø§Ø±ØªØ¨Ø§Ø· Ø¨Ø§ Ø³Ø±ÙˆØ±' });
+      
       }
     });
   }
@@ -654,7 +477,7 @@ export class UserComponent {
             this.roles = formData.roles || [];
             // this.permissions = formData.permissions || [];
         } else {
-            this.toastService.showToast.error({ message: res.message });
+        
         }
     });
 }
@@ -690,20 +513,20 @@ toggleRole(event: Event, roleId: number): void {
         // Ø¯Ø± Ø­Ø§Ù„Øª ÙˆÛŒØ±Ø§ÛŒØ´
         this.ObjectService.updateRecord(ObjectData).subscribe(res => {
           if (res.isSucceeded) {
-            this.toastService.showToast.success({ message: res.message });
+           
             this.afterSubmit();
           } else {
-            this.toastService.showToast.error({ message: res.message });
+         
           }
         });
       } else {
         // Ø¯Ø± Ø­Ø§Ù„Øª Ø§ÛŒØ¬Ø§Ø¯
         this.ObjectService.insertRecord(ObjectData).subscribe(res => {
           if (res.isSucceeded) {
-            this.toastService.showToast.success({ message: res.message });
+        
             this.afterSubmit();
           } else {
-            this.toastService.showToast.error({ message: res.message });
+      
           }
         });
       }
@@ -769,7 +592,7 @@ toggleRole(event: Event, roleId: number): void {
   
         this.showModal = true;
       } else {
-        this.toastService.showToast.error({ message: 'Ù…ÙˆØ±Ø¯ Ù¾ÛŒØ¯Ø§ Ù†Ø´Ø¯ ÛŒØ§ Ø®Ø·Ø§ Ø¯Ø± Ø¯Ø±ÛŒØ§ÙØª Ø§Ø·Ù„Ø§Ø¹Ø§Øª!' });
+        this.toastService.error('Ù…ÙˆØ±Ø¯ Ù¾ÛŒØ¯Ø§ Ù†Ø´Ø¯ ÛŒØ§ Ø®Ø·Ø§ Ø¯Ø± Ø¯Ø±ÛŒØ§ÙØª Ø§Ø·Ù„Ø§Ø¹Ø§Øª!' );
       }
     });
   }
@@ -804,11 +627,11 @@ toggleRole(event: Event, roleId: number): void {
   deleteSelectedRecords(): void {
     this.ObjectService.deleteRecords(this.selectedIds).subscribe(res => {
       if (res.isSucceeded) {
-        this.toastService.showToast.success({ message: res.message });
+       
         this.afterSubmit(); // Ø±ÛŒØ³Øª ÙØ±Ù… Ùˆ Ø¨Ø§Ø±Ú¯Ø°Ø§Ø±ÛŒ Ù…Ø¬Ø¯Ø¯
         this.selectedIds = [];
       } else {
-        this.toastService.showToast.error({ message: 'Ø®Ø·Ø§ Ø¯Ø± Ø­Ø°Ù Ú¯Ø±ÙˆÙ‡ÛŒ' });
+        this.toastService.error( 'Ø®Ø·Ø§ Ø¯Ø± Ø­Ø°Ù Ú¯Ø±ÙˆÙ‡ÛŒ' );
       }
       this.showDeleteConfirm = false;
     });
@@ -842,5 +665,411 @@ export const routes: Routes = [
     ]
   }
 ];
+
+
+===== FILE: src\app\views\shop\count-type\count-type.component.html =====
+
+
+<!-- Ø¯Ú©Ù…Ù‡â€ŒÛŒ Ø¨Ø§Ø² Ú©Ø±Ø¯Ù† ÙØ±Ù… Ù¾Ø§Ù¾â€ŒØ¢Ù¾ -->
+<button cButton color="primary" (click)="showModal = true">âž• Ø§ÛŒØ¬Ø§Ø¯ </button>
+<button
+  cButton
+  color="danger"
+  [disabled]="selectedIds.length === 0"
+  (click)="showDeleteConfirm = true"
+>
+ðŸ—‘ Ø­Ø°Ù Ø§Ù†ØªØ®Ø§Ø¨â€ŒØ´Ø¯Ù‡â€ŒÙ‡Ø§ ({{ selectedIds.length }})
+</button>
+
+
+<!-- Table -->
+
+<table cTable>
+  <thead>
+    <tr>
+      <th>Ø§Ù†ØªØ®Ø§Ø¨</th>
+      <th>Ø´Ù†Ø§Ø³Ù‡</th>
+      <th>Ù†Ø§Ù…</th>
+      <th>Ø¹Ù…Ù„ÛŒØ§Øª</th>
+    </tr>
+  </thead>
+  <tbody>
+     <tr *ngFor="let row of _objectsView">
+      <th> <input type="checkbox" [checked]="isSelected(row.id)" (change)="toggleSelection(row.id)" /> </th>
+      <th>{{row.id}}</th>
+      <th>{{row.name}}</th>
+         <td>
+          <button class="btn btn-sm btn-warning me-1"    (click)="onEdit(row.id)" > âœ ÙˆÛŒØ±Ø§ÛŒØ´</button>
+        </td>
+    </tr>
+  </tbody>
+</table>
+
+
+
+<!--nodata banner -->
+
+<div *ngIf="_objectsView.length === 0" class="alert alert-info text-center">
+  â• Ù‡ÛŒÚ† Ø¯Ø§Ø¯Ù‡â€ŒØ§ÛŒ ÛŒØ§ÙØª Ù†Ø´Ø¯.
+</div>
+
+
+
+<div class="d-flex justify-content-between align-items-center mt-3">
+
+  <!-- Ø®ÙˆØ¯ pagination -->
+  <c-pagination aria-label="Page navigation example">
+    <li cPageItem *ngIf="_baseResponse.pageNumber > 3">
+      <button cPageLink aria-label="First" (click)="changePage(1)">
+        <span aria-hidden="true">&laquo;</span>
+      </button>
+    </li>
+
+    <li cPageItem *ngIf="_baseResponse.pageNumber > 1">
+      <button cPageLink aria-label="Previous" (click)="changePage(_baseResponse.pageNumber - 1)">
+        <span aria-hidden="true">&lt;</span>
+      </button>
+    </li>
+
+    <li cPageItem *ngIf="_baseResponse.pageNumber > 2">
+      <button cPageLink (click)="changePage(_baseResponse.pageNumber - 2)">
+        {{ _baseResponse.pageNumber - 2 }}
+      </button>
+    </li>
+
+    <li cPageItem *ngIf="_baseResponse.pageNumber > 1">
+      <button cPageLink (click)="changePage(_baseResponse.pageNumber - 1)">
+        {{ _baseResponse.pageNumber - 1 }}
+      </button>
+    </li>
+
+    <li cPageItem>
+      <button cPageLink class="active" disabled>
+        {{ _baseResponse.pageNumber }}
+      </button>
+    </li>
+
+    <li cPageItem *ngIf="_baseResponse.totalPages > _baseResponse.pageNumber">
+      <button cPageLink (click)="changePage(_baseResponse.pageNumber + 1)">
+        {{ _baseResponse.pageNumber + 1 }}
+      </button>
+    </li>
+
+    <li cPageItem *ngIf="_baseResponse.totalPages > _baseResponse.pageNumber + 1">
+      <button cPageLink (click)="changePage(_baseResponse.pageNumber + 2)">
+        {{ _baseResponse.pageNumber + 2 }}
+      </button>
+    </li>
+
+    <li cPageItem *ngIf="_baseResponse.totalPages > _baseResponse.pageNumber">
+      <button cPageLink aria-label="Next" (click)="changePage(_baseResponse.pageNumber + 1)">
+        <span aria-hidden="true">&gt;</span>
+      </button>
+    </li>
+
+    <li cPageItem *ngIf="_baseResponse.totalPages > _baseResponse.pageNumber + 2">
+      <button cPageLink aria-label="Last" (click)="changePage(_baseResponse.totalPages)">
+        <span aria-hidden="true">&raquo;</span>
+      </button>
+    </li>
+  </c-pagination>
+
+  <!-- Ø§Ø·Ù„Ø§Ø¹Ø§Øª Ø±Ú©ÙˆØ±Ø¯ -->
+  <div class="text-muted">
+    <strong>{{_baseResponse.totalRecords}}</strong> Ø±Ú©ÙˆØ±Ø¯ Ø¯Ø± <strong>{{_baseResponse.totalPages}}</strong> ØµÙØ­Ù‡
+  </div>
+
+</div>
+
+
+
+
+
+
+<!-- Ù…ÙˆØ¯Ø§Ù„ ÙØ±Ù… Ø§ÙØ²ÙˆØ¯Ù† Ù…Ø­ØµÙˆÙ„ -->
+<c-modal [(visible)]="showModal" size="lg" backdrop="static">
+  <c-modal-header>
+    <h5 class="modal-title">{{ editMode ? 'ÙˆÛŒØ±Ø§ÛŒØ´ ' : 'Ø§ÙØ²ÙˆØ¯Ù†' }}</h5>
+    <button type="button" class="btn-close" aria-label="Close" (click)="showModal = false"></button>
+  </c-modal-header>
+
+  <c-modal-body>
+    <!-- ÙØ±Ù… Ø¯Ø§Ø®Ù„ Ù…ÙˆØ¯Ø§Ù„ -->
+    <form [formGroup]="ObjectForm"  (ngSubmit)="onSubmit1()" class="needs-validation" novalidate cForm cRow>
+
+      <!-- Ù†Ø§Ù… -->
+      <c-col [md]="6">
+        <label cLabel for="name">Ù†Ø§Ù… </label>
+        <input cFormControl id="name" name="name" type="text" required formControlName="name" />
+        <c-form-feedback [valid]="false">Ù†Ø§Ù… Ø±Ø§ ÙˆØ§Ø±Ø¯ Ú©Ù†ÛŒØ¯.</c-form-feedback>
+      </c-col>
+
+
+
+
+
+
+
+    </form>
+  </c-modal-body>
+
+  <c-modal-footer>
+    <!-- Ø¯Ú©Ù…Ù‡â€ŒÙ‡Ø§ÛŒ Ø§Ø±Ø³Ø§Ù„ Ùˆ Ø¨Ø³ØªÙ† -->
+    <button cButton color="secondary" (click)="showModal = false">Ø¨Ø³ØªÙ†</button>
+    <button cButton color="primary" type="submit" (click)="onSubmit1()"  [disabled]="!ObjectForm.valid "  >Ø°Ø®ÛŒØ±Ù‡</button>
+  </c-modal-footer>
+</c-modal>
+
+
+
+<c-modal [(visible)]="showDeleteConfirm" col="6" backdrop="static">
+  <c-modal-header>
+    <h5 class="modal-title">â— ØªØ£ÛŒÛŒØ¯ Ø­Ø°Ù</h5>
+    <button type="button" class="btn-close" (click)="showDeleteConfirm = false" aria-label="Close"></button>
+  </c-modal-header>
+
+  <c-modal-body>
+    <p>Ø¢ÛŒØ§ Ù…Ø·Ù…Ø¦Ù† Ù‡Ø³ØªÛŒØ¯ Ú©Ù‡ Ù…ÛŒâ€ŒØ®ÙˆØ§Ù‡ÛŒØ¯ <strong>{{ selectedIds.length }}</strong> Ù…Ø­ØµÙˆÙ„ Ø§Ù†ØªØ®Ø§Ø¨â€ŒØ´Ø¯Ù‡ Ø±Ø§ Ø­Ø°Ù Ú©Ù†ÛŒØ¯ØŸ</p>
+  </c-modal-body>
+
+  <c-modal-footer>
+    <button cButton color="secondary" (click)="showDeleteConfirm = false">Ø§Ù†ØµØ±Ø§Ù</button>
+    <button cButton color="danger" (click)="deleteSelectedRecords()">ØªØ£ÛŒÛŒØ¯ Ø­Ø°Ù</button>
+  </c-modal-footer>
+</c-modal>
+
+
+===== FILE: src\app\views\shop\count-type\count-type.component.scss =====
+
+
+===== FILE: src\app\views\shop\count-type\count-type.component.spec.ts =====
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+
+import { CountTypeComponent } from './count-type.component';
+
+describe('CountTypeComponent', () => {
+  let component: CountTypeComponent;
+  let fixture: ComponentFixture<CountTypeComponent>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [CountTypeComponent]
+    })
+    .compileComponents();
+
+    fixture = TestBed.createComponent(CountTypeComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+});
+
+
+===== FILE: src\app\views\shop\count-type\count-type.component.ts =====
+// ---------------------------
+// Import Dependencies
+// ---------------------------
+import { CommonModule } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+
+// CoreUI components & directives
+import {
+  ButtonDirective, ColComponent,
+  FormDirective, FormFeedbackComponent, FormLabelDirective, ModalModule,
+  PageItemDirective, PageLinkDirective,
+  PaginationComponent, RowDirective, TableDirective
+} from '@coreui/angular';
+
+// DTOs & Services
+import { baseResponse } from 'src/app/dto/baseResponse';
+import { ListRequest } from 'src/app/dto/ListRequestDto';
+import { CountTypeDto } from 'src/app/dto/shop/CountTypeDto';
+import { CountTypeService } from 'src/app/services/shop/countType/count-type.service';
+import { ToastService } from 'src/app/services/utilities/toast.service';
+
+// ---------------------------
+// Component Definition
+// ---------------------------
+@Component({
+  selector: 'app-count-type',
+  imports: [
+    // UI modules
+    CommonModule, TableDirective, PaginationComponent, PageItemDirective, PageLinkDirective,
+    ButtonDirective, ColComponent, FormDirective, FormFeedbackComponent,
+    FormLabelDirective, RowDirective, ModalModule,
+
+    // Form modules
+    FormsModule, ReactiveFormsModule,
+  ],
+  templateUrl: './count-type.component.html',
+  styleUrl: './count-type.component.scss'
+})
+export class CountTypeComponent implements OnInit {
+
+  constructor(
+    private fb: FormBuilder,
+    private countTypeService: CountTypeService,
+    private toastService: ToastService
+  ) {}
+
+  // ---------------------------
+  // Properties
+  // ---------------------------
+
+  _request = new ListRequest();
+  _objectsView: CountTypeDto[] = [];
+  _baseResponse = new baseResponse;
+
+  // ÙØ±Ù…
+  ObjectForm!: FormGroup;
+
+  // ÙˆØ¶Ø¹ÛŒØª Ù…Ø¯Ø§Ù„
+  showModal = false;
+
+  // ÙˆØ¶Ø¹ÛŒØª ÙˆÛŒØ±Ø§ÛŒØ´
+  editMode = false;
+  editingId: number | null = null;
+
+  // Ø¢ÛŒØªÙ…â€ŒÙ‡Ø§ÛŒ Ø§Ù†ØªØ®Ø§Ø¨â€ŒØ´Ø¯Ù‡
+  selectedIds: number[] = [];
+
+  // Ù†Ù…Ø§ÛŒØ´ ØªØ§ÛŒÛŒØ¯ Ø­Ø°Ù
+  showDeleteConfirm = false;
+
+  // ---------------------------
+  // Lifecycle
+  // ---------------------------
+  ngOnInit(): void {
+    this.initForm();
+    this.loadDataTable();
+  }
+
+  // ---------------------------
+  // Init Form
+  // ---------------------------
+  initForm() {
+    this.ObjectForm = this.fb.group({
+      id: [null],
+      name: ['', Validators.required],
+    });
+  }
+
+  // ---------------------------
+  // CRUD Methods
+  // ---------------------------
+
+  // Ø¯Ø±ÛŒØ§ÙØª Ù„ÛŒØ³Øª Ø¯Ø§Ø¯Ù‡â€ŒÙ‡Ø§ (Table)
+  loadDataTable(): void {
+    this._request.pageSize = 5;
+
+    this.countTypeService.getRecords(this._request).subscribe((res) => {
+      if (res.isSucceeded) {
+        this._baseResponse = res;
+        this._objectsView = res.data;
+
+      }
+    });
+  }
+
+  // Ø§ÛŒØ¬Ø§Ø¯ / ÙˆÛŒØ±Ø§ÛŒØ´ Ø¯Ø§Ø¯Ù‡
+  onSubmit1() {
+    if (this.ObjectForm.valid) {
+      const ObjectData: CountTypeDto = this.ObjectForm.value;
+
+      if (this.editMode && this.editingId != null) {
+        // Ø¯Ø± Ø­Ø§Ù„Øª ÙˆÛŒØ±Ø§ÛŒØ´
+        this.countTypeService.updateRecord(ObjectData).subscribe(res => {
+          if (res.isSucceeded) {
+            this.afterSubmit();
+          } else {
+          }
+        });
+      } else {
+        // Ø¯Ø± Ø­Ø§Ù„Øª Ø§ÛŒØ¬Ø§Ø¯
+        this.countTypeService.insertRecord(ObjectData).subscribe(res => {
+          if (res.isSucceeded) {
+            this.afterSubmit();
+          } else {
+          }
+        });
+      }
+    }
+  }
+
+  // Ø¹Ù…Ù„ÛŒØ§Øª Ù¾Ø³ Ø§Ø² Ø«Ø¨Øª ÛŒØ§ ÙˆÛŒØ±Ø§ÛŒØ´
+  afterSubmit() {
+    this.loadDataTable();
+    this.showModal = false;
+    this.ObjectForm.reset();
+    this.editMode = false;
+    this.editingId = null;
+  }
+
+  // Ø¯Ø±ÛŒØ§ÙØª Ùˆ Ù†Ù…Ø§ÛŒØ´ Ø§Ø·Ù„Ø§Ø¹Ø§Øª Ø¬Ù‡Øª ÙˆÛŒØ±Ø§ÛŒØ´
+  onEdit(ObjectId: number) {
+    this.editMode = true;
+    this.editingId = ObjectId;
+
+    this.countTypeService.getRecordById(ObjectId).subscribe(res => {
+      if (res.isSucceeded && res.singleData) {
+        const Object = res.singleData;
+
+        this.ObjectForm.patchValue({
+          id: Object.id,
+          name: Object.name,
+        });
+
+        this.showModal = true;
+      } else {
+        this.toastService.error('Ù…ÙˆØ±Ø¯ Ù¾ÛŒØ¯Ø§ Ù†Ø´Ø¯ ÛŒØ§ Ø®Ø·Ø§ Ø¯Ø± Ø¯Ø±ÛŒØ§ÙØª Ø§Ø·Ù„Ø§Ø¹Ø§Øª!' );
+      }
+    });
+  }
+
+  // ---------------------------
+  // Pagination
+  // ---------------------------
+  changePage(pagenumber: number) {
+    this._request.pageNumber = pagenumber;
+    this.loadDataTable();
+  }
+
+  // ---------------------------
+  // Selection for Delete
+  // ---------------------------
+  isSelected(objectId: number): boolean {
+    return this.selectedIds.includes(objectId);
+  }
+
+  toggleSelection(ObjectId: number): void {
+    const index = this.selectedIds.indexOf(ObjectId);
+    if (index > -1) {
+      this.selectedIds.splice(index, 1);
+    } else {
+      this.selectedIds.push(ObjectId);
+    }
+  }
+
+  // ---------------------------
+  // Delete Operation
+  // ---------------------------
+  deleteSelectedRecords(): void {
+    this.countTypeService.deleteRecords(this.selectedIds).subscribe(res => {
+      if (res.isSucceeded) {
+        
+        this.afterSubmit(); // Ø±ÛŒØ³Øª ÙØ±Ù… Ùˆ Ø¨Ø§Ø±Ú¯Ø°Ø§Ø±ÛŒ Ù…Ø¬Ø¯Ø¯
+        this.selectedIds = [];
+      } else {
+        this.toastService.error( 'Ø®Ø·Ø§ Ø¯Ø± Ø­Ø°Ù Ú¯Ø±ÙˆÙ‡ÛŒ' );
+      }
+      this.showDeleteConfirm = false;
+    });
+  }
+
+}
 
 

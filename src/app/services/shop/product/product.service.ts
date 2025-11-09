@@ -29,8 +29,8 @@ export class ProductService extends BaseService<ProductViewDto, ProductCreateDto
 
     return this.http.post<baseResponse<ProductViewDto>>(`${this.apiurl}/api/product/search`, request, { headers: this.getJsonHeaders() }).pipe(
       catchError(error => {
-        this.toast.showToast.error({ message: 'خطا در تراکنش ' });
-
+        //this.toast.showToast.error({ message: 'خطا در تراکنش ' });
+        this.toast.error("need change");
         return throwError(() => error);
       })
     );

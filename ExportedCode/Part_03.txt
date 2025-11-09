@@ -1,7 +1,4 @@
-﻿===== FILE: src\app\layout\default-layout\default-header\default-header.component.scss =====
-
-
-===== FILE: src\app\layout\default-layout\default-header\default-header.component.spec.ts =====
+﻿===== FILE: src\app\layout\default-layout\default-header\default-header.component.spec.ts =====
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { RouterTestingModule } from '@angular/router/testing';
@@ -791,6 +788,81 @@ describe('AuthService', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({});
     service = TestBed.inject(AuthService);
+  });
+
+  it('should be created', () => {
+    expect(service).toBeTruthy();
+  });
+});
+
+
+===== FILE: src\app\services\auth\login\auth.service.ts =====
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable, catchError, map, throwError } from 'rxjs';
+import { ToastService } from '../../utilities/toast.service';
+import { Domain } from '../../../../utilities/path';
+import { baseResponse } from '../../../dto/baseResponse';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class AuthService {
+  private apiUrl = `${Domain}/api/Auth`;
+
+  constructor(private http: HttpClient, private toast: ToastService) { }
+
+  /** ØªØ§Ø¨Ø¹ Ù„Ø§Ú¯ÛŒÙ† */
+  login(email: string, password: string): Observable<any> {
+    const body = { email, password };
+
+    return this.http.post<baseResponse<any>>(`${this.apiUrl}/login`, body, {
+      headers: new HttpHeaders({ 'Content-Type': 'application/json' })
+    }).pipe(
+      map(response => {
+        if (response.isSucceeded && response.singleData?.token) {
+          // Ø°Ø®ÛŒØ±Ù‡ ØªÙˆÚ©Ù† Ø¯Ø± localStorage
+          localStorage.setItem('token', response.singleData.token);
+          localStorage.setItem('user', JSON.stringify(response.singleData));
+        }
+        return response;
+      }),
+      catchError(error => {
+        this.toast.error( 'Ø®Ø·Ø§ Ø¯Ø± ÙˆØ±ÙˆØ¯ Ø¨Ù‡ Ø³ÛŒØ³ØªÙ…' );
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /** Ø®Ø±ÙˆØ¬ Ø§Ø² Ø³ÛŒØ³ØªÙ… */
+  logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+  }
+
+  /** Ø¨Ø±Ø±Ø³ÛŒ Ù„Ø§Ú¯ÛŒÙ† Ø¨ÙˆØ¯Ù† Ú©Ø§Ø±Ø¨Ø± */
+  isLoggedIn(): boolean {
+    return !!localStorage.getItem('token');
+  }
+
+  /** Ú¯Ø±ÙØªÙ† ØªÙˆÚ©Ù† Ø°Ø®ÛŒØ±Ù‡â€ŒØ´Ø¯Ù‡ */
+  getToken(): string | null {
+    return localStorage.getItem('token');
+  }
+}
+
+
+===== FILE: src\app\services\base\userManage\user-manage.service.spec.ts =====
+import { TestBed } from '@angular/core/testing';
+
+import { UserManageService } from './user-manage.service';
+
+describe('UserManageService', () => {
+  let service: UserManageService;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({});
+    service = TestBed.inject(UserManageService);
   });
 
   it('should be created', () => {

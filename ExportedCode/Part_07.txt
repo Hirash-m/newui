@@ -1,322 +1,4 @@
-﻿===== FILE: src\app\views\shop\product\product.component.ts =====
-import { ToastService } from './../../../services/utilities/toast.service';
-import { ListRequest } from './../../../dto/ListRequestDto';
-import { baseResponse } from './../../../dto/baseResponse';
-import { ProductService } from '../../../services/shop/product/product.service';
-import { Component, inject, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup,  Validators,  ReactiveFormsModule, FormsModule } from '@angular/forms';
-
-import { AccordionButtonDirective, AccordionComponent, AccordionItemComponent, ButtonDirective, ColComponent,
-      FormDirective, FormFeedbackComponent, FormLabelDirective,     ModalModule, PageItemDirective, PageLinkDirective,
-       PaginationComponent, RowDirective, TableDirective, TemplateIdDirective } from '@coreui/angular';
-
-
-import { CommonModule } from '@angular/common';
-import { ProductCreateDto, ProductViewDto } from '../../../dto/shop/ProductDto';
-
-
-
-
-@Component({
-
-  selector: 'app-product',
-  templateUrl: './product.component.html',
-  styleUrl: './product.component.scss',
-  imports :[TableDirective,CommonModule,PaginationComponent, PageItemDirective,PageLinkDirective
-    ,ButtonDirective,  ColComponent,
-  FormDirective,  FormFeedbackComponent,  FormLabelDirective,  RowDirective,
-   FormsModule, ReactiveFormsModule,
-   ModalModule,
-    AccordionComponent,    AccordionItemComponent,    TemplateIdDirective,    AccordionButtonDirective
-  ]
-})
-export class ProductComponent implements OnInit   {
-
-  _request = new ListRequest();
-  _productsView: ProductViewDto[]=[];
-  _baseResponse = new baseResponse;
-
-
-
-
-
-
-
-
-  constructor ( private fb: FormBuilder,private productService : ProductService , private toastService: ToastService){}
-
-
-  ngOnInit(): void {
-
-    this.initForm();
-    this.loadProducts();
-
-
-  }
-
-
-
-  //table of list
-
-  loadProducts(): void {
-    this._request.pageSize = 5;
-    this.productService.getRecords(this._request).subscribe((res)=>{
-      if(res.isSucceeded){
-        this._baseResponse = res ;
-        this._productsView = res.data;
-       // console.log(this._baseResponse);
-        //this.ToastService.showToast.success({message:this._baseResponse.message})
-      }
-     else {
-      this.toastService.showToast.success(res)
-     }
-
-    })
-  }
-
-
-
-
-//form create
-    showModal = false;
-    productForm!: FormGroup;
-
-    initForm() {
-  this.productForm = this.fb.group({
-    id: [null],
-    name:['',Validators.required],
-    productCode:['',Validators.required],
-    price:[0,Validators.required],
-    countTypeId:[0,Validators.required],
-  });}
-
-
-
-
-
-
-onSubmit1() {
-  if (this.productForm.valid) {
-
-     const productData : ProductCreateDto = this.productForm.value;
-    if (this.editMode && this.editingProductId != null) {
-      // ÙˆÛŒØ±Ø§ÛŒØ´
-      this.productService.updateRecord( productData).subscribe(res => {
-        if (res.isSucceeded) {
-          this.toastService.showToast.success({message: res.message});
-          this.afterSubmit();
-        } else {
-          this.toastService.showToast.error({message:res.message});
-        }
-      });
-    } else {
-      // Ø§ÛŒØ¬Ø§Ø¯
-      this.productService.insertRecord(productData).subscribe(res => {
-        if (res.isSucceeded) {
-          this.toastService.showToast.success({message: res.message});
-          this.afterSubmit();
-        } else {
-          this.toastService.showToast.error({message: res.message});
-
-        }
-      });
-    }
-  }
-}
-
-
-afterSubmit() {
-  this.loadProducts();
-  this.showModal = false;
-  this.productForm.reset();
-  this.editMode = false;
-  this.editingProductId = null;
-}
-
-// edit product
-
-
-
-editMode = false;
-editingProductId: number | null = null;
-
-
-onEdit(productId: number) {
-  this.editMode = true;
-  this.editingProductId = productId;
-
-  this.productService.getRecordById(productId).subscribe(res => {
-    if (res.isSucceeded && res.singleData) {
-      const product = res.singleData;
-        console.log(res);
-      this.productForm.patchValue({
-        id: product.id,
-        name: product.name,
-        productCode: product.productCode,
-        price: product.price,
-        countTypeId: product.countTypeId
-      });
-
-      this.showModal = true;
-    } else {
-      this.toastService.showToast.error({message:'Ù…Ø­ØµÙˆÙ„ Ù¾ÛŒØ¯Ø§ Ù†Ø´Ø¯ ÛŒØ§ Ø®Ø·Ø§ Ø¯Ø± Ø¯Ø±ÛŒØ§ÙØª Ø§Ø·Ù„Ø§Ø¹Ø§Øª!'});
-
-    }
-  });
-}
-
-
-
-
-
-
-//change page
-  changePage(pagenumber: number){
-    this._request.pageNumber = pagenumber;
-    this.loadProducts();
-
-  }
-
-
-
-  //remove products
-  selectedProductIds: number[] = [];
-
-isSelected(productId: number): boolean {
-  return this.selectedProductIds.includes(productId);
-}
-
-toggleSelection(productId: number): void {
-  const index = this.selectedProductIds.indexOf(productId);
-  if (index > -1) {
-    this.selectedProductIds.splice(index, 1);
-  } else {
-    this.selectedProductIds.push(productId);
-  }
-}
-
-
-showDeleteConfirm = false;
-
-deleteSelectedProducts(): void {
-  this.productService.deleteRecords(this.selectedProductIds).subscribe(res => {
-    if (res.isSucceeded) {
-      this.toastService.showToast.success({message:res.message});
-      this.afterSubmit(); // Ø±ÛŒØ³Øª ÙØ±Ù… Ùˆ Ø¨Ø§Ø±Ú¯Ø°Ø§Ø±ÛŒ Ù…Ø¬Ø¯Ø¯
-      this.selectedProductIds = [];
-    } else {
-      this.toastService.showToast.error({message:'Ø®Ø·Ø§ Ø¯Ø± Ø­Ø°Ù Ú¯Ø±ÙˆÙ‡ÛŒ'});
-    }
-    this.showDeleteConfirm = false;
-  });
-}
-
-
-searchData = {
-  pageNumber: 1,
-  pageSize: 3,
-  sortBy: 'Id',
-  sortDirection: true,
-  name: '',
-  minPrice: 0,
-  maxPrice: 0
-};
-
-onSearch() {
-  this.productService.searchProducts(this.searchData).subscribe(
-    (result) => {
-      if(result.isSucceeded){
-        this._baseResponse = result;
-        this._productsView = result.data;
-        console.log('Ù†ØªØ§ÛŒØ¬ Ø¬Ø³ØªØ¬Ùˆ:', this._productsView);
-      } else {
-        this.toastService.showToast.error({message:'Ø®Ø·Ø§ Ø¯Ø± Ø¬Ø³ØªØ¬Ùˆ'});
-      }
-    },
-    (error) => {
-      console.error('Ø®Ø·Ø§ Ø¯Ø± Ø¬Ø³ØªØ¬Ùˆ', error);
-      this.toastService.showToast.error({message:'Ø®Ø·Ø§ÛŒ Ø§Ø±ØªØ¨Ø§Ø· Ø¨Ø§ Ø³Ø±ÙˆØ±'});
-    }
-  );
-}
-}
-
-
-===== FILE: src\app\views\shop\routes.ts =====
-import { Routes } from '@angular/router';
-
-export const routes: Routes = [
-  {
-    path: '',
-    data: {
-      title: 'shop'
-    },
-    children: [
-      {
-        path: '',
-        redirectTo: 'coreui-icons',
-        pathMatch: 'full'
-      },
-      {
-        path: 'product',
-        loadComponent: () => import('./product/product.component').then(m => m.ProductComponent),
-        data: {
-          title: 'Ù„ÛŒØ³Øª Ù…Ø­ØµÙˆÙ„Ø§Øª '
-        }
-      },
-      {
-        path: 'countType',
-        loadComponent: () => import('./count-type/count-type.component').then(m => m.CountTypeComponent),
-        data: {
-          title: ' ÙˆØ§Ø­Ø¯ Ø´Ù…Ø§Ø±Ø´ '
-        }
-      },
-      {
-        path: 'inventory',
-        loadComponent: () => import('./inventory/inventory.component').then(m => m.InventoryComponent),
-        data: {
-          title: ' Ø§Ù†Ø¨Ø§Ø±'
-        }
-      }
-    ]
-  }
-];
-
-
-===== FILE: src\app\views\utilities\toast-container\toast-container.component.html =====
-<p>toast-container works!</p>
-
-
-===== FILE: src\app\views\utilities\toast-container\toast-container.component.scss =====
-
-
-===== FILE: src\app\views\utilities\toast-container\toast-container.component.spec.ts =====
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-
-import { ToastContainerComponent } from './toast-container.component';
-
-describe('ToastContainerComponent', () => {
-  let component: ToastContainerComponent;
-  let fixture: ComponentFixture<ToastContainerComponent>;
-
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [ToastContainerComponent]
-    })
-    .compileComponents();
-
-    fixture = TestBed.createComponent(ToastContainerComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
-
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
-});
-
-
-===== FILE: src\app\views\utilities\toast-container\toast-container.component.ts =====
+﻿===== FILE: src\app\views\utilities\toast-container\toast-container.component.ts =====
 // toast-container.component.ts
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -577,5 +259,219 @@ export const routes: Routes = [
     loadComponent: () => import('./views/base/login/loginForm/login/login.component').then(m => m.LoginComponent)
   }
 ];
+
+
+===== FILE: src\scss\styles.scss =====
+/* You can add global styles to this file, and also import other style files */
+
+// Import styles with default layout.
+@use "@coreui/coreui/scss/coreui" as * with (
+  $enable-deprecation-messages: false
+);
+
+// Import Chart.js custom tooltips styles
+@use "@coreui/chartjs/scss/coreui-chartjs";
+
+// Custom styles for this theme
+@use "theme";
+
+// Some temp fixes
+//@use "fixes";
+
+// If you want to add custom CSS you can put it here.
+@use "custom";
+
+// Examples
+// We use those styles to show code examples, you should remove them in your application.
+@use "examples";
+
+
+
+===== FILE: src\scss\_charts.scss =====
+// custom .chartjs-tooltip-body-item
+
+.chartjs-tooltip-body-item > td {
+  padding-bottom: 0 !important;
+  padding-top: 0 !important;
+  font-size: smaller;
+}
+
+
+===== FILE: src\scss\_custom.scss =====
+// Here you can add other styles
+
+// custom .chartjs-tooltip-body-item padding
+@use "charts";
+
+// custom tweaks for scrollbar styling (wip)
+@use "scrollbar";
+
+ // custom calendar today cell color
+.calendar-cell.today {
+  --cui-calendar-cell-today-color: var(--cui-info) !important;
+}
+
+// custom select week cursor pointer
+.select-week .calendar-row.current {
+  cursor: pointer;
+}
+
+
+===== FILE: src\scss\_examples.scss =====
+@use "@coreui/coreui/scss/variables" as *;
+@use "@coreui/coreui/scss/mixins/breakpoints" as *;
+@use "@coreui/coreui/scss/mixins/color-mode" as *;
+
+.example {
+  &:not(:first-child) {
+    margin-top: 1.5rem;
+  }
+
+  .tab-content {
+    background-color: var(--#{$prefix}tertiary-bg);
+  }
+
+  & + p {
+    margin-top: 1.5rem;
+  }
+
+  // Components examples
+  .preview {
+    + p {
+      margin-top: 2rem;
+    }
+
+    > .form-control {
+      + .form-control {
+        margin-top: .5rem;
+      }
+    }
+
+    > .nav + .nav,
+    > .alert + .alert,
+    > .navbar + .navbar,
+    > .progress + .progress {
+      margin-top: 1rem;
+    }
+
+    > .dropdown-menu {
+      position: static;
+      display: block;
+    }
+
+    > :last-child {
+      margin-bottom: 0;
+    }
+
+    // Images
+    > svg + svg,
+    > img + img {
+      margin-left: .5rem;
+    }
+
+    // Buttons
+    .col > .btn,
+    .col-auto > .btn,
+    .d-md-block > .btn,
+    > .btn,
+    > .btn-group {
+      margin: .25rem .125rem;
+    }
+
+    > .btn-toolbar + .btn-toolbar {
+      margin-top: .5rem;
+    }
+
+    // List groups
+    > .list-group {
+      max-width: 400px;
+    }
+
+    > [class*="list-group-horizontal"] {
+      max-width: 100%;
+    }
+
+    // Navbars
+    .fixed-top,
+    .sticky-top {
+      position: static;
+      margin: -1rem -1rem 1rem;
+    }
+
+    .fixed-bottom {
+      position: static;
+      margin: 1rem -1rem -1rem;
+    }
+
+    @include media-breakpoint-up(sm) {
+      .fixed-top,
+      .sticky-top {
+        margin: -1.5rem -1.5rem 1rem;
+      }
+      .fixed-bottom {
+        margin: 1rem -1.5rem -1.5rem;
+      }
+    }
+
+    // Pagination
+    .pagination {
+      margin-top: .5rem;
+      margin-bottom: .5rem;
+    }
+
+    .docs-example-modal {
+      .modal {
+        position: static;
+        display: block;
+      }
+    }
+  }
+}
+
+@include color-mode(dark) {
+  .example .tab-content {
+    background-color: var(--#{$prefix}secondary-bg);
+  }
+}
+
+
+===== FILE: src\scss\_fixes.scss =====
+// Place for temp fixes
+
+
+
+
+
+===== FILE: src\scss\_scrollbar.scss =====
+// scrollbar tinkering
+
+@supports (scrollbar-width: thin) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #444 transparent;
+  }
+}
+
+//::-webkit-scrollbar {
+//  width: .7em;
+//  height: .7em;
+//}
+
+::-webkit-scrollbar-track {
+  background: var(--cui-body-bg, #fff);
+  border-radius: 100vw;
+  margin-block: .2em;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #999;
+  border: .15em solid var(--cui-body-bg, #fff);
+  border-radius: 100vw;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #444;
+}
+
 
 

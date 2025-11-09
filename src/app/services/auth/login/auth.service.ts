@@ -29,7 +29,7 @@ export class AuthService {
         return response;
       }),
       catchError(error => {
-        this.toast.showToast.error({ message: 'خطا در ورود به سیستم' });
+        this.toast.error( 'خطا در ورود به سیستم' );
         return throwError(() => error);
       })
     );

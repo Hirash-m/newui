@@ -99,8 +99,7 @@ export class CountTypeComponent implements OnInit {
       if (res.isSucceeded) {
         this._baseResponse = res;
         this._objectsView = res.data;
-        console.log(this._baseResponse);
-        // this.toastService.showToast.success({message:this._baseResponse.message})
+
       }
     });
   }
@@ -114,20 +113,16 @@ export class CountTypeComponent implements OnInit {
         // در حالت ویرایش
         this.countTypeService.updateRecord(ObjectData).subscribe(res => {
           if (res.isSucceeded) {
-            this.toastService.showToast.success({ message: res.message });
             this.afterSubmit();
           } else {
-            this.toastService.showToast.error({ message: res.message });
           }
         });
       } else {
         // در حالت ایجاد
         this.countTypeService.insertRecord(ObjectData).subscribe(res => {
           if (res.isSucceeded) {
-            this.toastService.showToast.success({ message: res.message });
             this.afterSubmit();
           } else {
-            this.toastService.showToast.error({ message: res.message });
           }
         });
       }
@@ -159,7 +154,7 @@ export class CountTypeComponent implements OnInit {
 
         this.showModal = true;
       } else {
-        this.toastService.showToast.error({ message: 'مورد پیدا نشد یا خطا در دریافت اطلاعات!' });
+        this.toastService.error('مورد پیدا نشد یا خطا در دریافت اطلاعات!' );
       }
     });
   }
@@ -194,11 +189,11 @@ export class CountTypeComponent implements OnInit {
   deleteSelectedRecords(): void {
     this.countTypeService.deleteRecords(this.selectedIds).subscribe(res => {
       if (res.isSucceeded) {
-        this.toastService.showToast.success({ message: res.message });
+        
         this.afterSubmit(); // ریست فرم و بارگذاری مجدد
         this.selectedIds = [];
       } else {
-        this.toastService.showToast.error({ message: 'خطا در حذف گروهی' });
+        this.toastService.error( 'خطا در حذف گروهی' );
       }
       this.showDeleteConfirm = false;
     });

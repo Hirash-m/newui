@@ -1,7 +1,7 @@
 // src/app/dto/baseResponse.ts
 export class baseResponse<T> {
     isSucceeded!: boolean;
-    message!: string;
+    message?: string;
     data!: T[];
     singleData!:T;
     totalRecords!: number;

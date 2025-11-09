@@ -114,7 +114,7 @@ export class UserComponent {
             this.roles = formData.roles || [];
             // this.permissions = formData.permissions || [];
         } else {
-            this.toastService.showToast.error({ message: res.message });
+        
         }
     });
 }
@@ -150,20 +150,20 @@ toggleRole(event: Event, roleId: number): void {
         // در حالت ویرایش
         this.ObjectService.updateRecord(ObjectData).subscribe(res => {
           if (res.isSucceeded) {
-            this.toastService.showToast.success({ message: res.message });
+           
             this.afterSubmit();
           } else {
-            this.toastService.showToast.error({ message: res.message });
+         
           }
         });
       } else {
         // در حالت ایجاد
         this.ObjectService.insertRecord(ObjectData).subscribe(res => {
           if (res.isSucceeded) {
-            this.toastService.showToast.success({ message: res.message });
+        
             this.afterSubmit();
           } else {
-            this.toastService.showToast.error({ message: res.message });
+      
           }
         });
       }
@@ -220,16 +220,16 @@ toggleRole(event: Event, roleId: number): void {
   
         this.ObjectForm.patchValue({
           id: Object.id,
-          username: Object.username,
-          fullName: Object.fullName,
-          email: Object.email,
-          Password: Object.Password || "",
+          fullName: Object.fullName || '',  // اضافه کردن fallback برای null
+          username: Object.username || '',
+          email: Object.email || '',
+          password: Object.Password || '',
           roleIds: Object.roleIds || [] // اگر roleIds null یا undefined بود، آرایه خالی برگردون
         });
   
         this.showModal = true;
       } else {
-        this.toastService.showToast.error({ message: 'مورد پیدا نشد یا خطا در دریافت اطلاعات!' });
+        this.toastService.error('مورد پیدا نشد یا خطا در دریافت اطلاعات!' );
       }
     });
   }
@@ -264,11 +264,11 @@ toggleRole(event: Event, roleId: number): void {
   deleteSelectedRecords(): void {
     this.ObjectService.deleteRecords(this.selectedIds).subscribe(res => {
       if (res.isSucceeded) {
-        this.toastService.showToast.success({ message: res.message });
+       
         this.afterSubmit(); // ریست فرم و بارگذاری مجدد
         this.selectedIds = [];
       } else {
-        this.toastService.showToast.error({ message: 'خطا در حذف گروهی' });
+        this.toastService.error( 'خطا در حذف گروهی' );
       }
       this.showDeleteConfirm = false;
     });

@@ -1,79 +1,4 @@
-﻿===== FILE: src\app\services\auth\login\auth.service.ts =====
-import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, catchError, map, throwError } from 'rxjs';
-import { ToastService } from '../../utilities/toast.service';
-import { Domain } from '../../../../utilities/path';
-import { baseResponse } from '../../../dto/baseResponse';
-
-@Injectable({
-  providedIn: 'root'
-})
-export class AuthService {
-  private apiUrl = `${Domain}/api/Auth`;
-
-  constructor(private http: HttpClient, private toast: ToastService) { }
-
-  /** ØªØ§Ø¨Ø¹ Ù„Ø§Ú¯ÛŒÙ† */
-  login(email: string, password: string): Observable<any> {
-    const body = { email, password };
-
-    return this.http.post<baseResponse<any>>(`${this.apiUrl}/login`, body, {
-      headers: new HttpHeaders({ 'Content-Type': 'application/json' })
-    }).pipe(
-      map(response => {
-        if (response.isSucceeded && response.singleData?.token) {
-          // Ø°Ø®ÛŒØ±Ù‡ ØªÙˆÚ©Ù† Ø¯Ø± localStorage
-          localStorage.setItem('token', response.singleData.token);
-          localStorage.setItem('user', JSON.stringify(response.singleData));
-        }
-        return response;
-      }),
-      catchError(error => {
-        this.toast.showToast.error({ message: 'Ø®Ø·Ø§ Ø¯Ø± ÙˆØ±ÙˆØ¯ Ø¨Ù‡ Ø³ÛŒØ³ØªÙ…' });
-        return throwError(() => error);
-      })
-    );
-  }
-
-  /** Ø®Ø±ÙˆØ¬ Ø§Ø² Ø³ÛŒØ³ØªÙ… */
-  logout() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-  }
-
-  /** Ø¨Ø±Ø±Ø³ÛŒ Ù„Ø§Ú¯ÛŒÙ† Ø¨ÙˆØ¯Ù† Ú©Ø§Ø±Ø¨Ø± */
-  isLoggedIn(): boolean {
-    return !!localStorage.getItem('token');
-  }
-
-  /** Ú¯Ø±ÙØªÙ† ØªÙˆÚ©Ù† Ø°Ø®ÛŒØ±Ù‡â€ŒØ´Ø¯Ù‡ */
-  getToken(): string | null {
-    return localStorage.getItem('token');
-  }
-}
-
-
-===== FILE: src\app\services\base\userManage\user-manage.service.spec.ts =====
-import { TestBed } from '@angular/core/testing';
-
-import { UserManageService } from './user-manage.service';
-
-describe('UserManageService', () => {
-  let service: UserManageService;
-
-  beforeEach(() => {
-    TestBed.configureTestingModule({});
-    service = TestBed.inject(UserManageService);
-  });
-
-  it('should be created', () => {
-    expect(service).toBeTruthy();
-  });
-});
-
-
-===== FILE: src\app\services\base\userManage\user-manage.service.ts =====
+﻿===== FILE: src\app\services\base\userManage\user-manage.service.ts =====
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Domain } from 'src/utilities/path';
@@ -87,125 +12,9 @@ import { BaseService } from '../../utilities/base.service';
 @Injectable({
   providedIn: 'root'
 })
-export class UserManageService  extends BaseService{
+export class UserManageService  extends BaseService<UserDto, UserDto>{
+  protected endpoint = '/api/user';
 
-  
-    // ðŸ”§ API Base URL
-    private apiurl = Domain;
-
-    // ðŸ“¦ Inject HTTP client and toast notification service
-    constructor(
-      private http: HttpClient,
-      private toast: ToastService
-    ) {
-      super();
-    }
-
-
-  // ==========================================================================
-  // ðŸ“¥ Get List of Records
-  // ==========================================================================
- 
-    getRecords(request: ListRequest): Observable<baseResponse<UserDto>> {
-      const requestPayload = request;
-  
-      return this.http.post<baseResponse<UserDto>>(
-        `${this.apiurl}/api/User/GetAll`,
-        requestPayload,
-        { headers: this.getJsonHeaders() }
-      ).pipe(
-        catchError(error => {
-          this.toast.showToast.error({ message: error });
-          return throwError(() => error);
-        })
-      );
-    }
-  
-
-      // ==========================================================================
-  // ðŸ“¥ Get template create fields
-  // ==========================================================================
- 
-  getCreateForm(): Observable<baseResponse<UserCreateFormData>> {
-    return this.http.get<baseResponse<UserCreateFormData>>(
-        `${this.apiurl}/api/User/getcreateform`,
-        { headers: this.getJsonHeaders() }
-    ).pipe(
-        catchError(error => {
-            this.toast.showToast.error({ message: error });
-            return throwError(() => error);
-        })
-    );
-}
-
-
-
-      // ==========================================================================
-  // âž• Insert New Record
-  // ==========================================================================
-  insertRecord(insertData: UserDto): Observable<baseResponse<UserDto>> {
-    return this.http.post<baseResponse<any>>(
-      `${this.apiurl}/api/User/create`,
-      insertData,
-      { headers: this.getJsonHeaders() }
-    ).pipe(
-      catchError(error => {
-        this.toast.showToast.error({ message: error });
-        return throwError(() => error);
-      })
-    );
-  }
-
-
-    // ==========================================================================
-  // ðŸ—‘ï¸ Delete Records by IDs
-  // ==========================================================================
-  deleteRecords(ids: number[]): Observable<baseResponse<any>> {
-    return this.http.post<baseResponse<any>>(
-      `${this.apiurl}/api/User/delete`,
-      ids,
-      { headers: this.getJsonHeaders() }
-    ).pipe(
-      catchError(error => {
-        this.toast.showToast.error({ message: error });
-        return throwError(() => error);
-      })
-    );
-  }
-
-  // ==========================================================================
-  // ðŸ“ Update Existing Record
-  // ==========================================================================
-  updateRecord(updateData: UserDto): Observable<baseResponse<UserDto>> {
-    return this.http.post<baseResponse<UserDto>>(
-      `${this.apiurl}/api/User/update`,
-      updateData,
-      { headers: this.getJsonHeaders() }
-    ).pipe(
-      catchError(error => {
-        this.toast.showToast.error({ message: error });
-        return throwError(() => error);
-      })
-    );
-  }
-
-    // ==========================================================================
-  // ðŸ” Get Record By ID
-  // ==========================================================================
-  getRecordById(id: number): Observable<baseResponse<UserDto>> {
-    var result = this.http.get<baseResponse<UserDto>>(
-      `${this.apiurl}/api/User/getById/?id=${id}`,
-      { headers: this.getJsonHeaders() }
-
-    ).pipe(
-      catchError(error => {
-        this.toast.showToast.error({ message: error });
-        return throwError(() => error);
-      })
-    );
- console.log(result.subscribe.toString);
-    return result ;
-  }
 }
 
 
@@ -253,99 +62,8 @@ import { catchError, Observable, throwError } from 'rxjs';
 @Injectable({
   providedIn: 'root'
 })
-export class CountTypeService extends BaseService {
-
-  // ðŸ”§ API Base URL
-  private apiurl = Domain;
-
-  // ðŸ“¦ Inject HTTP client and toast notification service
-  constructor(
-    private http: HttpClient,
-    private toast: ToastService
-  ) {
-    super();
-  }
-
-  // ==========================================================================
-  // ðŸ“¥ Get List of Records
-  // ==========================================================================
-  getRecords(request: ListRequest): Observable<baseResponse<CountTypeDto>> {
-    const requestPayload = request;
-
-    return this.http.post<baseResponse<CountTypeDto>>(
-      `${this.apiurl}/api/CountType/GetAll`,
-      requestPayload,
-      { headers: this.getJsonHeaders() }
-    ).pipe(
-      catchError(error => {
-        this.toast.showToast.error({ message: error });
-        return throwError(() => error);
-      })
-    );
-  }
-
-  // ==========================================================================
-  // âž• Insert New Record
-  // ==========================================================================
-  insertRecord(insertData: CountTypeDto): Observable<baseResponse<CountTypeDto>> {
-    return this.http.post<baseResponse<any>>(
-      `${this.apiurl}/api/CountType/create`,
-      insertData,
-      { headers: this.getJsonHeaders() }
-    ).pipe(
-      catchError(error => {
-        this.toast.showToast.error({ message: error });
-        return throwError(() => error);
-      })
-    );
-  }
-
-  // ==========================================================================
-  // ðŸ—‘ï¸ Delete Records by IDs
-  // ==========================================================================
-  deleteRecords(ids: number[]): Observable<baseResponse<any>> {
-    return this.http.post<baseResponse<any>>(
-      `${this.apiurl}/api/CountType/delete`,
-      ids,
-      { headers: this.getJsonHeaders() }
-    ).pipe(
-      catchError(error => {
-        this.toast.showToast.error({ message: error });
-        return throwError(() => error);
-      })
-    );
-  }
-
-  // ==========================================================================
-  // ðŸ“ Update Existing Record
-  // ==========================================================================
-  updateRecord(updateData: CountTypeDto): Observable<baseResponse<CountTypeDto>> {
-    return this.http.post<baseResponse<CountTypeDto>>(
-      `${this.apiurl}/api/CountType/update`,
-      updateData,
-      { headers: this.getJsonHeaders() }
-    ).pipe(
-      catchError(error => {
-        this.toast.showToast.error({ message: error });
-        return throwError(() => error);
-      })
-    );
-  }
-
-  // ==========================================================================
-  // ðŸ” Get Record By ID
-  // ==========================================================================
-  getRecordById(id: number): Observable<baseResponse<CountTypeDto>> {
-    return this.http.get<baseResponse<CountTypeDto>>(
-      `${this.apiurl}/api/CountType/getById/?id=${id}`,
-      { headers: this.getJsonHeaders() }
-    ).pipe(
-      catchError(error => {
-        this.toast.showToast.error({ message: error });
-        return throwError(() => error);
-      })
-    );
-  }
+export class CountTypeService extends BaseService<CountTypeDto , CountTypeDto> {
+protected  endpoint= '/api/counttype';
 
 }
 
@@ -383,105 +101,10 @@ import {InventoryDto} from 'src/app/dto/shop/InventoryDto'
 @Injectable({
   providedIn: 'root'
 })
-export class InventoryService extends BaseService {
+export class InventoryService extends BaseService<InventoryDto , InventoryDto> {
 
-    // ðŸ”§ API Base URL
-    private apiurl = Domain;
-
-    // ðŸ“¦ Inject HTTP client and toast notification service
-    constructor(
-      private http: HttpClient,
-      private toast: ToastService
-    ) {
-      super();
-    }
-
-
-  // ==========================================================================
-  // ðŸ“¥ Get List of Records
-  // ==========================================================================
- 
-    getRecords(request: ListRequest): Observable<baseResponse<InventoryDto>> {
-      const requestPayload = request;
-  
-      return this.http.post<baseResponse<InventoryDto>>(
-        `${this.apiurl}/api/inv/GetAll`,
-        requestPayload,
-        { headers: this.getJsonHeaders() }
-      ).pipe(
-        catchError(error => {
-          this.toast.showToast.error({ message: error });
-          return throwError(() => error);
-        })
-      );
-    }
-  
-
-
-      // ==========================================================================
-  // âž• Insert New Record
-  // ==========================================================================
-  insertRecord(insertData: InventoryDto): Observable<baseResponse<InventoryDto>> {
-    return this.http.post<baseResponse<any>>(
-      `${this.apiurl}/api/inv/create`,
-      insertData,
-      { headers: this.getJsonHeaders() }
-    ).pipe(
-      catchError(error => {
-        this.toast.showToast.error({ message: error });
-        return throwError(() => error);
-      })
-    );
-  }
-
-
-    // ==========================================================================
-  // ðŸ—‘ï¸ Delete Records by IDs
-  // ==========================================================================
-  deleteRecords(ids: number[]): Observable<baseResponse<any>> {
-    return this.http.post<baseResponse<any>>(
-      `${this.apiurl}/api/inv/delete`,
-      ids,
-      { headers: this.getJsonHeaders() }
-    ).pipe(
-      catchError(error => {
-        this.toast.showToast.error({ message: error });
-        return throwError(() => error);
-      })
-    );
-  }
-
-  // ==========================================================================
-  // ðŸ“ Update Existing Record
-  // ==========================================================================
-  updateRecord(updateData: InventoryDto): Observable<baseResponse<InventoryDto>> {
-    return this.http.post<baseResponse<InventoryDto>>(
-      `${this.apiurl}/api/inv/update`,
-      updateData,
-      { headers: this.getJsonHeaders() }
-    ).pipe(
-      catchError(error => {
-        this.toast.showToast.error({ message: error });
-        return throwError(() => error);
-      })
-    );
-  }
-
-    // ==========================================================================
-  // ðŸ” Get Record By ID
-  // ==========================================================================
-  getRecordById(id: number): Observable<baseResponse<InventoryDto>> {
-    return this.http.get<baseResponse<InventoryDto>>(
-      `${this.apiurl}/api/inv/getById/?id=${id}`,
-      { headers: this.getJsonHeaders() }
-    ).pipe(
-      catchError(error => {
-        this.toast.showToast.error({ message: error });
-        return throwError(() => error);
-      })
-    );
-  }
-
+  protected endpoint='/api/inv';
+   
 
 }
 
@@ -519,84 +142,17 @@ import { BaseService } from '../../utilities/base.service';
 @Injectable({
   providedIn: 'root'
 })
-export class ProductService extends BaseService {
+export class ProductService extends BaseService<ProductViewDto, ProductCreateDto> {
+  protected endpoint='/api/product';
   private apiurl = Domain;
 
-  constructor(private http: HttpClient, private toast: ToastService) {
-    super();
-  }
-
-
-  /** Ø¯Ø±ÛŒØ§ÙØª Ù„ÛŒØ³Øª Ø¯Ø§Ø¯Ù‡â€ŒÙ‡Ø§ */
-  getRecords(request: ListRequest): Observable<baseResponse<ProductViewDto>> {
-    const requestPayload = request;
 
 
 
-    return this.http.post<baseResponse<ProductViewDto>>(`${this.apiurl}/api/product/GetAll`, requestPayload, { headers: this.getJsonHeaders() }).pipe(
-      catchError(error => {
-        this.toast.showToast.error({ message: 'Ø®Ø·Ø§ Ø¯Ø± ØªØ±Ø§Ú©Ù†Ø´ ' });
-
-        return throwError(() => error);
-      })
-    )
-      ;
-  }
 
 
-  /** Ø§ÙØ²ÙˆØ¯Ù† Ù…Ø­ØµÙˆÙ„ */
-  insertRecord(productData: ProductCreateDto): Observable<baseResponse<ProductCreateDto>> {
 
-    return this.http.post<baseResponse<any>>(`${this.apiurl}/api/product/create`, productData, { headers: this.getJsonHeaders() }).pipe(
-      catchError(error => {
-        this.toast.showToast.error({ message: 'Ø®Ø·Ø§ Ø¯Ø± ØªØ±Ø§Ú©Ù†Ø´ ' });
-
-        return throwError(() => error);
-      })
-    );
-  }
-
-  /** Ø­Ø°Ù Ù…Ø­ØµÙˆÙ„ */
-  deleteRecords(ids: number[]): Observable<baseResponse<any>> {
-
-    return this.http.post<baseResponse<any>>(`${this.apiurl}/api/product/delete`, ids, { headers: this.getJsonHeaders() }).pipe(
-      catchError(error => {
-        this.toast.showToast.error({ message: 'Ø®Ø·Ø§ Ø¯Ø± ØªØ±Ø§Ú©Ù†Ø´ ' });
-
-        return throwError(() => error);
-      })
-    );
-  }
-
-  /** ÙˆÛŒØ±Ø§ÛŒØ´ Ù…Ø­ØµÙˆÙ„ */
-  updateRecord(productData: ProductCreateDto): Observable<baseResponse<ProductCreateDto>> {
-
-    return this.http.post<baseResponse<ProductCreateDto>>(`${this.apiurl}/api/product/update`, productData, { headers: this.getJsonHeaders() }).pipe(
-      catchError(error => {
-        this.toast.showToast.error({ message: 'Ø®Ø·Ø§ Ø¯Ø± ØªØ±Ø§Ú©Ù†Ø´ ' });
-
-        return throwError(() => error);
-      })
-    );
-  }
-  /** Ø¯Ø±ÛŒØ§ÙØª Ù…Ø­ØµÙˆÙ„ Ø¨Ø± Ø§Ø³Ø§Ø³ Ø´Ù†Ø§Ø³Ù‡ */
-  getRecordById(id: number): Observable<baseResponse<ProductCreateDto>> {
-
-    return this.http.get<baseResponse<ProductCreateDto>>(`${this.apiurl}/api/product/getById/?id=${id}`, { headers: this.getJsonHeaders() }).pipe(
-      catchError(error => {
-        this.toast.showToast.error({ message: 'Ø®Ø·Ø§ Ø¯Ø± ØªØ±Ø§Ú©Ù†Ø´ ' });
-
-        return throwError(() => error);
-      })
-    );
-  }
-
-
-  getSelectOptions(serviceName: string): Observable<any[]> {
-    return this.http.get<any>(`${serviceName}`).pipe(
-      map(response => Array.isArray(response) ? response : [])
-    );
-  }
+ 
 
   /** Ø¬Ø³ØªØ¬ÙˆÛŒ Ù…Ø­ØµÙˆÙ„ Ø¨Ø§ Ù¾Ø§Ø±Ø§Ù…ØªØ±Ù‡Ø§ */
   searchProducts(request: ListRequest): Observable<baseResponse<ProductViewDto>> {
@@ -604,8 +160,8 @@ export class ProductService extends BaseService {
 
     return this.http.post<baseResponse<ProductViewDto>>(`${this.apiurl}/api/product/search`, request, { headers: this.getJsonHeaders() }).pipe(
       catchError(error => {
-        this.toast.showToast.error({ message: 'Ø®Ø·Ø§ Ø¯Ø± ØªØ±Ø§Ú©Ù†Ø´ ' });
-
+        //this.toast.showToast.error({ message: 'Ø®Ø·Ø§ Ø¯Ø± ØªØ±Ø§Ú©Ù†Ø´ ' });
+        this.toast.error("need change");
         return throwError(() => error);
       })
     );
@@ -615,16 +171,139 @@ export class ProductService extends BaseService {
 
 
 ===== FILE: src\app\services\utilities\base.service.spec.ts =====
-import { TestBed } from '@angular/core/testing';
-
+// src/app/services/utilities/mock-base.service.ts
+import { Injectable } from '@angular/core';
 import { BaseService } from './base.service';
 
-describe('BaseService', () => {
-  let service: BaseService;
+@Injectable()
+export class MockBaseService extends BaseService<any, any> {
+  protected endpoint = '/api/test'; // ÙÙ‚Ø· Ø¨Ø±Ø§ÛŒ Ú©Ø§Ù…Ù¾Ø§ÛŒÙ„ Ø´Ø¯Ù†
+
+  constructor() {
+    super(null!, null!); // HttpClient Ùˆ ToastService Ø±Ùˆ null Ù…ÛŒâ€ŒØ°Ø§Ø±ÛŒÙ… Ú†ÙˆÙ† ØªØ³Øª ÙˆØ§Ø­Ø¯ Ù‡Ø³Øª
+  }
+}
+
+===== FILE: src\app\services\utilities\base.service.ts =====
+// src/app/services/utilities/base.service.ts
+
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { Observable, throwError } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+import { ToastService } from './toast.service';
+import { ApiResult } from '../../dto/api-result';
+import { ListRequest } from '../../dto/ListRequestDto';
+import { Domain } from '../../../utilities/path';
+
+@Injectable({ providedIn: 'root' })
+export abstract class BaseService<TViewDto, TCreateDto = TViewDto> {
+  protected apiUrl = Domain;
+  protected abstract endpoint: string;
+
+  constructor(
+    protected http: HttpClient,
+    protected toast: ToastService
+  ) {}
+
+  protected getJsonHeaders(): HttpHeaders {
+    return new HttpHeaders({
+      accept: 'application/json',
+      'Content-Type': 'application/json',
+    });
+  }
+
+  // --- CRUD Methods ---
+  getRecords(request: ListRequest): Observable<ApiResult<TViewDto>> {
+    return this.http
+      .post<ApiResult<TViewDto>>(
+        `${this.apiUrl}${this.endpoint}/GetAll`,
+        request,
+        { headers: this.getJsonHeaders() }
+      )
+      .pipe(catchError(err => this.handleError(err)));
+  }
+
+  insertRecord(data: TCreateDto): Observable<ApiResult<TCreateDto>> {
+    return this.http
+      .post<ApiResult<TCreateDto>>(
+        `${this.apiUrl}${this.endpoint}/create`,
+        data,
+        { headers: this.getJsonHeaders() }
+      )
+      .pipe(catchError(err => this.handleError(err)));
+  }
+
+  updateRecord(data: TCreateDto): Observable<ApiResult<TCreateDto>> {
+    return this.http
+      .post<ApiResult<TCreateDto>>(
+        `${this.apiUrl}${this.endpoint}/update`,
+        data,
+        { headers: this.getJsonHeaders() }
+      )
+      .pipe(catchError(err => this.handleError(err)));
+  }
+
+  deleteRecords(ids: number[]): Observable<ApiResult<any>> {
+    return this.http
+      .post<ApiResult<any>>(
+        `${this.apiUrl}${this.endpoint}/delete`,
+        ids,
+        { headers: this.getJsonHeaders() }
+      )
+      .pipe(catchError(err => this.handleError(err)));
+  }
+
+  getRecordById(id: number): Observable<ApiResult<TCreateDto>> {
+    return this.http
+      .get<ApiResult<TCreateDto>>(
+        `${this.apiUrl}${this.endpoint}/getById/?id=${id}`,
+        { headers: this.getJsonHeaders() }
+      )
+      .pipe(catchError(err => this.handleError(err)));
+  }
+
+  getCreateForm<TForm>(): Observable<ApiResult<TForm>> {
+    return this.http
+      .get<ApiResult<TForm>>(
+        `${this.apiUrl}${this.endpoint}/getcreateform`,
+        { headers: this.getJsonHeaders() }
+      )
+      .pipe(catchError(err => this.handleError(err)));
+  }
+
+  // --- ÙÙ‚Ø· throw Ø®Ø·Ø§ â€” Toast Ø¯Ø± Ø§ÛŒÙ†ØªØ±Ø³Ù¾ØªÙˆØ± ---
+  private handleError(error: any): Observable<never> {
+    return throwError(() => error);
+  }
+
+  // --- ÙÙ‚Ø· Ù†Ù…Ø§ÛŒØ´ Ù¾ÛŒØ§Ù… Ø§Ø² ApiResult (Ø¨Ø¯ÙˆÙ† fallback) ---
+  protected showApiResultToast(result: ApiResult<any>): void {
+    if (result.isSucceeded) {
+      if (result.message) {
+        this.toast.success(result.message);
+      }
+      // Ø§Ú¯Ø± message Ù†Ø¨ÙˆØ¯ â†’ Ù‡ÛŒÚ† ØªÙˆØ³ØªÛŒ Ù†Ù…Ø§ÛŒØ´ Ø¯Ø§Ø¯Ù‡ Ù†Ù…ÛŒâ€ŒØ´ÙˆØ¯
+    } else {
+      const errorMsg = result.errors?.[0] ?? result.message;
+      if (errorMsg) {
+        this.toast.error(errorMsg);
+      }
+    }
+  }
+}
+
+===== FILE: src\app\services\utilities\toast.service.spec.ts =====
+import { TestBed } from '@angular/core/testing';
+
+import { ToastService } from './toast.service';
+
+describe('ToastService', () => {
+  let service: ToastService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
-    service = TestBed.inject(BaseService);
+    service = TestBed.inject(ToastService);
   });
 
   it('should be created', () => {
@@ -633,16 +312,234 @@ describe('BaseService', () => {
 });
 
 
-===== FILE: src\app\services\utilities\base.service.ts =====
-import { HttpHeaders } from '@angular/common/http';
+===== FILE: src\app\services\utilities\toast.service.ts =====
+// src/app/services/utilities/toast.service.ts
 
-export abstract class BaseService {
-  protected getJsonHeaders(): HttpHeaders {
-    return new HttpHeaders({
-      'accept': 'application/json',
-      'Content-Type': 'application/json'
-    });
-  }
+import { Injectable, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
+import { ApiResult } from 'src/app/dto/api-result';
+
+export type ToastType = 'success' | 'error' | 'warning' | 'info';
+
+export interface ToastData {
+  id: number;
+  title: string;
+  message: string;
+  type: ToastType;
+  duration?: number;
 }
+
+@Injectable({ providedIn: 'root' })
+export class ToastService {
+  private counter = 0;
+  toasts = signal<ToastData[]>([]);
+
+  // ØªÙ†Ø¸ÛŒÙ…Ø§Øª Ù¾ÛŒØ´â€ŒÙØ±Ø¶
+  private defaults = {
+    success: { title: 'Ø¹Ù…Ù„ÛŒØ§Øª Ù…ÙˆÙÙ‚', duration: 4000 },
+    error: { title: 'Ø®Ø·Ø§', duration: 6000 },
+    warning: { title: 'Ø§Ø®Ø·Ø§Ø±', duration: 5000 },
+    info: { title: 'Ø§Ø·Ù„Ø§Ø¹Ø§Øª', duration: 4000 },
+  };
+
+  // Ù…ØªØ¯ Ø§ØµÙ„ÛŒ Ù†Ù…Ø§ÛŒØ´ Toast
+  private show(type: ToastType, message: string, title?: string, duration?: number): void {
+    const id = this.counter++;
+    const config = this.defaults[type];
+
+    const toast: ToastData = {
+      id,
+      type,
+      title: title ?? config.title,
+      message,
+      duration: duration ?? config.duration,
+    };
+
+    this.toasts.update(list => [...list, toast]);
+    setTimeout(() => this.remove(id), toast.duration);
+  }
+
+  // Ù…ØªØ¯Ù‡Ø§ÛŒ Ø¹Ù…ÙˆÙ…ÛŒ
+  success(message: string, title?: string): void {
+    this.show('success', message, title);
+  }
+
+  error(message: string, title?: string): void {
+    this.show('error', message, title);
+  }
+
+  warning(message: string, title?: string): void {
+    this.show('warning', message, title);
+  }
+
+  info(message: string, title?: string): void {
+    this.show('info', message, title);
+  }
+
+  remove(id: number): void {
+    this.toasts.update(list => list.filter(t => t.id !== id));
+  }
+  removeToast(id: number): void {
+    this.toasts.update(list => list.filter(t => t.id !== id));
+  }
+  // --- ÙÙ‚Ø· Ù¾ÛŒØ§Ù… Ø§Ø² ApiResult â€” Ø¨Ø¯ÙˆÙ† fallback Ù…Ø­Ù„ÛŒ ---
+  handleApiResponse<T>(result: ApiResult<T>): void {
+    if (result.isSucceeded) {
+      if (result.message) {
+        this.success(result.message);
+      }
+      // Ø§Ú¯Ø± message Ù†Ø¨ÙˆØ¯ â†’ Ù‡ÛŒÚ† ØªÙˆØ³ØªÛŒ Ù†Ù…Ø§ÛŒØ´ Ø¯Ø§Ø¯Ù‡ Ù†Ù…ÛŒâ€ŒØ´ÙˆØ¯
+    } else {
+      this.handleApiError(result);
+    }
+  }
+  
+
+  // --- Ù‡Ù†Ø¯Ù„ Ú©Ø±Ø¯Ù† Ø®Ø·Ø§Ù‡Ø§ÛŒ ApiResult Ø¨Ø§ Ú†Ú© statusCode Ø§ÛŒÙ…Ù† ---
+  private handleApiError(result: ApiResult): void {
+    const errors = result.errors ?? [];
+    const message = errors.length > 0 ? errors[0] : result.message ?? 'Ø®Ø·Ø§ÛŒÛŒ Ø±Ø® Ø¯Ø§Ø¯.';
+
+    const status = result.statusCode;
+
+    if (status === 401) {
+      this.warning(message, 'Ø§Ø­Ø±Ø§Ø² Ù‡ÙˆÛŒØª');
+    } else if (status === 403) {
+      this.warning(message, 'Ø¯Ø³ØªØ±Ø³ÛŒ Ù…Ù…Ù†ÙˆØ¹');
+    } else if (status != null && status >= 400 && status < 500) {
+      this.error(message, 'Ø®Ø·Ø§ÛŒ Ø§Ø¹ØªØ¨Ø§Ø±Ø³Ù†Ø¬ÛŒ');
+    } else {
+      this.error(message); // 500 ÛŒØ§ Ø¨Ø¯ÙˆÙ† statusCode
+    }
+  }
+
+  // --- ÙÙ‚Ø· Ø®Ø·Ø§Ù‡Ø§ÛŒ Ø®Ø§Ù… HTTP (Ø¨Ø¯ÙˆÙ† ApiResult) ---
+  handleHttpError(error: HttpErrorResponse): void {
+    let message = 'Ø®Ø·Ø§ÛŒ Ø§Ø±ØªØ¨Ø§Ø· Ø¨Ø§ Ø³Ø±ÙˆØ±';
+
+    if (error.error instanceof ErrorEvent) {
+      // Ø®Ø·Ø§ÛŒ Ú©Ù„Ø§ÛŒÙ†Øª
+      message = `Ø®Ø·Ø§: ${error.error.message}`;
+    } else {
+      // Ø®Ø·Ø§ÛŒ Ø³Ø±ÙˆØ±
+      const status = error.status;
+      const body = error.error;
+
+      if (status === 0) {
+        message = 'Ø§ØªØµØ§Ù„ Ø¨Ù‡ Ø³Ø±ÙˆØ± Ø¨Ø±Ù‚Ø±Ø§Ø± Ù†ÛŒØ³Øª.';
+      } else if (status === 500) {
+        message = 'Ø®Ø·Ø§ÛŒ Ø¯Ø§Ø®Ù„ÛŒ Ø³Ø±ÙˆØ±.';
+      } else if (status === 404) {
+        message = 'Ù…Ù†Ø¨Ø¹ Ù…ÙˆØ±Ø¯ Ù†Ø¸Ø± ÛŒØ§ÙØª Ù†Ø´Ø¯.';
+      } else if (body && typeof body === 'object' && 'message' in body) {
+        message = (body as any).message;
+      } else if (typeof body === 'string') {
+        message = body;
+      }
+    }
+
+    this.error(message);
+  
+  
+  }
+
+  
+}
+
+===== FILE: src\app\views\base\login\loginForm\login\login.component.html =====
+<div class="bg-light dark:bg-transparent min-vh-100 d-flex flex-row align-items-center">
+  <c-container breakpoint="md">
+    <c-row class="justify-content-center">
+      <c-col lg="10" xl="8">
+        <c-card-group>
+          <c-card class="p-4">
+            <c-card-body>
+              <form cForm (ngSubmit)="onLogin()">
+                <h1>ÙˆØ±ÙˆØ¯ Ø¨Ù‡ Ø³ÛŒØ³ØªÙ…</h1>
+                <p class="text-body-secondary">Ù„Ø·ÙØ§Ù‹ Ø§Ø·Ù„Ø§Ø¹Ø§Øª Ú©Ø§Ø±Ø¨Ø±ÛŒ Ø®ÙˆØ¯ Ø±Ø§ ÙˆØ§Ø±Ø¯ Ú©Ù†ÛŒØ¯</p>
+
+                <c-input-group class="mb-3">
+                  <span cInputGroupText>
+                    <svg cIcon name="cilUser"></svg>
+                  </span>
+                  <input
+                    type="email"
+                    autoComplete="username"
+                    cFormControl
+                    placeholder="Ø§ÛŒÙ…ÛŒÙ„"
+                    [(ngModel)]="email"
+                    name="email"
+                    required
+                  />
+                </c-input-group>
+
+                <c-input-group class="mb-4">
+                  <span cInputGroupText>
+                    <svg cIcon name="cilLockLocked"></svg>
+                  </span>
+                  <input
+                    type="password"
+                    autoComplete="current-password"
+                    cFormControl
+                    placeholder="Ø±Ù…Ø² Ø¹Ø¨ÙˆØ±"
+                    [(ngModel)]="password"
+                    name="password"
+                    required
+                  />
+                </c-input-group>
+
+                <c-row>
+                  <c-col xs="12" class="text-center">
+                    <button
+                      cButton
+                      class="px-4"
+                      color="primary"
+                      type="submit"
+                      [disabled]="loading"
+                    >
+                      {{ loading ? 'Ø¯Ø± Ø­Ø§Ù„ ÙˆØ±ÙˆØ¯...' : 'ÙˆØ±ÙˆØ¯' }}
+                    </button>
+                  </c-col>
+                </c-row>
+
+                <!--
+                <c-row class="mt-3">
+                  <c-col class="text-right" xs="6">
+                    <button cButton class="px-0" color="link" type="button">
+                      ÙØ±Ø§Ù…ÙˆØ´ÛŒ Ø±Ù…Ø² Ø¹Ø¨ÙˆØ±ØŸ
+                    </button>
+                  </c-col>
+                </c-row>
+                -->
+              </form>
+            </c-card-body>
+          </c-card>
+
+          <!--
+          <c-card [ngStyle]="{'minWidth.%': 44}" class="text-white bg-primary py-5">
+            <c-card-body class="text-center">
+              <div>
+                <h2>Ø«Ø¨Øªâ€ŒÙ†Ø§Ù…</h2>
+                <p>
+                  Ø¨Ø±Ø§ÛŒ Ø§Ø³ØªÙØ§Ø¯Ù‡ Ø§Ø² Ø§Ù…Ú©Ø§Ù†Ø§Øª Ø³Ø§Ù…Ø§Ù†Ù‡ØŒ ÛŒÚ© Ø­Ø³Ø§Ø¨ Ú©Ø§Ø±Ø¨Ø±ÛŒ Ø¬Ø¯ÛŒØ¯ Ø§ÛŒØ¬Ø§Ø¯ Ú©Ù†ÛŒØ¯.
+                </p>
+                <button
+                  [active]="true"
+                  cButton
+                  class="mt-3"
+                  color="primary"
+                  routerLink="/register"
+                >
+                  Ø«Ø¨Øªâ€ŒÙ†Ø§Ù… Ú©Ù†ÛŒØ¯
+                </button>
+              </div>
+            </c-card-body>
+          </c-card>
+          -->
+        </c-card-group>
+      </c-col>
+    </c-row>
+  </c-container>
+</div>
 
 

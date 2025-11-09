@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>آموزش اضافه کردن فرم جدید در اپلیکیشن Angular با CoreUI</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f9;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+        header {
+            background-color: #007bff;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h1, h2, h3 {
+            color: #007bff;
+        }
+        details {
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        summary {
+            background-color: #e9ecef;
+            padding: 15px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        summary:hover {
+            background-color: #dee2e6;
+        }
+        .step-content {
+            padding: 15px;
+            background-color: #fff;
+        }
+        code {
+            background-color: #f8f9fa;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        pre {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        ul {
+            list-style-type: disc;
+            padding-right: 20px;
+        }
+        footer {
+            text-align: center;
+            padding: 10px;
+            background-color: #f4f6f9;
+            color: #666;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>آموزش گام‌به‌گام اضافه کردن فرم جدید در اپلیکیشن Angular با CoreUI</h1>
+        <p>این راهنما برای دولوپرهایی طراحی شده که می‌خواهند یک فرم جدید (مانند فرم مدیریت موجودی یا محصول) به پروژه اضافه کنند. مراحل به صورت تیتروار نمایش داده شده و با کلیک روی هر کدام، توضیحات کامل با مثال باز می‌شود.</p>
+    </header>
+
+    <div class="container">
+        <h2>مسیر کلی اضافه کردن فرم جدید</h2>
+        <p>برای اضافه کردن یک فرم جدید، مراحل زیر را به ترتیب دنبال کنید. هر مرحله شامل توضیح ساده، نکات کلیدی و مثال کد است.</p>
+
+        <details>
+            <summary>گام ۱: ایجاد DTOها (Data Transfer Objects)</summary>
+            <div class="step-content">
+                <h3>توضیح ساده:</h3>
+                <p>DTOها کلاس‌هایی هستند که ساختار داده‌های شما را تعریف می‌کنند. مثلاً برای یک فرم جدید مانند "دسته‌بندی محصولات"، DTOهایی برای نمایش، ایجاد و ویرایش ایجاد کنید. این کار کمک می‌کند داده‌ها بین فرانت‌اند و بک‌اند به درستی منتقل شوند.</p>
+                
+                <h3>نکات کلیدی:</h3>
+                <ul>
+                    <li>DTOها را در مسیر <code>src/app/dto/[module]/</code> قرار دهید.</li>
+                    <li>از اینترفیس یا کلاس استفاده کنید و فیلدهای ضروری را تعریف کنید.</li>
+                    <li>اگر نیاز به لیست یا جستجو دارید، DTOهای جداگانه برای View و Create بسازید.</li>
+                </ul>
+                
+                <h3>مثال:</h3>
+                <p>فرض کنید می‌خواهیم DTO برای "دسته‌بندی محصولات" (CategoryDto) بسازیم:</p>
+                <pre><code>// src/app/dto/shop/CategoryDto.ts
+export class CategoryViewDto {
+  id!: number;
+  name!: string;
+  description!: string;
+}
+
+export class CategoryCreateDto {
+  name!: string;
+  description!: string;
+}</code></pre>
+                <p>این DTOها را در سرویس‌ها و کامپوننت‌ها استفاده کنید.</p>
+            </div>
+        </details>
+
+        <details>
+            <summary>گام ۲: ایجاد سرویس برای مدیریت داده‌ها</summary>
+            <div class="step-content">
+                <h3>توضیح ساده:</h3>
+                <p>سرویس‌ها مسئولیت ارتباط با API (مانند GET, POST, PUT, DELETE) را بر عهده دارند. از BaseService ارث‌بری کنید تا کدهای تکراری کم شود. سرویس جدید را برای فرم خود بسازید و متدهای CRUD را پیاده‌سازی کنید.</p>
+                
+                <h3>نکات کلیدی:</h3>
+                <ul>
+                    <li>سرویس را در مسیر <code>src/app/services/[module]/</code> قرار دهید.</li>
+                    <li>از HttpClient برای درخواست‌ها استفاده کنید.</li>
+                    <li>با ToastService برای نمایش پیام‌ها ادغام کنید.</li>
+                    <li>از BaseService برای متدهای عمومی مانند getRecords, insertRecord استفاده کنید.</li>
+                </ul>
+                
+                <h3>مثال:</h3>
+                <p>سرویس برای "دسته‌بندی محصولات":</p>
+                <pre><code>// src/app/services/shop/category/category.service.ts
+import { Injectable } from '@angular/core';
+import { BaseService } from '../../utilities/base.service';
+import { CategoryDto, CategoryViewDto } from '../../../dto/shop/CategoryDto';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class CategoryService extends BaseService&lt;CategoryViewDto, CategoryDto&gt; {
+  protected endpoint = '/api/category';
+}</code></pre>
+                <p>حالا می‌توانید از این سرویس در کامپوننت برای بارگیری داده‌ها استفاده کنید.</p>
+            </div>
+        </details>
+
+        <details>
+            <summary>گام ۳: ایجاد کامپوننت برای UI فرم</summary>
+            <div class="step-content">
+                <h3>توضیح ساده:</h3>
+                <p>کامپوننت اصلی جایی است که جدول، فرم پاپ‌آپ و عملیات CRUD را پیاده می‌کنید. از CoreUI برای المان‌های UI مانند جدول، مدال و باتن‌ها استفاده کنید. فرم را با ReactiveForms بسازید و سرویس را inject کنید.</p>
+                
+                <h3>نکات کلیدی:</h3>
+                <ul>
+                    <li>کامپوننت را با CLI بسازید: <code>ng g c views/shop/category</code>.</li>
+                    <li>فرم را با FormGroup و Validators بسازید.</li>
+                    <li>برای جدول از cTable و برای مدال از c-modal استفاده کنید.</li>
+                    <li>عملیات انتخاب گروهی و حذف را اضافه کنید.</li>
+                </ul>
+                
+                <h3>مثال:</h3>
+                <p>قسمتی از کامپوننت برای "دسته‌بندی محصولات":</p>
+                <pre><code>// src/app/views/shop/category/category.component.ts
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { CategoryService } from '../../../services/shop/category/category.service';
+
+@Component({
+  selector: 'app-category',
+  templateUrl: './category.component.html',
+})
+export class CategoryComponent implements OnInit {
+  categoryForm!: FormGroup;
+  showModal = false;
+
+  constructor(private fb: FormBuilder, private categoryService: CategoryService) {}
+
+  ngOnInit(): void {
+    this.categoryForm = this.fb.group({
+      name: ['', Validators.required],
+      description: ['']
+    });
+  }
+
+  onSubmit() {
+    if (this.categoryForm.valid) {
+      this.categoryService.insertRecord(this.categoryForm.value).subscribe(res => {
+        // Handle success
+      });
+    }
+  }
+}</code></pre>
+                <p>در HTML جدول و مدال را اضافه کنید مشابه نمونه‌های موجود در پروژه.</p>
+            </div>
+        </details>
+
+        <details>
+            <summary>گام ۴: اضافه کردن به روتینگ و نویگیشن</summary>
+            <div class="step-content">
+                <h3>توضیح ساده:</h3>
+                <p>فرم جدید را به روتینگ اپ اضافه کنید تا از منو یا لینک‌ها قابل دسترسی باشد. همچنین به فایل _nav.ts اضافه کنید تا در سایدبار نمایش داده شود.</p>
+                
+                <h3>نکات کلیدی:</h3>
+                <ul>
+                    <li>روتینگ را در <code>src/app/views/shop/routes.ts</code> بروز کنید.</li>
+                    <li>به آرایه navItems در _nav.ts اضافه کنید.</li>
+                    <li>از lazy loading برای عملکرد بهتر استفاده کنید.</li>
+                </ul>
+                
+                <h3>مثال:</h3>
+                <p>اضافه کردن روت برای "دسته‌بندی محصولات":</p>
+                <pre><code>// src/app/views/shop/routes.ts
+{
+  path: 'category',
+  loadComponent: () => import('./category/category.component').then(m => m.CategoryComponent),
+  data: { title: 'دسته‌بندی محصولات' }
+}</code></pre>
+                <p>در _nav.ts:</p>
+                <pre><code>{
+  name: 'دسته‌بندی محصولات',
+  url: '/shop/category',
+  icon: 'nav-icon-bullet'
+}</code></pre>
+            </div>
+        </details>
+
+        <details>
+            <summary>گام ۵: تست و ادغام نهایی</summary>
+            <div class="step-content">
+                <h3>توضیح ساده:</h3>
+                <p>پس از ساخت، فرم را تست کنید. مطمئن شوید که CRUD کار می‌کند، پیام‌ها نمایش داده می‌شوند و UI responsive است. اگر خطایی بود، از کنسول و Toastها بررسی کنید.</p>
+                
+                <h3>نکات کلیدی:</h3>
+                <ul>
+                    <li>با <code>ng serve</code> اجرا کنید و تست دستی انجام دهید.</li>
+                    <li>از Guardها برای امنیت استفاده کنید (مانند authGuard).</li>
+                    <li>اگر نیاز به جستجو یا فیلتر دارید، متدهای اضافی به سرویس اضافه کنید.</li>
+                </ul>
+                
+                <h3>مثال:</h3>
+                <p>تست: به صفحه بروید، داده اضافه کنید و چک کنید که در جدول نمایش داده شود. اگر خطا رخ داد، بررسی کنید که endpoint سرویس درست باشد.</p>
+            </div>
+        </details>
+    </div>
+
+    <footer>
+        <p>تهیه‌شده توسط AI Assistant | بر اساس پروژه CoreUI Angular</p>
+    </footer>
+</body>
+</html>
