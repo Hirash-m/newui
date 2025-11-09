@@ -26,7 +26,7 @@ import { ToastService } from 'src/app/services/utilities/toast.service';
 export class UserComponent {
 
 
-  
+
   constructor(
     private fb: FormBuilder,
     private ObjectService: UserManageService ,
@@ -51,7 +51,7 @@ export class UserComponent {
 
     // وضعیت مدال
     showModal = false;
-  
+
     // وضعیت ویرایش
     editMode = false;
     editingId: number | null = null;
@@ -83,7 +83,7 @@ export class UserComponent {
       Password: ['', this.editMode ? [] : [Validators.required]],
       fullName: ['', Validators.required],
       roleIds: [[]]
-      
+
     });
   }
 
@@ -99,7 +99,7 @@ export class UserComponent {
       if (res.isSucceeded) {
         this._baseResponse = res;
         this._objectsView = res.data;
-        
+
         // this.toastService.showToast.success({message:this._baseResponse.message})
       }
     });
@@ -119,7 +119,7 @@ export class UserComponent {
     });
 }
 
-  
+
 
 
 
@@ -181,7 +181,7 @@ toggleRole(event: Event, roleId: number): void {
       fullName: '',
       email: '',
       Password: '',
-      roleIds: [] 
+      roleIds: []
     });
     this.editMode = false;
     this.editingId = null;
@@ -198,7 +198,7 @@ toggleRole(event: Event, roleId: number): void {
       fullName: '',
       email: '',
       Password: '',
-      roleIds: [] 
+      roleIds: []
     });
     this.editMode = false;
     this.editingId = null;
@@ -209,24 +209,27 @@ toggleRole(event: Event, roleId: number): void {
   onEdit(ObjectId: number) {
     this.editMode = true;
     this.editingId = ObjectId;
-  
+
     this.ObjectForm.get('Password')?.clearValidators();
     this.ObjectForm.get('Password')?.updateValueAndValidity();
 
     this.ObjectService.getRecordById(ObjectId).subscribe(res => {
       if (res.isSucceeded && res.singleData) {
         const Object = res.singleData;
-       
-  
+
+
         this.ObjectForm.patchValue({
           id: Object.id,
-          fullName: Object.fullName || '',  // اضافه کردن fallback برای null
-          username: Object.username || '',
-          email: Object.email || '',
-          password: Object.Password || '',
+
+          username: Object.username,
+          fullName: Object.fullName,
+          email: Object.email,
+          Password: Object.Password || "",
+          UserStatus : Object.status,
+
           roleIds: Object.roleIds || [] // اگر roleIds null یا undefined بود، آرایه خالی برگردون
         });
-  
+
         this.showModal = true;
       } else {
         this.toastService.error('مورد پیدا نشد یا خطا در دریافت اطلاعات!' );

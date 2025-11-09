@@ -4,9 +4,18 @@ export class UserDto {
     username!: string;
     email!: string;
     Password: string = "";
+    profilePictureUrl?: string;     // جدید
+  status!: UserStatus;            // جدید
+  lastSeen?: string;
     roleIds: number[] = [];
 }
-  
+
+
+export enum UserStatus {
+  Offline = 1,
+  Inactive = 2,
+  Online = 3
+}
 
 export interface UserCreateFormData {
     roles: RoleDto[];
