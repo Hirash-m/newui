@@ -369,7 +369,6 @@ For general troubleshooting or help getting started:
 
 
 ===== FILE: src\app\core\interceptors\auth.interceptor.ts =====
-<<<<<<< HEAD
 import { HttpEvent, HttpHandlerFn, HttpRequest, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Observable, throwError } from 'rxjs';
@@ -377,15 +376,6 @@ import { catchError } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { ToastService } from '../../services/utilities/toast.service';
 import { ApiResult } from 'src/app/dto/api-result';
-=======
-// src/app/core/interceptors/auth.interceptor.ts
-import { HttpEvent, HttpHandlerFn, HttpRequest, HttpErrorResponse } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
-import { catchError } from 'rxjs/operators';
-import { inject } from '@angular/core';
-import { Router } from '@angular/router';
-import { ToastService } from '../../services/utilities/toast.service';
->>>>>>> 11646a3f948a94d9206287ac6c614785c2096f52
 
 export function authInterceptor(
   req: HttpRequest<unknown>,
@@ -396,13 +386,6 @@ export function authInterceptor(
 
   let cloned = req;
   const token = localStorage.getItem('token');
-<<<<<<< HEAD
-=======
-  const toast = inject(ToastService);
-  const router = inject(Router);
-
-  let cloned = req;
->>>>>>> 11646a3f948a94d9206287ac6c614785c2096f52
   if (token) {
     cloned = req.clone({
       headers: req.headers.set('Authorization', `Bearer ${token}`)
@@ -411,7 +394,6 @@ export function authInterceptor(
 
   return next(cloned).pipe(
     catchError((error: HttpErrorResponse) => {
-<<<<<<< HEAD
       // 1. Ø§Ú¯Ø± Ù¾Ø§Ø³Ø® JSON Ø¨Ø§ Ø³Ø§Ø®ØªØ§Ø± ApiResult Ø¨ÙˆØ¯
       if (error.error && typeof error.error === 'object') {
         const apiResult = error.error as ApiResult;
@@ -443,26 +425,6 @@ export function authInterceptor(
         router.navigate(['/login']);
       }
 
-=======
-      let message = 'Ø®Ø·Ø§ÛŒ Ù†Ø§Ø´Ù†Ø§Ø®ØªÙ‡';
-
-      if (error.status === 401) {
-        message = 'Ù„Ø·ÙØ§Ù‹ ÙˆØ§Ø±Ø¯ Ø­Ø³Ø§Ø¨ Ú©Ø§Ø±Ø¨Ø±ÛŒ Ø®ÙˆØ¯ Ø´ÙˆÛŒØ¯.';
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        router.navigate(['/login']);
-      } else if (error.status === 403) {
-        message = 'Ø´Ù…Ø§ Ø¯Ø³ØªØ±Ø³ÛŒ Ù„Ø§Ø²Ù… Ø¨Ø±Ø§ÛŒ Ø§ÛŒÙ† Ø¹Ù…Ù„ÛŒØ§Øª Ø±Ø§ Ù†Ø¯Ø§Ø±ÛŒØ¯.';
-      } else if (error.status === 404) {
-        message = 'Ù…ÙˆØ±Ø¯ Ù…ÙˆØ±Ø¯ Ù†Ø¸Ø± ÛŒØ§ÙØª Ù†Ø´Ø¯.';
-      } else if (error.status === 500) {
-        message = 'Ø®Ø·Ø§ÛŒ Ø³Ø±ÙˆØ± Ø±Ø® Ø¯Ø§Ø¯Ù‡ Ø§Ø³Øª.';
-      } else {
-        message = error.error?.errors?.[0] || error.message || 'Ø®Ø·Ø§ Ø¯Ø± Ø§Ø±ØªØ¨Ø§Ø· Ø¨Ø§ Ø³Ø±ÙˆØ±';
-      }
-
-      toast.showToast.error({ message });
->>>>>>> 11646a3f948a94d9206287ac6c614785c2096f52
       return throwError(() => error);
     })
   );
@@ -475,9 +437,18 @@ export class UserDto {
     username!: string;
     email!: string;
     Password: string = "";
+    profilePictureUrl?: string;     // Ø¬Ø¯ÛŒØ¯
+  status!: UserStatus;            // Ø¬Ø¯ÛŒØ¯
+  lastSeen?: string;
     roleIds: number[] = [];
 }
-  
+
+
+export enum UserStatus {
+  Offline = 1,
+  Inactive = 2,
+  Online = 3
+}
 
 export interface UserCreateFormData {
     roles: RoleDto[];
@@ -493,6 +464,7 @@ export interface PermissionDto {
     id: number;
     name: string;
 }
+
 
 ===== FILE: src\app\dto\shop\CountTypeDto.ts =====
 export class CountTypeDto {
@@ -534,16 +506,33 @@ export class ProductCreateDto {
 
 
 ===== FILE: src\app\dto\api-result.ts =====
+// src/app/dto/api-result.ts
+
 export interface ApiResult<T = any> {
-    isSucceeded: boolean;
-    statusCode?: number;
-    message?: string;
-    errors?: string[];
-    data: T[];
-    singleData: T;
-    totalRecords: number;
-    totalPages: number;
-    pageNumber: number;
-    pageSize: number;
-  }
+  isSucceeded: boolean;
+  message?: string;
+  statusCode?: number;
+  errors?: string[];
+
+  // Ø¨Ø±Ø§ÛŒ Ù„ÛŒØ³Øª
+  data?: T[];
+  totalRecords?: number;
+  totalPages?: number;
+  pageNumber?: number;
+  pageSize?: number;
+
+  // Ø¨Ø±Ø§ÛŒ ØªÚ© Ø¢ÛŒØªÙ…
+  singleData?: T;
+}
+
+// --- Factory Function Ø¨Ø§ Ù…Ù‚Ø¯Ø§Ø± Ù¾ÛŒØ´â€ŒÙØ±Ø¶ ---
+export const createApiResult = <T>(): ApiResult<T> => ({
+  isSucceeded: false,
+  data: [],
+  singleData: null as any,
+  totalRecords: 0,
+  totalPages: 1,
+  pageNumber: 1,
+  pageSize: 10,
+});
 

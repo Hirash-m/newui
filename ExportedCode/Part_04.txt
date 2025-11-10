@@ -1,22 +1,30 @@
 ﻿===== FILE: src\app\services\base\userManage\user-manage.service.ts =====
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { Domain } from 'src/utilities/path';
 import { ToastService } from '../../utilities/toast.service';
 import { ListRequest } from 'src/app/dto/ListRequestDto';
-import { catchError, Observable, throwError } from 'rxjs';
-import { baseResponse } from 'src/app/dto/baseResponse';
-import {UserCreateFormData, UserDto} from 'src/app/dto/base/UserDto';
+import { UserCreateFormData, UserDto } from 'src/app/dto/base/UserDto';
 import { BaseService } from '../../utilities/base.service';
+import { ApiResult } from 'src/app/dto/api-result';
 
 @Injectable({
   providedIn: 'root'
 })
-export class UserManageService  extends BaseService<UserDto, UserDto>{
-  protected endpoint = '/api/user';
+export class UserManageService extends BaseService<UserDto, UserDto> {
+  protected override endpoint = '/api/user';
 
+  override getCreateForm(): Observable<ApiResult<UserCreateFormData>> {
+    return this.http
+      .get<ApiResult<UserCreateFormData>>(
+        `${this.apiUrl}${this.endpoint}/getcreateform`,
+        { headers: this.getJsonHeaders() }
+      )
+      .pipe(catchError(err => this.handleError(err)));
+  }
 }
-
 
 ===== FILE: src\app\services\shop\countType\count-type.service.spec.ts =====
 import { TestBed } from '@angular/core/testing';
@@ -49,8 +57,7 @@ import { Domain } from 'src/utilities/path';
 
 // DTO Imports
 import { CountTypeDto } from './../../../dto/shop/CountTypeDto';
-import { ListRequest } from 'src/app/dto/ListRequestDto';
-import { baseResponse } from 'src/app/dto/baseResponse';
+
 
 // RxJS Imports
 import { catchError, Observable, throwError } from 'rxjs';
@@ -90,12 +97,6 @@ describe('InventoryService', () => {
 ===== FILE: src\app\services\shop\inventory\inventory.service.ts =====
 import { Injectable } from '@angular/core';
 import { BaseService } from '../../utilities/base.service';
-import { Domain } from 'src/utilities/path';
-import { HttpClient } from '@angular/common/http';
-import { ToastService } from '../../utilities/toast.service';
-import { ListRequest } from 'src/app/dto/ListRequestDto';
-import { catchError, Observable, throwError } from 'rxjs';
-import { baseResponse } from 'src/app/dto/baseResponse';
 import {InventoryDto} from 'src/app/dto/shop/InventoryDto'
 
 @Injectable({
@@ -134,10 +135,10 @@ import { ListRequest } from '../../../dto/ListRequestDto';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Domain } from '../../../../utilities/path';
 import { Injectable } from '@angular/core';
-import { baseResponse } from '../../../dto/baseResponse';
 import { catchError, map, Observable, throwError } from 'rxjs';
 import { ProductCreateDto, ProductViewDto } from '../../../dto/shop/ProductDto';
 import { BaseService } from '../../utilities/base.service';
+import { ApiResult } from 'src/app/dto/api-result';
 
 @Injectable({
   providedIn: 'root'
@@ -155,10 +156,10 @@ export class ProductService extends BaseService<ProductViewDto, ProductCreateDto
  
 
   /** Ø¬Ø³ØªØ¬ÙˆÛŒ Ù…Ø­ØµÙˆÙ„ Ø¨Ø§ Ù¾Ø§Ø±Ø§Ù…ØªØ±Ù‡Ø§ */
-  searchProducts(request: ListRequest): Observable<baseResponse<ProductViewDto>> {
+  searchProducts(request: ListRequest): Observable<ApiResult<ProductViewDto>> {
 
 
-    return this.http.post<baseResponse<ProductViewDto>>(`${this.apiurl}/api/product/search`, request, { headers: this.getJsonHeaders() }).pipe(
+    return this.http.post<ApiResult<ProductViewDto>>(`${this.apiurl}/api/product/search`, request, { headers: this.getJsonHeaders() }).pipe(
       catchError(error => {
         //this.toast.showToast.error({ message: 'Ø®Ø·Ø§ Ø¯Ø± ØªØ±Ø§Ú©Ù†Ø´ ' });
         this.toast.error("need change");
@@ -178,7 +179,6 @@ import { BaseService } from './base.service';
 @Injectable()
 export class MockBaseService extends BaseService<any, any> {
   protected endpoint = '/api/test'; // ÙÙ‚Ø· Ø¨Ø±Ø§ÛŒ Ú©Ø§Ù…Ù¾Ø§ÛŒÙ„ Ø´Ø¯Ù†
-<<<<<<< HEAD
 
   constructor() {
     super(null!, null!); // HttpClient Ùˆ ToastService Ø±Ùˆ null Ù…ÛŒâ€ŒØ°Ø§Ø±ÛŒÙ… Ú†ÙˆÙ† ØªØ³Øª ÙˆØ§Ø­Ø¯ Ù‡Ø³Øª
@@ -264,17 +264,18 @@ export abstract class BaseService<TViewDto, TCreateDto = TViewDto> {
       .pipe(catchError(err => this.handleError(err)));
   }
 
-  getCreateForm<TForm>(): Observable<ApiResult<TForm>> {
-    return this.http
-      .get<ApiResult<TForm>>(
-        `${this.apiUrl}${this.endpoint}/getcreateform`,
-        { headers: this.getJsonHeaders() }
-      )
-      .pipe(catchError(err => this.handleError(err)));
-  }
+// --- Ø­Ø°Ù Ú˜Ù†Ø±ÛŒÚ© Ø§Ø² getCreateForm ---
+getCreateForm(): Observable<ApiResult<any>> {
+  return this.http
+    .get<ApiResult<any>>(
+      `${this.apiUrl}${this.endpoint}/getcreateform`,
+      { headers: this.getJsonHeaders() }
+    )
+    .pipe(catchError(err => this.handleError(err)));
+}
 
   // --- ÙÙ‚Ø· throw Ø®Ø·Ø§ â€” Toast Ø¯Ø± Ø§ÛŒÙ†ØªØ±Ø³Ù¾ØªÙˆØ± ---
-  private handleError(error: any): Observable<never> {
+  protected handleError(error: any): Observable<never> {
     return throwError(() => error);
   }
 
@@ -311,15 +312,8 @@ describe('ToastService', () => {
     expect(service).toBeTruthy();
   });
 });
-=======
->>>>>>> 11646a3f948a94d9206287ac6c614785c2096f52
 
-  constructor() {
-    super(null!, null!); // HttpClient Ùˆ ToastService Ø±Ùˆ null Ù…ÛŒâ€ŒØ°Ø§Ø±ÛŒÙ… Ú†ÙˆÙ† ØªØ³Øª ÙˆØ§Ø­Ø¯ Ù‡Ø³Øª
-  }
-}
 
-<<<<<<< HEAD
 ===== FILE: src\app\services\utilities\toast.service.ts =====
 // src/app/services/utilities/toast.service.ts
 
@@ -551,101 +545,3 @@ export class ToastService {
 </div>
 
 
-=======
-===== FILE: src\app\services\utilities\base.service.ts =====
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Injectable } from '@angular/core';
-import { Observable, catchError, throwError } from 'rxjs';
-import { ToastService } from './toast.service'; // ÙØ±Ø¶ Ú©Ù†ÛŒØ¯ Ø§ÛŒÙ† Ø±Ùˆ Ø¯Ø§Ø±ÛŒØ¯
-import { baseResponse } from '../../dto/baseResponse'; // Ù†ÙˆØ¹ response Ø¹Ù…ÙˆÙ…ÛŒ
-import { ListRequest } from '../../dto/ListRequestDto'; // Ù†ÙˆØ¹ request Ù„ÛŒØ³Øª
-import { Domain } from '../../../utilities/path'; // URL Ù¾Ø§ÛŒÙ‡
-
-@Injectable({
-  providedIn: 'root'
-})
-export abstract class BaseService<TViewDto, TCreateDto = TViewDto> { // generics Ø¨Ø±Ø§ÛŒ Ù†ÙˆØ¹ view Ùˆ create
-  protected apiUrl = Domain; // URL Ù¾Ø§ÛŒÙ‡
-  protected abstract endpoint: string; // Ù‡Ø± Ø³Ø±ÙˆÛŒØ³ Ø®Ø§Øµ Ø§ÛŒÙ† Ø±Ùˆ Ù…Ø´Ø®Øµ Ú©Ù†Ù‡ (Ù…Ø«Ù„ '/api/User')
-
-  constructor(protected http: HttpClient, protected toast: ToastService) {}
-
-  protected getJsonHeaders(): HttpHeaders {
-    return new HttpHeaders({
-      'accept': 'application/json',
-      'Content-Type': 'application/json'
-    });
-  }
-
-  // Ù…ØªØ¯ Ø¹Ù…ÙˆÙ…ÛŒ Ø¨Ø±Ø§ÛŒ Ù„ÛŒØ³Øª
-  getRecords(request: ListRequest): Observable<baseResponse<TViewDto>> {
-    return this.http.post<baseResponse<TViewDto>>(
-      `${this.apiUrl}${this.endpoint}/GetAll`,
-      request,
-      { headers: this.getJsonHeaders() }
-    ).pipe(
-      catchError(error => this.handleError(error))
-    );
-  }
-
-  // Ù…ØªØ¯ Ø¹Ù…ÙˆÙ…ÛŒ Ø¨Ø±Ø§ÛŒ Ø§ÛŒØ¬Ø§Ø¯
-  insertRecord(data: TCreateDto): Observable<baseResponse<TCreateDto>> {
-    return this.http.post<baseResponse<TCreateDto>>(
-      `${this.apiUrl}${this.endpoint}/create`,
-      data,
-      { headers: this.getJsonHeaders() }
-    ).pipe(
-      catchError(error => this.handleError(error))
-    );
-  }
-
-  // Ù…ØªØ¯ Ø¹Ù…ÙˆÙ…ÛŒ Ø¨Ø±Ø§ÛŒ Ø­Ø°Ù
-  deleteRecords(ids: number[]): Observable<baseResponse<any>> {
-    return this.http.post<baseResponse<any>>(
-      `${this.apiUrl}${this.endpoint}/delete`,
-      ids,
-      { headers: this.getJsonHeaders() }
-    ).pipe(
-      catchError(error => this.handleError(error))
-    );
-  }
-
-  // Ù…ØªØ¯ Ø¹Ù…ÙˆÙ…ÛŒ Ø¨Ø±Ø§ÛŒ Ø¨Ø±ÙˆØ²Ø±Ø³Ø§Ù†ÛŒ
-  updateRecord(data: TCreateDto): Observable<baseResponse<TCreateDto>> {
-    return this.http.post<baseResponse<TCreateDto>>(
-      `${this.apiUrl}${this.endpoint}/update`,
-      data,
-      { headers: this.getJsonHeaders() }
-    ).pipe(
-      catchError(error => this.handleError(error))
-    );
-  }
-
-  // Ù…ØªØ¯ Ø¹Ù…ÙˆÙ…ÛŒ Ø¨Ø±Ø§ÛŒ Ø¯Ø±ÛŒØ§ÙØª ØªÚ© Ø±Ú©ÙˆØ±Ø¯
-  getRecordById(id: number): Observable<baseResponse<TCreateDto>> {
-    return this.http.get<baseResponse<TCreateDto>>(
-      `${this.apiUrl}${this.endpoint}/getById/?id=${id}`,
-      { headers: this.getJsonHeaders() }
-    ).pipe(
-      catchError(error => this.handleError(error))
-    );
-  }
-
-  // Ù‡Ù†Ø¯Ù„Ø± Ø¹Ù…ÙˆÙ…ÛŒ Ø®Ø·Ø§
-  protected handleError(error: any): Observable<never> {
-    this.toast.showToast.error({ message: 'Ø®Ø·Ø§ Ø¯Ø± ØªØ±Ø§Ú©Ù†Ø´' });
-    return throwError(() => error);
-  }
-
-
-  getCreateForm<TForm>(): Observable<baseResponse<TForm>> {
-    return this.http.get<baseResponse<TForm>>(
-      `${this.apiUrl}${this.endpoint}/getcreateform`,
-      { headers: this.getJsonHeaders() }
-    ).pipe(
-      catchError(error => this.handleError(error))
-    );
-  }
-}
-
->>>>>>> 11646a3f948a94d9206287ac6c614785c2096f52

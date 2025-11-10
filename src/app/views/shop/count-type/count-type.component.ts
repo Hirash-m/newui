@@ -14,7 +14,7 @@ import {
 } from '@coreui/angular';
 
 // DTOs & Services
-import { baseResponse } from 'src/app/dto/baseResponse';
+import { ApiResult, createApiResult } from 'src/app/dto/api-result'; // تغییر از baseResponse
 import { ListRequest } from 'src/app/dto/ListRequestDto';
 import { CountTypeDto } from 'src/app/dto/shop/CountTypeDto';
 import { CountTypeService } from 'src/app/services/shop/countType/count-type.service';
@@ -25,13 +25,11 @@ import { ToastService } from 'src/app/services/utilities/toast.service';
 // ---------------------------
 @Component({
   selector: 'app-count-type',
+  standalone: true,
   imports: [
-    // UI modules
     CommonModule, TableDirective, PaginationComponent, PageItemDirective, PageLinkDirective,
     ButtonDirective, ColComponent, FormDirective, FormFeedbackComponent,
     FormLabelDirective, RowDirective, ModalModule,
-
-    // Form modules
     FormsModule, ReactiveFormsModule,
   ],
   templateUrl: './count-type.component.html',
@@ -39,46 +37,36 @@ import { ToastService } from 'src/app/services/utilities/toast.service';
 })
 export class CountTypeComponent implements OnInit {
 
+  // درخواست لیست
+  _request = new ListRequest();
+  _objectsView: CountTypeDto[] = [];
+  _baseResponse: ApiResult<CountTypeDto> = createApiResult<CountTypeDto>();
+
+  // فرم
+  ObjectForm!: FormGroup;
+  showModal = false;
+
+  // ویرایش
+  editMode = false;
+  editingId: number | null = null;
+
+  // حذف گروهی
+  selectedIds: number[] = [];
+  showDeleteConfirm = false;
+
   constructor(
     private fb: FormBuilder,
     private countTypeService: CountTypeService,
     private toastService: ToastService
   ) {}
 
-  // ---------------------------
-  // Properties
-  // ---------------------------
-
-  _request = new ListRequest();
-  _objectsView: CountTypeDto[] = [];
-  _baseResponse = new baseResponse;
-
-  // فرم
-  ObjectForm!: FormGroup;
-
-  // وضعیت مدال
-  showModal = false;
-
-  // وضعیت ویرایش
-  editMode = false;
-  editingId: number | null = null;
-
-  // آیتم‌های انتخاب‌شده
-  selectedIds: number[] = [];
-
-  // نمایش تایید حذف
-  showDeleteConfirm = false;
-
-  // ---------------------------
-  // Lifecycle
-  // ---------------------------
   ngOnInit(): void {
     this.initForm();
     this.loadDataTable();
   }
 
   // ---------------------------
-  // Init Form
+  // فرم
   // ---------------------------
   initForm() {
     this.ObjectForm = this.fb.group({
@@ -88,48 +76,56 @@ export class CountTypeComponent implements OnInit {
   }
 
   // ---------------------------
-  // CRUD Methods
+  // بارگذاری لیست
   // ---------------------------
-
-  // دریافت لیست داده‌ها (Table)
   loadDataTable(): void {
     this._request.pageSize = 5;
-
-    this.countTypeService.getRecords(this._request).subscribe((res) => {
-      if (res.isSucceeded) {
-        this._baseResponse = res;
-        this._objectsView = res.data;
-
+    this.countTypeService.getRecords(this._request).subscribe({
+      next: (res: ApiResult<CountTypeDto>) => {
+        if (res.isSucceeded) {
+          this._baseResponse = res;
+          this._objectsView = res.data || [];
+        } else {
+          this.toastService.error(res.message || 'خطا در بارگذاری انواع شمارش');
+        }
+      },
+      error: (err) => {
+        console.error('خطا در دریافت لیست:', err);
+        this.toastService.error('خطای ارتباط با سرور');
       }
     });
   }
 
-  // ایجاد / ویرایش داده
+  // ---------------------------
+  // ایجاد / ویرایش
+  // ---------------------------
   onSubmit1() {
     if (this.ObjectForm.valid) {
-      const ObjectData: CountTypeDto = this.ObjectForm.value;
+      const data: CountTypeDto = this.ObjectForm.value;
 
-      if (this.editMode && this.editingId != null) {
-        // در حالت ویرایش
-        this.countTypeService.updateRecord(ObjectData).subscribe(res => {
+      const request$ = this.editMode && this.editingId != null
+        ? this.countTypeService.updateRecord(data)
+        : this.countTypeService.insertRecord(data);
+
+      request$.subscribe({
+        next: (res: ApiResult<any>) => {
           if (res.isSucceeded) {
             this.afterSubmit();
+            this.toastService.success(
+              this.editMode ? 'نوع شمارش با موفقیت ویرایش شد' : 'نوع شمارش با موفقیت ایجاد شد'
+            );
           } else {
+            this.toastService.error(res.message || 'خطا در عملیات');
           }
-        });
-      } else {
-        // در حالت ایجاد
-        this.countTypeService.insertRecord(ObjectData).subscribe(res => {
-          if (res.isSucceeded) {
-            this.afterSubmit();
-          } else {
-          }
-        });
-      }
+        },
+        error: (err) => {
+          console.error('خطا در ذخیره:', err);
+          this.toastService.error('خطای ارتباط با سرور');
+        }
+      });
     }
   }
 
-  // عملیات پس از ثبت یا ویرایش
   afterSubmit() {
     this.loadDataTable();
     this.showModal = false;
@@ -138,65 +134,67 @@ export class CountTypeComponent implements OnInit {
     this.editingId = null;
   }
 
-  // دریافت و نمایش اطلاعات جهت ویرایش
-  onEdit(ObjectId: number) {
+  // ---------------------------
+  // ویرایش
+  // ---------------------------
+  onEdit(id: number) {
     this.editMode = true;
-    this.editingId = ObjectId;
+    this.editingId = id;
 
-    this.countTypeService.getRecordById(ObjectId).subscribe(res => {
-      if (res.isSucceeded && res.singleData) {
-        const Object = res.singleData;
-
-        this.ObjectForm.patchValue({
-          id: Object.id,
-          name: Object.name,
-        });
-
-        this.showModal = true;
-      } else {
-        this.toastService.error('مورد پیدا نشد یا خطا در دریافت اطلاعات!' );
+    this.countTypeService.getRecordById(id).subscribe({
+      next: (res: ApiResult<CountTypeDto>) => {
+        if (res.isSucceeded && res.data) {
+          this.ObjectForm.patchValue(res.data);
+          this.showModal = true;
+        } else {
+          this.toastService.error('مورد پیدا نشد');
+        }
+      },
+      error: (err) => {
+        this.toastService.error('خطا در دریافت اطلاعات');
       }
     });
   }
 
   // ---------------------------
-  // Pagination
+  // صفحه‌بندی
   // ---------------------------
-  changePage(pagenumber: number) {
-    this._request.pageNumber = pagenumber;
+  changePage(pageNumber: number) {
+    this._request.pageNumber = pageNumber;
     this.loadDataTable();
   }
 
   // ---------------------------
-  // Selection for Delete
+  // حذف گروهی
   // ---------------------------
-  isSelected(objectId: number): boolean {
-    return this.selectedIds.includes(objectId);
+  isSelected(id: number): boolean {
+    return this.selectedIds.includes(id);
   }
 
-  toggleSelection(ObjectId: number): void {
-    const index = this.selectedIds.indexOf(ObjectId);
+  toggleSelection(id: number): void {
+    const index = this.selectedIds.indexOf(id);
     if (index > -1) {
       this.selectedIds.splice(index, 1);
     } else {
-      this.selectedIds.push(ObjectId);
+      this.selectedIds.push(id);
     }
   }
 
-  // ---------------------------
-  // Delete Operation
-  // ---------------------------
   deleteSelectedRecords(): void {
-    this.countTypeService.deleteRecords(this.selectedIds).subscribe(res => {
-      if (res.isSucceeded) {
-        
-        this.afterSubmit(); // ریست فرم و بارگذاری مجدد
-        this.selectedIds = [];
-      } else {
-        this.toastService.error( 'خطا در حذف گروهی' );
+    this.countTypeService.deleteRecords(this.selectedIds).subscribe({
+      next: (res: ApiResult<any>) => {
+        if (res.isSucceeded) {
+          this.afterSubmit();
+          this.selectedIds = [];
+          this.toastService.success('انواع انتخاب‌شده حذف شدند');
+        } else {
+          this.toastService.error(res.message || 'خطا در حذف');
+        }
+        this.showDeleteConfirm = false;
+      },
+      error: () => {
+        this.toastService.error('خطا در حذف گروهی');
       }
-      this.showDeleteConfirm = false;
     });
   }
-
 }

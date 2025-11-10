@@ -55,56 +55,56 @@
 
   <!-- خود pagination -->
   <c-pagination aria-label="Page navigation example">
-    <li cPageItem *ngIf="_baseResponse.pageNumber > 3">
+    <li cPageItem *ngIf="_baseResponse.pageNumber! > 3">
       <button cPageLink aria-label="First" (click)="changePage(1)">
         <span aria-hidden="true">&laquo;</span>
       </button>
     </li>
 
-    <li cPageItem *ngIf="_baseResponse.pageNumber > 1">
-      <button cPageLink aria-label="Previous" (click)="changePage(_baseResponse.pageNumber - 1)">
+    <li cPageItem *ngIf="_baseResponse.pageNumber! > 1">
+      <button cPageLink aria-label="Previous" (click)="changePage(_baseResponse.pageNumber! - 1)">
         <span aria-hidden="true">&lt;</span>
       </button>
     </li>
 
-    <li cPageItem *ngIf="_baseResponse.pageNumber > 2">
-      <button cPageLink (click)="changePage(_baseResponse.pageNumber - 2)">
-        {{ _baseResponse.pageNumber - 2 }}
+    <li cPageItem *ngIf="_baseResponse.pageNumber! > 2">
+      <button cPageLink (click)="changePage(_baseResponse.pageNumber! - 2)">
+        {{ _baseResponse.pageNumber! - 2 }}
       </button>
     </li>
 
-    <li cPageItem *ngIf="_baseResponse.pageNumber > 1">
-      <button cPageLink (click)="changePage(_baseResponse.pageNumber - 1)">
-        {{ _baseResponse.pageNumber - 1 }}
+    <li cPageItem *ngIf="_baseResponse.pageNumber! > 1">
+      <button cPageLink (click)="changePage(_baseResponse.pageNumber! - 1)">
+        {{ _baseResponse.pageNumber! - 1 }}
       </button>
     </li>
 
     <li cPageItem>
       <button cPageLink class="active" disabled>
-        {{ _baseResponse.pageNumber }}
+        {{ _baseResponse.pageNumber! }}
       </button>
     </li>
 
-    <li cPageItem *ngIf="_baseResponse.totalPages > _baseResponse.pageNumber">
-      <button cPageLink (click)="changePage(_baseResponse.pageNumber + 1)">
-        {{ _baseResponse.pageNumber + 1 }}
+    <li cPageItem *ngIf="_baseResponse.totalPages! > _baseResponse.pageNumber!">
+      <button cPageLink (click)="changePage(_baseResponse.pageNumber! + 1)">
+        {{ _baseResponse.pageNumber! + 1 }}
       </button>
     </li>
 
-    <li cPageItem *ngIf="_baseResponse.totalPages > _baseResponse.pageNumber + 1">
-      <button cPageLink (click)="changePage(_baseResponse.pageNumber + 2)">
-        {{ _baseResponse.pageNumber + 2 }}
+    <li cPageItem *ngIf="_baseResponse.totalPages! > _baseResponse.pageNumber! + 1">
+      <button cPageLink (click)="changePage(_baseResponse.pageNumber! + 2)">
+        {{ _baseResponse.pageNumber! + 2 }}
       </button>
     </li>
 
-    <li cPageItem *ngIf="_baseResponse.totalPages > _baseResponse.pageNumber">
-      <button cPageLink aria-label="Next" (click)="changePage(_baseResponse.pageNumber + 1)">
+    <li cPageItem *ngIf="_baseResponse.totalPages! > _baseResponse.pageNumber!">
+      <button cPageLink aria-label="Next" (click)="changePage(_baseResponse.pageNumber! + 1)">
         <span aria-hidden="true">&gt;</span>
       </button>
     </li>
 
-    <li cPageItem *ngIf="_baseResponse.totalPages > _baseResponse.pageNumber + 2">
-      <button cPageLink aria-label="Last" (click)="changePage(_baseResponse.totalPages)">
+    <li cPageItem *ngIf="_baseResponse.totalPages! > _baseResponse.pageNumber! + 2">
+      <button cPageLink aria-label="Last" (click)="changePage(_baseResponse.totalPages!)">
         <span aria-hidden="true">&raquo;</span>
       </button>
     </li>
@@ -112,7 +112,7 @@
 
   <!-- اطلاعات رکورد -->
   <div class="text-muted">
-    <strong>{{_baseResponse.totalRecords}}</strong> رکورد در <strong>{{_baseResponse.totalPages}}</strong> صفحه
+    <strong>{{_baseResponse.totalRecords}}</strong> رکورد در <strong>{{_baseResponse.totalPages!}}</strong> صفحه
   </div>
 
 </div>

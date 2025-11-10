@@ -14,125 +14,109 @@ import {
 } from '@coreui/angular';
 
 // DTOs & Services
-import { baseResponse } from 'src/app/dto/baseResponse';
+import { ApiResult, createApiResult } from 'src/app/dto/api-result'; // تغییر از baseResponse
 import { ListRequest } from 'src/app/dto/ListRequestDto';
 import { InventoryDto } from 'src/app/dto/shop/InventoryDto';
 import { InventoryService } from 'src/app/services/shop/inventory/inventory.service';
 import { ToastService } from 'src/app/services/utilities/toast.service';
 
-
 @Component({
   selector: 'app-inventory',
   imports: [
-        // UI modules
-        CommonModule, TableDirective, PaginationComponent, PageItemDirective, PageLinkDirective,
-        ButtonDirective, ColComponent, FormDirective, FormFeedbackComponent,
-        FormLabelDirective, RowDirective, ModalModule,
-    
-        // Form modules
-        FormsModule, ReactiveFormsModule,
+    CommonModule, TableDirective, PaginationComponent, PageItemDirective, PageLinkDirective,
+    ButtonDirective, ColComponent, FormDirective, FormFeedbackComponent,
+    FormLabelDirective, RowDirective, ModalModule,
+    FormsModule, ReactiveFormsModule
   ],
   templateUrl: './inventory.component.html',
-  styleUrl: './inventory.component.scss'
+  styleUrl: './inventory.component.scss',
+  standalone: true
 })
 export class InventoryComponent implements OnInit {
 
+  // درخواست لیست
+  _request = new ListRequest();
+  _objectsView: InventoryDto[] = [];
+  _baseResponse: ApiResult<InventoryDto> = createApiResult<InventoryDto>();
+
+  // فرم
+  ObjectForm!: FormGroup;
+  showModal = false;
+
+  // ویرایش
+  editMode = false;
+  editingId: number | null = null;
+
+  // حذف گروهی
+  selectedIds: number[] = [];
+  showDeleteConfirm = false;
+
   constructor(
     private fb: FormBuilder,
-    private ObjectService: InventoryService ,
+    private ObjectService: InventoryService,
     private toastService: ToastService
   ) {}
 
-
-    // ---------------------------
-  // Properties
-  // ---------------------------
-
-  _request = new ListRequest();
-  _objectsView: InventoryDto[] = [];
-  _baseResponse = new baseResponse;
-
-    // فرم
-    ObjectForm!: FormGroup;
-
-    // وضعیت مدال
-    showModal = false;
-  
-    // وضعیت ویرایش
-    editMode = false;
-    editingId: number | null = null;
-
-      // آیتم‌های انتخاب‌شده
-  selectedIds: number[] = [];
-
-  // نمایش تایید حذف
-  showDeleteConfirm = false;
-
-  // ---------------------------
-  // Lifecycle
-  // ---------------------------
   ngOnInit(): void {
     this.initForm();
     this.loadDataTable();
   }
 
-
   // ---------------------------
-  // Init Form
+  // فرم
   // ---------------------------
   initForm() {
     this.ObjectForm = this.fb.group({
       id: [null],
       name: ['', Validators.required],
-      active:[true ,Validators.required ]
+      active: [true, Validators.required]
     });
   }
 
- // ---------------------------
-  // CRUD Methods
   // ---------------------------
-
-  // دریافت لیست داده‌ها (Table)
+  // بارگذاری لیست
+  // ---------------------------
   loadDataTable(): void {
     this._request.pageSize = 5;
-
-    this.ObjectService.getRecords(this._request).subscribe((res) => {
+    this.ObjectService.getRecords(this._request).subscribe((res: ApiResult<InventoryDto>) => {
       if (res.isSucceeded) {
         this._baseResponse = res;
-        this._objectsView = res.data;
+        this._objectsView = res.data || [];
+      } else {
+        this.toastService.error(res.message || 'خطا در بارگذاری انبارها');
       }
     });
   }
 
-
-  
-  // ایجاد / ویرایش داده
+  // ---------------------------
+  // ایجاد / ویرایش
+  // ---------------------------
   onSubmit1() {
     if (this.ObjectForm.valid) {
       const ObjectData: InventoryDto = this.ObjectForm.value;
 
       if (this.editMode && this.editingId != null) {
-        // در حالت ویرایش
-        this.ObjectService.updateRecord(ObjectData).subscribe(res => {
+        this.ObjectService.updateRecord(ObjectData).subscribe((res: ApiResult<any>) => {
           if (res.isSucceeded) {
             this.afterSubmit();
+            this.toastService.success('انبار با موفقیت ویرایش شد');
           } else {
+            this.toastService.error(res.message || 'خطا در ویرایش');
           }
         });
       } else {
-        // در حالت ایجاد
-        this.ObjectService.insertRecord(ObjectData).subscribe(res => {
+        this.ObjectService.insertRecord(ObjectData).subscribe((res: ApiResult<any>) => {
           if (res.isSucceeded) {
             this.afterSubmit();
+            this.toastService.success('انبار با موفقیت ایجاد شد');
           } else {
+            this.toastService.error(res.message || 'خطا در ایجاد');
           }
         });
       }
     }
   }
 
-
-  // عملیات پس از ثبت یا ویرایش
   afterSubmit() {
     this.loadDataTable();
     this.showModal = false;
@@ -141,29 +125,30 @@ export class InventoryComponent implements OnInit {
     this.editingId = null;
   }
 
-  // دریافت و نمایش اطلاعات جهت ویرایش
+  // ---------------------------
+  // ویرایش
+  // ---------------------------
   onEdit(ObjectId: number) {
     this.editMode = true;
     this.editingId = ObjectId;
 
-    this.ObjectService.getRecordById(ObjectId).subscribe(res => {
+    this.ObjectService.getRecordById(ObjectId).subscribe((res: ApiResult<InventoryDto>) => {
       if (res.isSucceeded && res.singleData) {
-        const Object = res.singleData;
-
+        const obj = res.singleData;
         this.ObjectForm.patchValue({
-          id: Object.id,
-          name: Object.name,
+          id: obj.id,
+          name: obj.name,
+          active: obj.active
         });
-
         this.showModal = true;
       } else {
-        this.toastService.error( 'مورد پیدا نشد یا خطا در دریافت اطلاعات!' );
+        this.toastService.error('مورد پیدا نشد یا خطا در دریافت اطلاعات!');
       }
     });
   }
 
   // ---------------------------
-  // Pagination
+  // صفحه‌بندی
   // ---------------------------
   changePage(pagenumber: number) {
     this._request.pageNumber = pagenumber;
@@ -171,7 +156,7 @@ export class InventoryComponent implements OnInit {
   }
 
   // ---------------------------
-  // Selection for Delete
+  // حذف گروهی
   // ---------------------------
   isSelected(objectId: number): boolean {
     return this.selectedIds.includes(objectId);
@@ -186,17 +171,14 @@ export class InventoryComponent implements OnInit {
     }
   }
 
-  // ---------------------------
-  // Delete Operation
-  // ---------------------------
   deleteSelectedRecords(): void {
-    this.ObjectService.deleteRecords(this.selectedIds).subscribe(res => {
+    this.ObjectService.deleteRecords(this.selectedIds).subscribe((res: ApiResult<any>) => {
       if (res.isSucceeded) {
-   
-        this.afterSubmit(); // ریست فرم و بارگذاری مجدد
+        this.afterSubmit();
         this.selectedIds = [];
+        this.toastService.success('انبارهای انتخاب‌شده حذف شدند');
       } else {
-        this.toastService.error('خطا در حذف گروهی' );
+        this.toastService.error(res.message || 'خطا در حذف گروهی');
       }
       this.showDeleteConfirm = false;
     });

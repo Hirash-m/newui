@@ -3,7 +3,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, catchError, map, throwError } from 'rxjs';
 import { ToastService } from '../../utilities/toast.service';
 import { Domain } from '../../../../utilities/path';
-import { baseResponse } from '../../../dto/baseResponse';
+import { ApiResult } from 'src/app/dto/api-result';
 
 @Injectable({
   providedIn: 'root'
@@ -17,14 +17,14 @@ export class AuthService {
   login(email: string, password: string): Observable<any> {
     const body = { email, password };
 
-    return this.http.post<baseResponse<any>>(`${this.apiUrl}/login`, body, {
+    return this.http.post<ApiResult<any>>(`${this.apiUrl}/login`, body, {
       headers: new HttpHeaders({ 'Content-Type': 'application/json' })
     }).pipe(
       map(response => {
-        if (response.isSucceeded && response.singleData?.token) {
+        if (response.isSucceeded && response.data?.token) {
           // ذخیره توکن در localStorage
-          localStorage.setItem('token', response.singleData.token);
-          localStorage.setItem('user', JSON.stringify(response.singleData));
+          localStorage.setItem('token', response.data.token);
+          localStorage.setItem('user', JSON.stringify(response.data));
         }
         return response;
       }),

@@ -180,56 +180,56 @@ export class LoginComponent {
 
   <!-- Ø®ÙˆØ¯ pagination -->
   <c-pagination aria-label="Page navigation example">
-    <li cPageItem *ngIf="_baseResponse.pageNumber > 3">
+    <li cPageItem *ngIf="_baseResponse.totalPages!!! > 3">
       <button cPageLink aria-label="First" (click)="changePage(1)">
         <span aria-hidden="true">&laquo;</span>
       </button>
     </li>
 
-    <li cPageItem *ngIf="_baseResponse.pageNumber > 1">
-      <button cPageLink aria-label="Previous" (click)="changePage(_baseResponse.pageNumber - 1)">
+    <li cPageItem *ngIf="_baseResponse.totalPages!!! > 1">
+      <button cPageLink aria-label="Previous" (click)="changePage(_baseResponse.totalPages!!! - 1)">
         <span aria-hidden="true">&lt;</span>
       </button>
     </li>
 
-    <li cPageItem *ngIf="_baseResponse.pageNumber > 2">
-      <button cPageLink (click)="changePage(_baseResponse.pageNumber - 2)">
-        {{ _baseResponse.pageNumber - 2 }}
+    <li cPageItem *ngIf="_baseResponse.totalPages!!! > 2">
+      <button cPageLink (click)="changePage(_baseResponse.totalPages!!! - 2)">
+        {{ _baseResponse.totalPages!!! - 2 }}
       </button>
     </li>
 
-    <li cPageItem *ngIf="_baseResponse.pageNumber > 1">
-      <button cPageLink (click)="changePage(_baseResponse.pageNumber - 1)">
-        {{ _baseResponse.pageNumber - 1 }}
+    <li cPageItem *ngIf="_baseResponse.totalPages!!! > 1">
+      <button cPageLink (click)="changePage(_baseResponse.totalPages!!! - 1)">
+        {{ _baseResponse.totalPages!!! - 1 }}
       </button>
     </li>
 
     <li cPageItem>
       <button cPageLink class="active" disabled>
-        {{ _baseResponse.pageNumber }}
+        {{ _baseResponse.totalPages!!! }}
       </button>
     </li>
 
-    <li cPageItem *ngIf="_baseResponse.totalPages > _baseResponse.pageNumber">
-      <button cPageLink (click)="changePage(_baseResponse.pageNumber + 1)">
-        {{ _baseResponse.pageNumber + 1 }}
+    <li cPageItem *ngIf="_baseResponse.totalPages! > _baseResponse.totalPages!!!">
+      <button cPageLink (click)="changePage(_baseResponse.totalPages!!! + 1)">
+        {{ _baseResponse.totalPages!!! + 1 }}
       </button>
     </li>
 
-    <li cPageItem *ngIf="_baseResponse.totalPages > _baseResponse.pageNumber + 1">
-      <button cPageLink (click)="changePage(_baseResponse.pageNumber + 2)">
-        {{ _baseResponse.pageNumber + 2 }}
+    <li cPageItem *ngIf="_baseResponse.totalPages! > _baseResponse.totalPages!!! + 1">
+      <button cPageLink (click)="changePage(_baseResponse.totalPages!!! + 2)">
+        {{ _baseResponse.totalPages!!! + 2 }}
       </button>
     </li>
 
-    <li cPageItem *ngIf="_baseResponse.totalPages > _baseResponse.pageNumber">
-      <button cPageLink aria-label="Next" (click)="changePage(_baseResponse.pageNumber + 1)">
+    <li cPageItem *ngIf="_baseResponse.totalPages! > _baseResponse.totalPages!!!">
+      <button cPageLink aria-label="Next" (click)="changePage(_baseResponse.totalPages!!! + 1)">
         <span aria-hidden="true">&gt;</span>
       </button>
     </li>
 
-    <li cPageItem *ngIf="_baseResponse.totalPages > _baseResponse.pageNumber + 2">
-      <button cPageLink aria-label="Last" (click)="changePage(_baseResponse.totalPages)">
+    <li cPageItem *ngIf="_baseResponse.totalPages! > _baseResponse.totalPages!!! + 2">
+      <button cPageLink aria-label="Last" (click)="changePage(_baseResponse.totalPages!)">
         <span aria-hidden="true">&raquo;</span>
       </button>
     </li>
@@ -237,7 +237,7 @@ export class LoginComponent {
 
   <!-- Ø§Ø·Ù„Ø§Ø¹Ø§Øª Ø±Ú©ÙˆØ±Ø¯ -->
   <div class="text-muted">
-    <strong>{{_baseResponse.totalRecords}}</strong> Ø±Ú©ÙˆØ±Ø¯ Ø¯Ø± <strong>{{_baseResponse.totalPages}}</strong> ØµÙØ­Ù‡
+    <strong>{{_baseResponse.totalRecords}}</strong> Ø±Ú©ÙˆØ±Ø¯ Ø¯Ø± <strong>{{_baseResponse.totalPages!}}</strong> ØµÙØ­Ù‡
   </div>
 
 </div>
@@ -362,196 +362,170 @@ describe('UserComponent', () => {
 
 ===== FILE: src\app\views\base\userManage\user\user.component.ts =====
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonDirective, ColComponent, FormDirective, FormFeedbackComponent, FormLabelDirective, ModalModule, PageItemDirective, PageLinkDirective, PaginationComponent, RowDirective, TableDirective } from '@coreui/angular';
 import { PermissionDto, RoleDto, UserCreateFormData, UserDto } from 'src/app/dto/base/UserDto';
-import { baseResponse } from 'src/app/dto/baseResponse';
+import { ApiResult, createApiResult } from 'src/app/dto/api-result'; // ØªØºÛŒÛŒØ± Ø§Ø² baseResponse
 import { ListRequest } from 'src/app/dto/ListRequestDto';
 import { UserManageService } from 'src/app/services/base/userManage/user-manage.service';
 import { ToastService } from 'src/app/services/utilities/toast.service';
 
 @Component({
   selector: 'app-user',
+  standalone: true,
   imports: [
- // UI modules
- CommonModule, TableDirective, PaginationComponent, PageItemDirective, PageLinkDirective,
- ButtonDirective, ColComponent, FormDirective, FormFeedbackComponent,
- FormLabelDirective, RowDirective, ModalModule,
-
- // Form modules
- FormsModule, ReactiveFormsModule,
-
+    CommonModule, TableDirective, PaginationComponent, PageItemDirective, PageLinkDirective,
+    ButtonDirective, ColComponent, FormDirective, FormFeedbackComponent,
+    FormLabelDirective, RowDirective, ModalModule,
+    FormsModule, ReactiveFormsModule,
   ],
   templateUrl: './user.component.html',
   styleUrl: './user.component.scss'
 })
-export class UserComponent {
+export class UserComponent implements OnInit {
 
+  // Ø¯Ø§Ø¯Ù‡â€ŒÙ‡Ø§ÛŒ ÙØ±Ù… Ø§ÛŒØ¬Ø§Ø¯
+  roles: RoleDto[] = [];
+  permissions: PermissionDto[] = [];
 
-  
+  // Ù„ÛŒØ³Øª Ú©Ø§Ø±Ø¨Ø±Ø§Ù†
+  _request = new ListRequest();
+  _objectsView: UserDto[] = [];
+  _baseResponse: ApiResult<UserDto> = createApiResult<UserDto>();
+
+  // ÙØ±Ù…
+  ObjectForm!: FormGroup;
+  showModal = false;
+
+  // ÙˆÛŒØ±Ø§ÛŒØ´
+  editMode = false;
+  editingId: number | null = null;
+
+  // Ø­Ø°Ù Ú¯Ø±ÙˆÙ‡ÛŒ
+  selectedIds: number[] = [];
+  showDeleteConfirm = false;
+
   constructor(
     private fb: FormBuilder,
-    private ObjectService: UserManageService ,
+    private ObjectService: UserManageService,
     private toastService: ToastService
   ) {}
 
-
-    // ---------------------------
-  // Properties
-  // ---------------------------
-
-
-  roles: RoleDto[] = []; // Ù„ÛŒØ³Øª Ù†Ù‚Ø´â€ŒÙ‡Ø§
-  permissions: PermissionDto[] = []; // Ù„ÛŒØ³Øª Ø¯Ø³ØªØ±Ø³ÛŒâ€ŒÙ‡Ø§
-  selectedPermissionIds: number[] = []; // IDÙ‡Ø§ÛŒ Ø¯Ø³ØªØ±Ø³ÛŒâ€ŒÙ‡Ø§ÛŒ Ø§Ù†ØªØ®Ø§Ø¨â€ŒØ´Ø¯Ù‡
-  _request = new ListRequest();
-  _objectsView: UserDto[] = [];
-  _baseResponse = new baseResponse;
-
-    // ÙØ±Ù…
-    ObjectForm!: FormGroup;
-
-    // ÙˆØ¶Ø¹ÛŒØª Ù…Ø¯Ø§Ù„
-    showModal = false;
-  
-    // ÙˆØ¶Ø¹ÛŒØª ÙˆÛŒØ±Ø§ÛŒØ´
-    editMode = false;
-    editingId: number | null = null;
-
-      // Ø¢ÛŒØªÙ…â€ŒÙ‡Ø§ÛŒ Ø§Ù†ØªØ®Ø§Ø¨â€ŒØ´Ø¯Ù‡
-  selectedIds: number[] = [];
-
-  // Ù†Ù…Ø§ÛŒØ´ ØªØ§ÛŒÛŒØ¯ Ø­Ø°Ù
-  showDeleteConfirm = false;
-
-  // ---------------------------
-  // Lifecycle
-  // ---------------------------
   ngOnInit(): void {
     this.initForm();
     this.loadDataTable();
     this.loadCreateFormData();
   }
 
-
   // ---------------------------
-  // Init Form
+  // ÙØ±Ù…
   // ---------------------------
   initForm() {
     this.ObjectForm = this.fb.group({
       id: [null],
       username: ['', Validators.required],
-      email: ['', Validators.required ],
-      Password: ['', this.editMode ? [] : [Validators.required]],
+      email: ['', [Validators.required, Validators.email]],
+      Password: ['', this.editMode ? [] : Validators.required],
       fullName: ['', Validators.required],
       roleIds: [[]]
-      
     });
   }
 
- // ---------------------------
-  // CRUD Methods
   // ---------------------------
-
-  // Ø¯Ø±ÛŒØ§ÙØª Ù„ÛŒØ³Øª Ø¯Ø§Ø¯Ù‡â€ŒÙ‡Ø§ (Table)
+  // Ø¨Ø§Ø±Ú¯Ø°Ø§Ø±ÛŒ Ù„ÛŒØ³Øª Ú©Ø§Ø±Ø¨Ø±Ø§Ù†
+  // ---------------------------
   loadDataTable(): void {
     this._request.pageSize = 5;
-
-    this.ObjectService.getRecords(this._request).subscribe((res) => {
-      if (res.isSucceeded) {
-        this._baseResponse = res;
-        this._objectsView = res.data;
-        
-        // this.toastService.showToast.success({message:this._baseResponse.message})
-      }
-    });
-  }
-
-
-
-  loadCreateFormData(): void {
-    this.ObjectService.getCreateForm().subscribe(res => {
-        if (res.isSucceeded && res.singleData) {
-            const formData = res.singleData as unknown as UserCreateFormData;
-            this.roles = formData.roles || [];
-            // this.permissions = formData.permissions || [];
+    this.ObjectService.getRecords(this._request).subscribe({
+      next: (res: ApiResult<UserDto>) => {
+        if (res.isSucceeded) {
+          this._baseResponse = res;
+          this._objectsView = res.data || [];
         } else {
-        
+          this.toastService.error(res.message || 'Ø®Ø·Ø§ Ø¯Ø± Ø¨Ø§Ø±Ú¯Ø°Ø§Ø±ÛŒ Ú©Ø§Ø±Ø¨Ø±Ø§Ù†');
         }
-    });
-}
-
-  
-
-
-
-toggleRole(event: Event, roleId: number): void {
-  const input = event.target as HTMLInputElement;
-  const roleIds = this.ObjectForm.get('roleIds')?.value || [];
-
-  if (input.checked) {
-      roleIds.push(roleId);
-  } else {
-      const index = roleIds.indexOf(roleId);
-      if (index > -1) {
-          roleIds.splice(index, 1);
+      },
+      error: (err) => {
+        console.error('Ø®Ø·Ø§ Ø¯Ø± Ø¯Ø±ÛŒØ§ÙØª Ú©Ø§Ø±Ø¨Ø±Ø§Ù†:', err);
+        this.toastService.error('Ø®Ø·Ø§ÛŒ Ø§Ø±ØªØ¨Ø§Ø· Ø¨Ø§ Ø³Ø±ÙˆØ±');
       }
+    });
   }
 
-  this.ObjectForm.get('roleIds')?.setValue(roleIds);
-}
+  // ---------------------------
+  // Ø¨Ø§Ø±Ú¯Ø°Ø§Ø±ÛŒ Ù†Ù‚Ø´â€ŒÙ‡Ø§ Ø¨Ø±Ø§ÛŒ ÙØ±Ù… Ø§ÛŒØ¬Ø§Ø¯
+  // ---------------------------
+  loadCreateFormData(): void {
+    this.ObjectService.getCreateForm().subscribe({
+      next: (res: ApiResult<UserCreateFormData>) => {
+        if (res.isSucceeded ) {
+          const data = res.data;
+          this.roles = data || [];
+          this.permissions =  [];
+          console.log(data);
+        } else {
+          this.toastService.error('Ø®Ø·Ø§ Ø¯Ø± Ø¯Ø±ÛŒØ§ÙØª Ù†Ù‚Ø´â€ŒÙ‡Ø§');
+        }
+      },
+      error: (err) => {
+        console.error('Ø®Ø·Ø§ Ø¯Ø± Ø¯Ø±ÛŒØ§ÙØª ÙØ±Ù… Ø§ÛŒØ¬Ø§Ø¯:', err);
+        this.toastService.error('Ø®Ø·Ø§ÛŒ Ø§Ø±ØªØ¨Ø§Ø· Ø¨Ø§ Ø³Ø±ÙˆØ±');
+      }
+    });
+  }
 
+  // ---------------------------
+  // Ø§Ù†ØªØ®Ø§Ø¨ Ù†Ù‚Ø´
+  // ---------------------------
+  toggleRole(event: Event, roleId: number): void {
+    const input = event.target as HTMLInputElement;
+    const roleIds = this.ObjectForm.get('roleIds')?.value || [];
 
+    if (input.checked && !roleIds.includes(roleId)) {
+      roleIds.push(roleId);
+    } else if (!input.checked) {
+      const index = roleIds.indexOf(roleId);
+      if (index > -1) roleIds.splice(index, 1);
+    }
 
-  // Ø§ÛŒØ¬Ø§Ø¯ / ÙˆÛŒØ±Ø§ÛŒØ´ Ø¯Ø§Ø¯Ù‡
+    this.ObjectForm.get('roleIds')?.setValue(roleIds);
+  }
+
+  // ---------------------------
+  // Ø§ÛŒØ¬Ø§Ø¯ / ÙˆÛŒØ±Ø§ÛŒØ´
+  // ---------------------------
   onSubmit1() {
     if (this.ObjectForm.valid) {
-      const ObjectData: UserDto = this.ObjectForm.value;
+      const data: UserDto = this.ObjectForm.value;
 
-      if (this.editMode && this.editingId != null) {
-        // Ø¯Ø± Ø­Ø§Ù„Øª ÙˆÛŒØ±Ø§ÛŒØ´
-        this.ObjectService.updateRecord(ObjectData).subscribe(res => {
+      const request$ = this.editMode && this.editingId != null
+        ? this.ObjectService.updateRecord(data)
+        : this.ObjectService.insertRecord(data);
+
+      request$.subscribe({
+        next: (res: ApiResult<any>) => {
           if (res.isSucceeded) {
-           
             this.afterSubmit();
+            this.toastService.success(
+              this.editMode ? 'Ú©Ø§Ø±Ø¨Ø± Ø¨Ø§ Ù…ÙˆÙÙ‚ÛŒØª ÙˆÛŒØ±Ø§ÛŒØ´ Ø´Ø¯' : 'Ú©Ø§Ø±Ø¨Ø± Ø¨Ø§ Ù…ÙˆÙÙ‚ÛŒØª Ø§ÛŒØ¬Ø§Ø¯ Ø´Ø¯'
+            );
           } else {
-         
+            this.toastService.error(res.message || 'Ø®Ø·Ø§ Ø¯Ø± Ø¹Ù…Ù„ÛŒØ§Øª');
           }
-        });
-      } else {
-        // Ø¯Ø± Ø­Ø§Ù„Øª Ø§ÛŒØ¬Ø§Ø¯
-        this.ObjectService.insertRecord(ObjectData).subscribe(res => {
-          if (res.isSucceeded) {
-        
-            this.afterSubmit();
-          } else {
-      
-          }
-        });
-      }
+        },
+        error: (err) => {
+          console.error('Ø®Ø·Ø§ Ø¯Ø± Ø°Ø®ÛŒØ±Ù‡ Ú©Ø§Ø±Ø¨Ø±:', err);
+          this.toastService.error('Ø®Ø·Ø§ÛŒ Ø§Ø±ØªØ¨Ø§Ø· Ø¨Ø§ Ø³Ø±ÙˆØ±');
+        }
+      });
     }
   }
 
-
-  // Ø¹Ù…Ù„ÛŒØ§Øª Ù¾Ø³ Ø§Ø² Ø«Ø¨Øª ÛŒØ§ ÙˆÛŒØ±Ø§ÛŒØ´
   afterSubmit() {
     this.loadDataTable();
-    this.showModal = false;
-    this.ObjectForm.reset({
-      id: null,
-      username: '',
-      fullName: '',
-      email: '',
-      Password: '',
-      roleIds: [] 
-    });
-    this.editMode = false;
-    this.editingId = null;
+    this.closeModal();
   }
-
-
-
 
   closeModal() {
     this.showModal = false;
@@ -561,83 +535,90 @@ toggleRole(event: Event, roleId: number): void {
       fullName: '',
       email: '',
       Password: '',
-      roleIds: [] 
+      roleIds: []
     });
     this.editMode = false;
     this.editingId = null;
-    this.initForm();
+    this.initForm(); // Ø¨Ø§Ø²Ø³Ø§Ø²ÛŒ ÙØ±Ù… Ø¨Ø§ ÙˆÙ„ÛŒØ¯Ø§ØªÙˆØ±Ù‡Ø§ÛŒ Ø¯Ø±Ø³Øª
   }
 
-  // Ø¯Ø±ÛŒØ§ÙØª Ùˆ Ù†Ù…Ø§ÛŒØ´ Ø§Ø·Ù„Ø§Ø¹Ø§Øª Ø¬Ù‡Øª ÙˆÛŒØ±Ø§ÛŒØ´
-  onEdit(ObjectId: number) {
+  // ---------------------------
+  // ÙˆÛŒØ±Ø§ÛŒØ´
+  // ---------------------------
+  onEdit(id: number) {
     this.editMode = true;
-    this.editingId = ObjectId;
-  
-    this.ObjectForm.get('Password')?.clearValidators();
-    this.ObjectForm.get('Password')?.updateValueAndValidity();
+    this.editingId = id;
 
-    this.ObjectService.getRecordById(ObjectId).subscribe(res => {
-      if (res.isSucceeded && res.singleData) {
-        const Object = res.singleData;
-       
-  
-        this.ObjectForm.patchValue({
-          id: Object.id,
-          username: Object.username,
-          fullName: Object.fullName,
-          email: Object.email,
-          Password: Object.Password || "",
-          roleIds: Object.roleIds || [] // Ø§Ú¯Ø± roleIds null ÛŒØ§ undefined Ø¨ÙˆØ¯ØŒ Ø¢Ø±Ø§ÛŒÙ‡ Ø®Ø§Ù„ÛŒ Ø¨Ø±Ú¯Ø±Ø¯ÙˆÙ†
-        });
-  
-        this.showModal = true;
-      } else {
-        this.toastService.error('Ù…ÙˆØ±Ø¯ Ù¾ÛŒØ¯Ø§ Ù†Ø´Ø¯ ÛŒØ§ Ø®Ø·Ø§ Ø¯Ø± Ø¯Ø±ÛŒØ§ÙØª Ø§Ø·Ù„Ø§Ø¹Ø§Øª!' );
+    // Ø­Ø°Ù ÙˆÙ„ÛŒØ¯Ø§ØªÙˆØ± Ø±Ù…Ø² Ø¹Ø¨ÙˆØ± Ø¯Ø± Ø­Ø§Ù„Øª ÙˆÛŒØ±Ø§ÛŒØ´
+    const passwordControl = this.ObjectForm.get('Password');
+    passwordControl?.clearValidators();
+    passwordControl?.updateValueAndValidity();
+
+    this.ObjectService.getRecordById(id).subscribe({
+      next: (res: ApiResult<UserDto>) => {
+        if (res.isSucceeded && res.singleData) {
+          const user = res.singleData;
+          this.ObjectForm.patchValue({
+            id: user.id,
+            username: user.username,
+            fullName: user.fullName,
+            email: user.email,
+            Password: '',
+            roleIds: user.roleIds || []
+          });
+          this.showModal = true;
+        } else {
+          this.toastService.error('Ú©Ø§Ø±Ø¨Ø± Ù¾ÛŒØ¯Ø§ Ù†Ø´Ø¯');
+        }
+      },
+      error: () => {
+        this.toastService.error('Ø®Ø·Ø§ Ø¯Ø± Ø¯Ø±ÛŒØ§ÙØª Ø§Ø·Ù„Ø§Ø¹Ø§Øª Ú©Ø§Ø±Ø¨Ø±');
       }
     });
   }
 
   // ---------------------------
-  // Pagination
+  // ØµÙØ­Ù‡â€ŒØ¨Ù†Ø¯ÛŒ
   // ---------------------------
-  changePage(pagenumber: number) {
-    this._request.pageNumber = pagenumber;
+  changePage(pageNumber: number) {
+    this._request.pageNumber = pageNumber;
     this.loadDataTable();
   }
 
   // ---------------------------
-  // Selection for Delete
+  // Ø­Ø°Ù Ú¯Ø±ÙˆÙ‡ÛŒ
   // ---------------------------
-  isSelected(objectId: number): boolean {
-    return this.selectedIds.includes(objectId);
+  isSelected(id: number): boolean {
+    return this.selectedIds.includes(id);
   }
 
-  toggleSelection(ObjectId: number): void {
-    const index = this.selectedIds.indexOf(ObjectId);
+  toggleSelection(id: number): void {
+    const index = this.selectedIds.indexOf(id);
     if (index > -1) {
       this.selectedIds.splice(index, 1);
     } else {
-      this.selectedIds.push(ObjectId);
+      this.selectedIds.push(id);
     }
   }
 
-  // ---------------------------
-  // Delete Operation
-  // ---------------------------
   deleteSelectedRecords(): void {
-    this.ObjectService.deleteRecords(this.selectedIds).subscribe(res => {
-      if (res.isSucceeded) {
-       
-        this.afterSubmit(); // Ø±ÛŒØ³Øª ÙØ±Ù… Ùˆ Ø¨Ø§Ø±Ú¯Ø°Ø§Ø±ÛŒ Ù…Ø¬Ø¯Ø¯
-        this.selectedIds = [];
-      } else {
-        this.toastService.error( 'Ø®Ø·Ø§ Ø¯Ø± Ø­Ø°Ù Ú¯Ø±ÙˆÙ‡ÛŒ' );
+    this.ObjectService.deleteRecords(this.selectedIds).subscribe({
+      next: (res: ApiResult<any>) => {
+        if (res.isSucceeded) {
+          this.afterSubmit();
+          this.selectedIds = [];
+          this.toastService.success('Ú©Ø§Ø±Ø¨Ø±Ø§Ù† Ø§Ù†ØªØ®Ø§Ø¨â€ŒØ´Ø¯Ù‡ Ø­Ø°Ù Ø´Ø¯Ù†Ø¯');
+        } else {
+          this.toastService.error(res.message || 'Ø®Ø·Ø§ Ø¯Ø± Ø­Ø°Ù');
+        }
+        this.showDeleteConfirm = false;
+      },
+      error: () => {
+        this.toastService.error('Ø®Ø·Ø§ Ø¯Ø± Ø­Ø°Ù Ú¯Ø±ÙˆÙ‡ÛŒ');
       }
-      this.showDeleteConfirm = false;
     });
   }
 }
-
 
 ===== FILE: src\app\views\base\routes.ts =====
 import { Routes } from '@angular/router';
@@ -719,56 +700,56 @@ export const routes: Routes = [
 
   <!-- Ø®ÙˆØ¯ pagination -->
   <c-pagination aria-label="Page navigation example">
-    <li cPageItem *ngIf="_baseResponse.pageNumber > 3">
+    <li cPageItem *ngIf="_baseResponse.pageNumber! > 3">
       <button cPageLink aria-label="First" (click)="changePage(1)">
         <span aria-hidden="true">&laquo;</span>
       </button>
     </li>
 
-    <li cPageItem *ngIf="_baseResponse.pageNumber > 1">
-      <button cPageLink aria-label="Previous" (click)="changePage(_baseResponse.pageNumber - 1)">
+    <li cPageItem *ngIf="_baseResponse.pageNumber! > 1">
+      <button cPageLink aria-label="Previous" (click)="changePage(_baseResponse.pageNumber! - 1)">
         <span aria-hidden="true">&lt;</span>
       </button>
     </li>
 
-    <li cPageItem *ngIf="_baseResponse.pageNumber > 2">
-      <button cPageLink (click)="changePage(_baseResponse.pageNumber - 2)">
-        {{ _baseResponse.pageNumber - 2 }}
+    <li cPageItem *ngIf="_baseResponse.pageNumber! > 2">
+      <button cPageLink (click)="changePage(_baseResponse.pageNumber! - 2)">
+        {{ _baseResponse.pageNumber! - 2 }}
       </button>
     </li>
 
-    <li cPageItem *ngIf="_baseResponse.pageNumber > 1">
-      <button cPageLink (click)="changePage(_baseResponse.pageNumber - 1)">
-        {{ _baseResponse.pageNumber - 1 }}
+    <li cPageItem *ngIf="_baseResponse.pageNumber! > 1">
+      <button cPageLink (click)="changePage(_baseResponse.pageNumber! - 1)">
+        {{ _baseResponse.pageNumber! - 1 }}
       </button>
     </li>
 
     <li cPageItem>
       <button cPageLink class="active" disabled>
-        {{ _baseResponse.pageNumber }}
+        {{ _baseResponse.pageNumber! }}
       </button>
     </li>
 
-    <li cPageItem *ngIf="_baseResponse.totalPages > _baseResponse.pageNumber">
-      <button cPageLink (click)="changePage(_baseResponse.pageNumber + 1)">
-        {{ _baseResponse.pageNumber + 1 }}
+    <li cPageItem *ngIf="_baseResponse.totalPages! > _baseResponse.pageNumber!">
+      <button cPageLink (click)="changePage(_baseResponse.pageNumber! + 1)">
+        {{ _baseResponse.pageNumber! + 1 }}
       </button>
     </li>
 
-    <li cPageItem *ngIf="_baseResponse.totalPages > _baseResponse.pageNumber + 1">
-      <button cPageLink (click)="changePage(_baseResponse.pageNumber + 2)">
-        {{ _baseResponse.pageNumber + 2 }}
+    <li cPageItem *ngIf="_baseResponse.totalPages! > _baseResponse.pageNumber! + 1">
+      <button cPageLink (click)="changePage(_baseResponse.pageNumber! + 2)">
+        {{ _baseResponse.pageNumber! + 2 }}
       </button>
     </li>
 
-    <li cPageItem *ngIf="_baseResponse.totalPages > _baseResponse.pageNumber">
-      <button cPageLink aria-label="Next" (click)="changePage(_baseResponse.pageNumber + 1)">
+    <li cPageItem *ngIf="_baseResponse.totalPages! > _baseResponse.pageNumber!">
+      <button cPageLink aria-label="Next" (click)="changePage(_baseResponse.pageNumber! + 1)">
         <span aria-hidden="true">&gt;</span>
       </button>
     </li>
 
-    <li cPageItem *ngIf="_baseResponse.totalPages > _baseResponse.pageNumber + 2">
-      <button cPageLink aria-label="Last" (click)="changePage(_baseResponse.totalPages)">
+    <li cPageItem *ngIf="_baseResponse.totalPages! > _baseResponse.pageNumber! + 2">
+      <button cPageLink aria-label="Last" (click)="changePage(_baseResponse.totalPages!)">
         <span aria-hidden="true">&raquo;</span>
       </button>
     </li>
@@ -776,7 +757,7 @@ export const routes: Routes = [
 
   <!-- Ø§Ø·Ù„Ø§Ø¹Ø§Øª Ø±Ú©ÙˆØ±Ø¯ -->
   <div class="text-muted">
-    <strong>{{_baseResponse.totalRecords}}</strong> Ø±Ú©ÙˆØ±Ø¯ Ø¯Ø± <strong>{{_baseResponse.totalPages}}</strong> ØµÙØ­Ù‡
+    <strong>{{_baseResponse.totalRecords}}</strong> Ø±Ú©ÙˆØ±Ø¯ Ø¯Ø± <strong>{{_baseResponse.totalPages!}}</strong> ØµÙØ­Ù‡
   </div>
 
 </div>
@@ -885,7 +866,7 @@ import {
 } from '@coreui/angular';
 
 // DTOs & Services
-import { baseResponse } from 'src/app/dto/baseResponse';
+import { ApiResult, createApiResult } from 'src/app/dto/api-result'; // ØªØºÛŒÛŒØ± Ø§Ø² baseResponse
 import { ListRequest } from 'src/app/dto/ListRequestDto';
 import { CountTypeDto } from 'src/app/dto/shop/CountTypeDto';
 import { CountTypeService } from 'src/app/services/shop/countType/count-type.service';
@@ -896,13 +877,11 @@ import { ToastService } from 'src/app/services/utilities/toast.service';
 // ---------------------------
 @Component({
   selector: 'app-count-type',
+  standalone: true,
   imports: [
-    // UI modules
     CommonModule, TableDirective, PaginationComponent, PageItemDirective, PageLinkDirective,
     ButtonDirective, ColComponent, FormDirective, FormFeedbackComponent,
     FormLabelDirective, RowDirective, ModalModule,
-
-    // Form modules
     FormsModule, ReactiveFormsModule,
   ],
   templateUrl: './count-type.component.html',
@@ -910,46 +889,36 @@ import { ToastService } from 'src/app/services/utilities/toast.service';
 })
 export class CountTypeComponent implements OnInit {
 
+  // Ø¯Ø±Ø®ÙˆØ§Ø³Øª Ù„ÛŒØ³Øª
+  _request = new ListRequest();
+  _objectsView: CountTypeDto[] = [];
+  _baseResponse: ApiResult<CountTypeDto> = createApiResult<CountTypeDto>();
+
+  // ÙØ±Ù…
+  ObjectForm!: FormGroup;
+  showModal = false;
+
+  // ÙˆÛŒØ±Ø§ÛŒØ´
+  editMode = false;
+  editingId: number | null = null;
+
+  // Ø­Ø°Ù Ú¯Ø±ÙˆÙ‡ÛŒ
+  selectedIds: number[] = [];
+  showDeleteConfirm = false;
+
   constructor(
     private fb: FormBuilder,
     private countTypeService: CountTypeService,
     private toastService: ToastService
   ) {}
 
-  // ---------------------------
-  // Properties
-  // ---------------------------
-
-  _request = new ListRequest();
-  _objectsView: CountTypeDto[] = [];
-  _baseResponse = new baseResponse;
-
-  // ÙØ±Ù…
-  ObjectForm!: FormGroup;
-
-  // ÙˆØ¶Ø¹ÛŒØª Ù…Ø¯Ø§Ù„
-  showModal = false;
-
-  // ÙˆØ¶Ø¹ÛŒØª ÙˆÛŒØ±Ø§ÛŒØ´
-  editMode = false;
-  editingId: number | null = null;
-
-  // Ø¢ÛŒØªÙ…â€ŒÙ‡Ø§ÛŒ Ø§Ù†ØªØ®Ø§Ø¨â€ŒØ´Ø¯Ù‡
-  selectedIds: number[] = [];
-
-  // Ù†Ù…Ø§ÛŒØ´ ØªØ§ÛŒÛŒØ¯ Ø­Ø°Ù
-  showDeleteConfirm = false;
-
-  // ---------------------------
-  // Lifecycle
-  // ---------------------------
   ngOnInit(): void {
     this.initForm();
     this.loadDataTable();
   }
 
   // ---------------------------
-  // Init Form
+  // ÙØ±Ù…
   // ---------------------------
   initForm() {
     this.ObjectForm = this.fb.group({
@@ -959,48 +928,56 @@ export class CountTypeComponent implements OnInit {
   }
 
   // ---------------------------
-  // CRUD Methods
+  // Ø¨Ø§Ø±Ú¯Ø°Ø§Ø±ÛŒ Ù„ÛŒØ³Øª
   // ---------------------------
-
-  // Ø¯Ø±ÛŒØ§ÙØª Ù„ÛŒØ³Øª Ø¯Ø§Ø¯Ù‡â€ŒÙ‡Ø§ (Table)
   loadDataTable(): void {
     this._request.pageSize = 5;
-
-    this.countTypeService.getRecords(this._request).subscribe((res) => {
-      if (res.isSucceeded) {
-        this._baseResponse = res;
-        this._objectsView = res.data;
-
+    this.countTypeService.getRecords(this._request).subscribe({
+      next: (res: ApiResult<CountTypeDto>) => {
+        if (res.isSucceeded) {
+          this._baseResponse = res;
+          this._objectsView = res.data || [];
+        } else {
+          this.toastService.error(res.message || 'Ø®Ø·Ø§ Ø¯Ø± Ø¨Ø§Ø±Ú¯Ø°Ø§Ø±ÛŒ Ø§Ù†ÙˆØ§Ø¹ Ø´Ù…Ø§Ø±Ø´');
+        }
+      },
+      error: (err) => {
+        console.error('Ø®Ø·Ø§ Ø¯Ø± Ø¯Ø±ÛŒØ§ÙØª Ù„ÛŒØ³Øª:', err);
+        this.toastService.error('Ø®Ø·Ø§ÛŒ Ø§Ø±ØªØ¨Ø§Ø· Ø¨Ø§ Ø³Ø±ÙˆØ±');
       }
     });
   }
 
-  // Ø§ÛŒØ¬Ø§Ø¯ / ÙˆÛŒØ±Ø§ÛŒØ´ Ø¯Ø§Ø¯Ù‡
+  // ---------------------------
+  // Ø§ÛŒØ¬Ø§Ø¯ / ÙˆÛŒØ±Ø§ÛŒØ´
+  // ---------------------------
   onSubmit1() {
     if (this.ObjectForm.valid) {
-      const ObjectData: CountTypeDto = this.ObjectForm.value;
+      const data: CountTypeDto = this.ObjectForm.value;
 
-      if (this.editMode && this.editingId != null) {
-        // Ø¯Ø± Ø­Ø§Ù„Øª ÙˆÛŒØ±Ø§ÛŒØ´
-        this.countTypeService.updateRecord(ObjectData).subscribe(res => {
+      const request$ = this.editMode && this.editingId != null
+        ? this.countTypeService.updateRecord(data)
+        : this.countTypeService.insertRecord(data);
+
+      request$.subscribe({
+        next: (res: ApiResult<any>) => {
           if (res.isSucceeded) {
             this.afterSubmit();
+            this.toastService.success(
+              this.editMode ? 'Ù†ÙˆØ¹ Ø´Ù…Ø§Ø±Ø´ Ø¨Ø§ Ù…ÙˆÙÙ‚ÛŒØª ÙˆÛŒØ±Ø§ÛŒØ´ Ø´Ø¯' : 'Ù†ÙˆØ¹ Ø´Ù…Ø§Ø±Ø´ Ø¨Ø§ Ù…ÙˆÙÙ‚ÛŒØª Ø§ÛŒØ¬Ø§Ø¯ Ø´Ø¯'
+            );
           } else {
+            this.toastService.error(res.message || 'Ø®Ø·Ø§ Ø¯Ø± Ø¹Ù…Ù„ÛŒØ§Øª');
           }
-        });
-      } else {
-        // Ø¯Ø± Ø­Ø§Ù„Øª Ø§ÛŒØ¬Ø§Ø¯
-        this.countTypeService.insertRecord(ObjectData).subscribe(res => {
-          if (res.isSucceeded) {
-            this.afterSubmit();
-          } else {
-          }
-        });
-      }
+        },
+        error: (err) => {
+          console.error('Ø®Ø·Ø§ Ø¯Ø± Ø°Ø®ÛŒØ±Ù‡:', err);
+          this.toastService.error('Ø®Ø·Ø§ÛŒ Ø§Ø±ØªØ¨Ø§Ø· Ø¨Ø§ Ø³Ø±ÙˆØ±');
+        }
+      });
     }
   }
 
-  // Ø¹Ù…Ù„ÛŒØ§Øª Ù¾Ø³ Ø§Ø² Ø«Ø¨Øª ÛŒØ§ ÙˆÛŒØ±Ø§ÛŒØ´
   afterSubmit() {
     this.loadDataTable();
     this.showModal = false;
@@ -1009,67 +986,68 @@ export class CountTypeComponent implements OnInit {
     this.editingId = null;
   }
 
-  // Ø¯Ø±ÛŒØ§ÙØª Ùˆ Ù†Ù…Ø§ÛŒØ´ Ø§Ø·Ù„Ø§Ø¹Ø§Øª Ø¬Ù‡Øª ÙˆÛŒØ±Ø§ÛŒØ´
-  onEdit(ObjectId: number) {
+  // ---------------------------
+  // ÙˆÛŒØ±Ø§ÛŒØ´
+  // ---------------------------
+  onEdit(id: number) {
     this.editMode = true;
-    this.editingId = ObjectId;
+    this.editingId = id;
 
-    this.countTypeService.getRecordById(ObjectId).subscribe(res => {
-      if (res.isSucceeded && res.singleData) {
-        const Object = res.singleData;
-
-        this.ObjectForm.patchValue({
-          id: Object.id,
-          name: Object.name,
-        });
-
-        this.showModal = true;
-      } else {
-        this.toastService.error('Ù…ÙˆØ±Ø¯ Ù¾ÛŒØ¯Ø§ Ù†Ø´Ø¯ ÛŒØ§ Ø®Ø·Ø§ Ø¯Ø± Ø¯Ø±ÛŒØ§ÙØª Ø§Ø·Ù„Ø§Ø¹Ø§Øª!' );
+    this.countTypeService.getRecordById(id).subscribe({
+      next: (res: ApiResult<CountTypeDto>) => {
+        if (res.isSucceeded && res.singleData) {
+          this.ObjectForm.patchValue(res.singleData);
+          this.showModal = true;
+        } else {
+          this.toastService.error('Ù…ÙˆØ±Ø¯ Ù¾ÛŒØ¯Ø§ Ù†Ø´Ø¯');
+        }
+      },
+      error: (err) => {
+        this.toastService.error('Ø®Ø·Ø§ Ø¯Ø± Ø¯Ø±ÛŒØ§ÙØª Ø§Ø·Ù„Ø§Ø¹Ø§Øª');
       }
     });
   }
 
   // ---------------------------
-  // Pagination
+  // ØµÙØ­Ù‡â€ŒØ¨Ù†Ø¯ÛŒ
   // ---------------------------
-  changePage(pagenumber: number) {
-    this._request.pageNumber = pagenumber;
+  changePage(pageNumber: number) {
+    this._request.pageNumber = pageNumber;
     this.loadDataTable();
   }
 
   // ---------------------------
-  // Selection for Delete
+  // Ø­Ø°Ù Ú¯Ø±ÙˆÙ‡ÛŒ
   // ---------------------------
-  isSelected(objectId: number): boolean {
-    return this.selectedIds.includes(objectId);
+  isSelected(id: number): boolean {
+    return this.selectedIds.includes(id);
   }
 
-  toggleSelection(ObjectId: number): void {
-    const index = this.selectedIds.indexOf(ObjectId);
+  toggleSelection(id: number): void {
+    const index = this.selectedIds.indexOf(id);
     if (index > -1) {
       this.selectedIds.splice(index, 1);
     } else {
-      this.selectedIds.push(ObjectId);
+      this.selectedIds.push(id);
     }
   }
 
-  // ---------------------------
-  // Delete Operation
-  // ---------------------------
   deleteSelectedRecords(): void {
-    this.countTypeService.deleteRecords(this.selectedIds).subscribe(res => {
-      if (res.isSucceeded) {
-        
-        this.afterSubmit(); // Ø±ÛŒØ³Øª ÙØ±Ù… Ùˆ Ø¨Ø§Ø±Ú¯Ø°Ø§Ø±ÛŒ Ù…Ø¬Ø¯Ø¯
-        this.selectedIds = [];
-      } else {
-        this.toastService.error( 'Ø®Ø·Ø§ Ø¯Ø± Ø­Ø°Ù Ú¯Ø±ÙˆÙ‡ÛŒ' );
+    this.countTypeService.deleteRecords(this.selectedIds).subscribe({
+      next: (res: ApiResult<any>) => {
+        if (res.isSucceeded) {
+          this.afterSubmit();
+          this.selectedIds = [];
+          this.toastService.success('Ø§Ù†ÙˆØ§Ø¹ Ø§Ù†ØªØ®Ø§Ø¨â€ŒØ´Ø¯Ù‡ Ø­Ø°Ù Ø´Ø¯Ù†Ø¯');
+        } else {
+          this.toastService.error(res.message || 'Ø®Ø·Ø§ Ø¯Ø± Ø­Ø°Ù');
+        }
+        this.showDeleteConfirm = false;
+      },
+      error: () => {
+        this.toastService.error('Ø®Ø·Ø§ Ø¯Ø± Ø­Ø°Ù Ú¯Ø±ÙˆÙ‡ÛŒ');
       }
-      this.showDeleteConfirm = false;
     });
   }
-
 }
-
 

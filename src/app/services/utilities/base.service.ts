@@ -26,10 +26,10 @@ export abstract class BaseService<TViewDto, TCreateDto = TViewDto> {
     });
   }
 
-  // --- CRUD Methods ---
-  getRecords(request: ListRequest): Observable<ApiResult<TViewDto>> {
+  // لیست: data همیشه TViewDto[]
+  getRecords(request: ListRequest): Observable<ApiResult<TViewDto[]>> {
     return this.http
-      .post<ApiResult<TViewDto>>(
+      .post<ApiResult<TViewDto[]>>(
         `${this.apiUrl}${this.endpoint}/GetAll`,
         request,
         { headers: this.getJsonHeaders() }
@@ -76,27 +76,25 @@ export abstract class BaseService<TViewDto, TCreateDto = TViewDto> {
       .pipe(catchError(err => this.handleError(err)));
   }
 
-  getCreateForm<TForm>(): Observable<ApiResult<TForm>> {
+  // فرم ایجاد: data یک شیء تک (مثل UserCreateFormData)
+  getCreateForm<U = any>(): Observable<ApiResult<U>> {
     return this.http
-      .get<ApiResult<TForm>>(
+      .get<ApiResult<U>>(
         `${this.apiUrl}${this.endpoint}/getcreateform`,
         { headers: this.getJsonHeaders() }
       )
       .pipe(catchError(err => this.handleError(err)));
   }
 
-  // --- فقط throw خطا — Toast در اینترسپتور ---
-  private handleError(error: any): Observable<never> {
+  protected handleError(error: any): Observable<never> {
     return throwError(() => error);
   }
 
-  // --- فقط نمایش پیام از ApiResult (بدون fallback) ---
   protected showApiResultToast(result: ApiResult<any>): void {
     if (result.isSucceeded) {
       if (result.message) {
         this.toast.success(result.message);
       }
-      // اگر message نبود → هیچ توستی نمایش داده نمی‌شود
     } else {
       const errorMsg = result.errors?.[0] ?? result.message;
       if (errorMsg) {
