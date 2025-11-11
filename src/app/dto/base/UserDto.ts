@@ -1,14 +1,16 @@
 export class UserDto {
-    id!: number;
-    fullName!: string;
-    username!: string;
-    email!: string;
-    Password: string = "";
-    profilePictureUrl?: string;     // جدید
-  status!: UserStatus;            // جدید
+  id!: number;
+  fullName!: string;
+  username!: string;
+  email!: string;
+  Password: string = "";
+  profilePicture?: File | null;  // تغییر به File
+  status!: UserStatus;
   lastSeen?: string;
-    roleIds: number[] = [];
+  roleIds: number[] = [];
 }
+
+
 
 
 export enum UserStatus {

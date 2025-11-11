@@ -507,32 +507,20 @@ export class ProductCreateDto {
 
 ===== FILE: src\app\dto\api-result.ts =====
 // src/app/dto/api-result.ts
-
 export interface ApiResult<T = any> {
   isSucceeded: boolean;
   message?: string;
   statusCode?: number;
   errors?: string[];
-
-  // Ø¨Ø±Ø§ÛŒ Ù„ÛŒØ³Øª
-  data?: T[];
+  data?: T;
   totalRecords?: number;
   totalPages?: number;
   pageNumber?: number;
   pageSize?: number;
-
-  // Ø¨Ø±Ø§ÛŒ ØªÚ© Ø¢ÛŒØªÙ…
-  singleData?: T;
 }
 
-// --- Factory Function Ø¨Ø§ Ù…Ù‚Ø¯Ø§Ø± Ù¾ÛŒØ´â€ŒÙØ±Ø¶ ---
 export const createApiResult = <T>(): ApiResult<T> => ({
   isSucceeded: false,
-  data: [],
-  singleData: null as any,
-  totalRecords: 0,
-  totalPages: 1,
-  pageNumber: 1,
-  pageSize: 10,
+  data: undefined,
 });
 

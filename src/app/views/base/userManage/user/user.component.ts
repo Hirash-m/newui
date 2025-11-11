@@ -29,7 +29,7 @@ export class UserComponent implements OnInit {
   // لیست کاربران
   _request = new ListRequest();
   _objectsView: UserDto[] = [];
-  _baseResponse: ApiResult<UserDto> = createApiResult<UserDto>();
+  _baseResponse: ApiResult<UserDto[]> = createApiResult<UserDto[]>();
 
   // فرم
   ObjectForm!: FormGroup;
@@ -65,9 +65,21 @@ export class UserComponent implements OnInit {
       email: ['', [Validators.required, Validators.email]],
       Password: ['', this.editMode ? [] : Validators.required],
       fullName: ['', Validators.required],
-      roleIds: [[]]
+      roleIds: [[]],
+      profilePicture: [null]  
     });
   }
+
+
+  // انتخاب فایل
+onFileSelected(event: Event): void {
+  const input = event.target as HTMLInputElement;
+  if (input.files && input.files[0]) {
+    const file = input.files[0];
+    this.ObjectForm.patchValue({ profilePicture: file });
+    this.ObjectForm.get('profilePicture')?.updateValueAndValidity();
+  }
+}
 
   // ---------------------------
   // بارگذاری لیست کاربران
@@ -75,7 +87,7 @@ export class UserComponent implements OnInit {
   loadDataTable(): void {
     this._request.pageSize = 5;
     this.ObjectService.getRecords(this._request).subscribe({
-      next: (res: ApiResult<UserDto>) => {
+      next: (res: ApiResult<UserDto[]>) => {
         if (res.isSucceeded) {
           this._baseResponse = res;
           this._objectsView = res.data || [];
@@ -137,12 +149,16 @@ export class UserComponent implements OnInit {
   // ---------------------------
   onSubmit1() {
     if (this.ObjectForm.valid) {
-      const data: UserDto = this.ObjectForm.value;
-
+      const formValue = this.ObjectForm.value;
+      const data: UserDto = {
+        ...formValue,
+        profilePicture: formValue.profilePicture // File object
+      };
+  
       const request$ = this.editMode && this.editingId != null
         ? this.ObjectService.updateRecord(data)
         : this.ObjectService.insertRecord(data);
-
+  
       request$.subscribe({
         next: (res: ApiResult<any>) => {
           if (res.isSucceeded) {
@@ -175,6 +191,7 @@ export class UserComponent implements OnInit {
       fullName: '',
       email: '',
       Password: '',
+      profilePicture: null,
       roleIds: []
     });
     this.editMode = false;
@@ -188,23 +205,23 @@ export class UserComponent implements OnInit {
   onEdit(id: number) {
     this.editMode = true;
     this.editingId = id;
-
-    // حذف ولیداتور رمز عبور در حالت ویرایش
+  
     const passwordControl = this.ObjectForm.get('Password');
     passwordControl?.clearValidators();
     passwordControl?.updateValueAndValidity();
-
+  
     this.ObjectService.getRecordById(id).subscribe({
       next: (res: ApiResult<UserDto>) => {
-        if (res.isSucceeded && res.singleData) {
-          const user = res.singleData;
+        if (res.isSucceeded && res.data) {
+          const user = res.data;
           this.ObjectForm.patchValue({
             id: user.id,
             username: user.username,
             fullName: user.fullName,
             email: user.email,
             Password: '',
-            roleIds: user.roleIds || []
+            roleIds: user.roleIds || [],
+            profilePicture: null  // فایل قبلی حذف میشه
           });
           this.showModal = true;
         } else {
@@ -216,7 +233,6 @@ export class UserComponent implements OnInit {
       }
     });
   }
-
   // ---------------------------
   // صفحه‌بندی
   // ---------------------------

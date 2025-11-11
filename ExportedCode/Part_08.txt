@@ -167,8 +167,8 @@ getTestBed().initTestEnvironment(
             "index": "src/index.html",
             "browser": "src/main.ts",
             "polyfills": [
-              "@angular/localize/init",
-              "zone.js"
+              "zone.js",
+              "@angular/localize/init"              
             ],
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
@@ -217,7 +217,9 @@ getTestBed().initTestEnvironment(
         },
         "serve": {
            "options": {
-    "proxyConfig": "proxy.conf.json"
+    "proxyConfig": "proxy.conf.json",
+    "port": 4200,
+    "open": false
   },
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {

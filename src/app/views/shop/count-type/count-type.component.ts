@@ -40,7 +40,7 @@ export class CountTypeComponent implements OnInit {
   // درخواست لیست
   _request = new ListRequest();
   _objectsView: CountTypeDto[] = [];
-  _baseResponse: ApiResult<CountTypeDto> = createApiResult<CountTypeDto>();
+  _baseResponse: ApiResult<CountTypeDto[]> = createApiResult<CountTypeDto[]>();
 
   // فرم
   ObjectForm!: FormGroup;
@@ -81,10 +81,10 @@ export class CountTypeComponent implements OnInit {
   loadDataTable(): void {
     this._request.pageSize = 5;
     this.countTypeService.getRecords(this._request).subscribe({
-      next: (res: ApiResult<CountTypeDto>) => {
+      next: (res: ApiResult<CountTypeDto[]>) => {
         if (res.isSucceeded) {
           this._baseResponse = res;
-          this._objectsView = res.data || [];
+          this._objectsView = res.data ?? [];
         } else {
           this.toastService.error(res.message || 'خطا در بارگذاری انواع شمارش');
         }

@@ -37,7 +37,7 @@ export class InventoryComponent implements OnInit {
   // درخواست لیست
   _request = new ListRequest();
   _objectsView: InventoryDto[] = [];
-  _baseResponse: ApiResult<InventoryDto> = createApiResult<InventoryDto>();
+  _baseResponse: ApiResult<InventoryDto[]> = createApiResult<InventoryDto[]>();
 
   // فرم
   ObjectForm!: FormGroup;
@@ -78,7 +78,7 @@ export class InventoryComponent implements OnInit {
   // ---------------------------
   loadDataTable(): void {
     this._request.pageSize = 5;
-    this.ObjectService.getRecords(this._request).subscribe((res: ApiResult<InventoryDto>) => {
+    this.ObjectService.getRecords(this._request).subscribe((res: ApiResult<InventoryDto[]>) => {
       if (res.isSucceeded) {
         this._baseResponse = res;
         this._objectsView = res.data || [];
@@ -133,8 +133,8 @@ export class InventoryComponent implements OnInit {
     this.editingId = ObjectId;
 
     this.ObjectService.getRecordById(ObjectId).subscribe((res: ApiResult<InventoryDto>) => {
-      if (res.isSucceeded && res.singleData) {
-        const obj = res.singleData;
+      if (res.isSucceeded && res.data) {
+        const obj = res.data;
         this.ObjectForm.patchValue({
           id: obj.id,
           name: obj.name,

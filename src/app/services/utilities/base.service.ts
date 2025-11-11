@@ -26,7 +26,7 @@ export abstract class BaseService<TViewDto, TCreateDto = TViewDto> {
     });
   }
 
-  // لیست: data همیشه TViewDto[]
+  // لیست: همیشه TViewDto[]
   getRecords(request: ListRequest): Observable<ApiResult<TViewDto[]>> {
     return this.http
       .post<ApiResult<TViewDto[]>>(
@@ -37,6 +37,7 @@ export abstract class BaseService<TViewDto, TCreateDto = TViewDto> {
       .pipe(catchError(err => this.handleError(err)));
   }
 
+  // ایجاد
   insertRecord(data: TCreateDto): Observable<ApiResult<TCreateDto>> {
     return this.http
       .post<ApiResult<TCreateDto>>(
@@ -47,6 +48,7 @@ export abstract class BaseService<TViewDto, TCreateDto = TViewDto> {
       .pipe(catchError(err => this.handleError(err)));
   }
 
+  // ویرایش
   updateRecord(data: TCreateDto): Observable<ApiResult<TCreateDto>> {
     return this.http
       .post<ApiResult<TCreateDto>>(
@@ -57,6 +59,7 @@ export abstract class BaseService<TViewDto, TCreateDto = TViewDto> {
       .pipe(catchError(err => this.handleError(err)));
   }
 
+  // حذف چندتایی
   deleteRecords(ids: number[]): Observable<ApiResult<any>> {
     return this.http
       .post<ApiResult<any>>(
@@ -67,6 +70,7 @@ export abstract class BaseService<TViewDto, TCreateDto = TViewDto> {
       .pipe(catchError(err => this.handleError(err)));
   }
 
+  // دریافت یک رکورد
   getRecordById(id: number): Observable<ApiResult<TCreateDto>> {
     return this.http
       .get<ApiResult<TCreateDto>>(
@@ -76,7 +80,7 @@ export abstract class BaseService<TViewDto, TCreateDto = TViewDto> {
       .pipe(catchError(err => this.handleError(err)));
   }
 
-  // فرم ایجاد: data یک شیء تک (مثل UserCreateFormData)
+  // فرم ایجاد (مثل roles, permissions)
   getCreateForm<U = any>(): Observable<ApiResult<U>> {
     return this.http
       .get<ApiResult<U>>(
@@ -86,20 +90,24 @@ export abstract class BaseService<TViewDto, TCreateDto = TViewDto> {
       .pipe(catchError(err => this.handleError(err)));
   }
 
+  // --- خطا ---
   protected handleError(error: any): Observable<never> {
+    // می‌تونی اینجا لاگ بزنی
+    console.error('API Error:', error);
     return throwError(() => error);
   }
 
+  // --- نمایش پیام ---
   protected showApiResultToast(result: ApiResult<any>): void {
+    if (!result) return;
+
     if (result.isSucceeded) {
       if (result.message) {
         this.toast.success(result.message);
       }
     } else {
-      const errorMsg = result.errors?.[0] ?? result.message;
-      if (errorMsg) {
-        this.toast.error(errorMsg);
-      }
+      const errorMsg = result.errors?.[0] ?? result.message ?? 'خطایی رخ داد';
+      this.toast.error(errorMsg);
     }
   }
 }

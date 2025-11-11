@@ -820,10 +820,10 @@ export class AuthService {
       headers: new HttpHeaders({ 'Content-Type': 'application/json' })
     }).pipe(
       map(response => {
-        if (response.isSucceeded && response.singleData?.token) {
+        if (response.isSucceeded && response.data?.token) {
           // Ø°Ø®ÛŒØ±Ù‡ ØªÙˆÚ©Ù† Ø¯Ø± localStorage
-          localStorage.setItem('token', response.singleData.token);
-          localStorage.setItem('user', JSON.stringify(response.singleData));
+          localStorage.setItem('token', response.data.token);
+          localStorage.setItem('user', JSON.stringify(response.data));
         }
         return response;
       }),

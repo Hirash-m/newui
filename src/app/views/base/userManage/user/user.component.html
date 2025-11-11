@@ -157,6 +157,19 @@
         <c-form-feedback [valid]="false">کلمه عبور  را وارد کنید.</c-form-feedback>
       </c-col>
 
+
+      <!-- آپلود تصویر -->
+      <div class="mb-3">
+        <label cFormLabel>تصویر پروفایل</label>
+        <input
+          type="file"
+          cFormControl
+          accept="image/*"
+          (change)="onFileSelected($event)"
+          class="form-control"
+        >
+        <small class="text-muted">فقط تصاویر (JPG, PNG)</small>
+      </div>
  
 <!-- بخش نقش‌ها -->
 <c-col [md]="12">
@@ -175,6 +188,8 @@
     </label>
   </div>
 </c-col>
+
+
 
 
     </form>

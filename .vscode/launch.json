@@ -1,25 +1,28 @@
+// .vscode/launch.json
 {
   "version": "0.2.0",
   "configurations": [
     {
-      "type": "node",
+      "type": "chrome",
       "request": "launch",
-      "name": "Debug Angular with npm.cmd",
-      "cwd": "${workspaceFolder}",
-      "runtimeExecutable": "D:/node/node-v22.16.0-win-x64/npm.cmd",
-      "runtimeArgs": ["run", "start"],
-      "sourceMaps": true,
+      "name": "Debug Angular in Chrome",
+      "url": "http://localhost:4200",
       "webRoot": "${workspaceFolder}",
+      "sourceMaps": true,
       "sourceMapPathOverrides": {
-        "webpack:/*": "${workspaceFolder}/*",
-        "/*": "${workspaceFolder}/*"
+        "webpack:///./*": "${webRoot}/*",
+        "webpack:///src/*": "${webRoot}/src/*"
       },
-      "port": 9229,
-      "console": "integratedTerminal",
+      "runtimeArgs": [
+        "--remote-debugging-port=9222"
+      ],
+      "userDataDir": "${workspaceFolder}/.vscode/chrome-debug-profile",
+      "preLaunchTask": "npm: start",
+      "postDebugTask": "terminateAll",
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "Compiled successfully",
-        "uriFormat": "http://localhost:4300"
+        "pattern": "Local:\\s[](http://localhost:4300)",
+        "uriFormat": "%s"
       }
     }
   ]

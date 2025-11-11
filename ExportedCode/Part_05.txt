@@ -8,7 +8,8 @@ import { ButtonModule, CardModule, FormModule, GridModule } from '@coreui/angula
 import { LoginComponent } from './login.component';
 import { IconModule } from '@coreui/icons-angular';
 import { IconSetService } from '@coreui/icons-angular';
-import { iconSubset } from '../../../icons/icon-subset';
+import { iconSubset } from 'src/app/icons/icon-subset';
+
 
 describe('LoginComponent', () => {
   let component: LoginComponent;
@@ -60,6 +61,7 @@ import {
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../../../services/auth/login/auth.service';
 import { ToastService } from '../../../../../services/utilities/toast.service';
+import { ApiResult } from 'src/app/dto/api-result';
 
 @Component({
   selector: 'app-login',
@@ -94,28 +96,32 @@ export class LoginComponent {
     private toast: ToastService,
     private router: Router
   ) {}
-
   onLogin() {
     if (!this.email || !this.password) {
- 
+      this.toast.error('Ù„Ø·ÙØ§Ù‹ Ø§ÛŒÙ…ÛŒÙ„ Ùˆ Ø±Ù…Ø² Ø¹Ø¨ÙˆØ± Ø±Ø§ ÙˆØ§Ø±Ø¯ Ú©Ù†ÛŒØ¯');
       return;
     }
-
+  
     this.loading = true;
-
+  
     this.authService.login(this.email, this.password).subscribe({
-      next: (res) => {
+      next: (res: ApiResult<any>) => {
         this.loading = false;
-        if (res.isSucceeded) {
-
+  
+        if (res.isSucceeded && res.data?.token) {
+          this.toast.success('ÙˆØ±ÙˆØ¯ Ø¨Ø§ Ù…ÙˆÙÙ‚ÛŒØª Ø§Ù†Ø¬Ø§Ù… Ø´Ø¯');
           this.router.navigate(['/dashboard']);
+          
         } else {
-     
+          // Ø§ÛŒÙ† Ù‚Ø³Ù…Øª Ø­ÛŒØ§ØªÛŒ Ø§Ø³Øª!
+          const errorMsg = res. message || res.errors?.join(', ') || 'ÙˆØ±ÙˆØ¯ Ù†Ø§Ù…ÙˆÙÙ‚';
+          this.toast.error(errorMsg);
         }
       },
       error: (err) => {
         this.loading = false;
-      
+        this.toast.error('Ø®Ø·Ø§ Ø¯Ø± Ø§Ø±ØªØ¨Ø§Ø· Ø¨Ø§ Ø³Ø±ÙˆØ±');
+        console.error('HTTP Error:', err);
       }
     });
   }
@@ -392,7 +398,7 @@ export class UserComponent implements OnInit {
   // Ù„ÛŒØ³Øª Ú©Ø§Ø±Ø¨Ø±Ø§Ù†
   _request = new ListRequest();
   _objectsView: UserDto[] = [];
-  _baseResponse: ApiResult<UserDto> = createApiResult<UserDto>();
+  _baseResponse: ApiResult<UserDto[]> = createApiResult<UserDto[]>();
 
   // ÙØ±Ù…
   ObjectForm!: FormGroup;
@@ -438,7 +444,7 @@ export class UserComponent implements OnInit {
   loadDataTable(): void {
     this._request.pageSize = 5;
     this.ObjectService.getRecords(this._request).subscribe({
-      next: (res: ApiResult<UserDto>) => {
+      next: (res: ApiResult<UserDto[]>) => {
         if (res.isSucceeded) {
           this._baseResponse = res;
           this._objectsView = res.data || [];
@@ -459,13 +465,16 @@ export class UserComponent implements OnInit {
   loadCreateFormData(): void {
     this.ObjectService.getCreateForm().subscribe({
       next: (res: ApiResult<UserCreateFormData>) => {
-        if (res.isSucceeded ) {
-          const data = res.data;
-          this.roles = data || [];
-          this.permissions =  [];
-          console.log(data);
+        if (res.isSucceeded && res.data) {
+          // Ø­Ø§Ù„Ø§ res.data ÛŒÚ© Ø´ÛŒØ¡ ØªÚ© Ø§Ø³Øª: { roles: [...] }
+          const formData = res.data as UserCreateFormData;
+  
+          this.roles = formData.roles ?? [];
+          this.permissions = [];
+  
+          console.log('ÙØ±Ù… Ø§ÛŒØ¬Ø§Ø¯ Ø¨Ø§Ø±Ú¯Ø°Ø§Ø±ÛŒ Ø´Ø¯:', formData);
         } else {
-          this.toastService.error('Ø®Ø·Ø§ Ø¯Ø± Ø¯Ø±ÛŒØ§ÙØª Ù†Ù‚Ø´â€ŒÙ‡Ø§');
+          this.toastService.error(res.message || 'Ø®Ø·Ø§ Ø¯Ø± Ø¯Ø±ÛŒØ§ÙØª ÙØ±Ù… Ø§ÛŒØ¬Ø§Ø¯');
         }
       },
       error: (err) => {
@@ -556,8 +565,8 @@ export class UserComponent implements OnInit {
 
     this.ObjectService.getRecordById(id).subscribe({
       next: (res: ApiResult<UserDto>) => {
-        if (res.isSucceeded && res.singleData) {
-          const user = res.singleData;
+        if (res.isSucceeded && res.data) {
+          const user = res.data;
           this.ObjectForm.patchValue({
             id: user.id,
             username: user.username,
@@ -892,7 +901,7 @@ export class CountTypeComponent implements OnInit {
   // Ø¯Ø±Ø®ÙˆØ§Ø³Øª Ù„ÛŒØ³Øª
   _request = new ListRequest();
   _objectsView: CountTypeDto[] = [];
-  _baseResponse: ApiResult<CountTypeDto> = createApiResult<CountTypeDto>();
+  _baseResponse: ApiResult<CountTypeDto[]> = createApiResult<CountTypeDto[]>();
 
   // ÙØ±Ù…
   ObjectForm!: FormGroup;
@@ -933,10 +942,10 @@ export class CountTypeComponent implements OnInit {
   loadDataTable(): void {
     this._request.pageSize = 5;
     this.countTypeService.getRecords(this._request).subscribe({
-      next: (res: ApiResult<CountTypeDto>) => {
+      next: (res: ApiResult<CountTypeDto[]>) => {
         if (res.isSucceeded) {
           this._baseResponse = res;
-          this._objectsView = res.data || [];
+          this._objectsView = res.data ?? [];
         } else {
           this.toastService.error(res.message || 'Ø®Ø·Ø§ Ø¯Ø± Ø¨Ø§Ø±Ú¯Ø°Ø§Ø±ÛŒ Ø§Ù†ÙˆØ§Ø¹ Ø´Ù…Ø§Ø±Ø´');
         }
@@ -995,8 +1004,8 @@ export class CountTypeComponent implements OnInit {
 
     this.countTypeService.getRecordById(id).subscribe({
       next: (res: ApiResult<CountTypeDto>) => {
-        if (res.isSucceeded && res.singleData) {
-          this.ObjectForm.patchValue(res.singleData);
+        if (res.isSucceeded && res.data) {
+          this.ObjectForm.patchValue(res.data);
           this.showModal = true;
         } else {
           this.toastService.error('Ù…ÙˆØ±Ø¯ Ù¾ÛŒØ¯Ø§ Ù†Ø´Ø¯');

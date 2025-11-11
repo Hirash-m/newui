@@ -24,10 +24,10 @@ export class ProductService extends BaseService<ProductViewDto, ProductCreateDto
  
 
   /** جستجوی محصول با پارامترها */
-  searchProducts(request: ListRequest): Observable<ApiResult<ProductViewDto>> {
+  searchProducts(request: ListRequest): Observable<ApiResult<ProductViewDto[]>> {
 
 
-    return this.http.post<ApiResult<ProductViewDto>>(`${this.apiurl}/api/product/search`, request, { headers: this.getJsonHeaders() }).pipe(
+    return this.http.post<ApiResult<ProductViewDto[]>>(`${this.apiurl}/api/product/search`, request, { headers: this.getJsonHeaders() }).pipe(
       catchError(error => {
         //this.toast.showToast.error({ message: 'خطا در تراکنش ' });
         this.toast.error("need change");

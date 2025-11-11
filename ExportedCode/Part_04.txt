@@ -1,4 +1,6 @@
 ﻿===== FILE: src\app\services\base\userManage\user-manage.service.ts =====
+// src/app/services/base/userManage/user-manage.service.ts
+
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
@@ -16,14 +18,7 @@ import { ApiResult } from 'src/app/dto/api-result';
 export class UserManageService extends BaseService<UserDto, UserDto> {
   protected override endpoint = '/api/user';
 
-  override getCreateForm(): Observable<ApiResult<UserCreateFormData>> {
-    return this.http
-      .get<ApiResult<UserCreateFormData>>(
-        `${this.apiUrl}${this.endpoint}/getcreateform`,
-        { headers: this.getJsonHeaders() }
-      )
-      .pipe(catchError(err => this.handleError(err)));
-  }
+
 }
 
 ===== FILE: src\app\services\shop\countType\count-type.service.spec.ts =====
@@ -156,10 +151,10 @@ export class ProductService extends BaseService<ProductViewDto, ProductCreateDto
  
 
   /** Ø¬Ø³ØªØ¬ÙˆÛŒ Ù…Ø­ØµÙˆÙ„ Ø¨Ø§ Ù¾Ø§Ø±Ø§Ù…ØªØ±Ù‡Ø§ */
-  searchProducts(request: ListRequest): Observable<ApiResult<ProductViewDto>> {
+  searchProducts(request: ListRequest): Observable<ApiResult<ProductViewDto[]>> {
 
 
-    return this.http.post<ApiResult<ProductViewDto>>(`${this.apiurl}/api/product/search`, request, { headers: this.getJsonHeaders() }).pipe(
+    return this.http.post<ApiResult<ProductViewDto[]>>(`${this.apiurl}/api/product/search`, request, { headers: this.getJsonHeaders() }).pipe(
       catchError(error => {
         //this.toast.showToast.error({ message: 'Ø®Ø·Ø§ Ø¯Ø± ØªØ±Ø§Ú©Ù†Ø´ ' });
         this.toast.error("need change");
@@ -214,10 +209,10 @@ export abstract class BaseService<TViewDto, TCreateDto = TViewDto> {
     });
   }
 
-  // --- CRUD Methods ---
-  getRecords(request: ListRequest): Observable<ApiResult<TViewDto>> {
+  // Ù„ÛŒØ³Øª: Ù‡Ù…ÛŒØ´Ù‡ TViewDto[]
+  getRecords(request: ListRequest): Observable<ApiResult<TViewDto[]>> {
     return this.http
-      .post<ApiResult<TViewDto>>(
+      .post<ApiResult<TViewDto[]>>(
         `${this.apiUrl}${this.endpoint}/GetAll`,
         request,
         { headers: this.getJsonHeaders() }
@@ -225,6 +220,7 @@ export abstract class BaseService<TViewDto, TCreateDto = TViewDto> {
       .pipe(catchError(err => this.handleError(err)));
   }
 
+  // Ø§ÛŒØ¬Ø§Ø¯
   insertRecord(data: TCreateDto): Observable<ApiResult<TCreateDto>> {
     return this.http
       .post<ApiResult<TCreateDto>>(
@@ -235,6 +231,7 @@ export abstract class BaseService<TViewDto, TCreateDto = TViewDto> {
       .pipe(catchError(err => this.handleError(err)));
   }
 
+  // ÙˆÛŒØ±Ø§ÛŒØ´
   updateRecord(data: TCreateDto): Observable<ApiResult<TCreateDto>> {
     return this.http
       .post<ApiResult<TCreateDto>>(
@@ -245,6 +242,7 @@ export abstract class BaseService<TViewDto, TCreateDto = TViewDto> {
       .pipe(catchError(err => this.handleError(err)));
   }
 
+  // Ø­Ø°Ù Ú†Ù†Ø¯ØªØ§ÛŒÛŒ
   deleteRecords(ids: number[]): Observable<ApiResult<any>> {
     return this.http
       .post<ApiResult<any>>(
@@ -255,6 +253,7 @@ export abstract class BaseService<TViewDto, TCreateDto = TViewDto> {
       .pipe(catchError(err => this.handleError(err)));
   }
 
+  // Ø¯Ø±ÛŒØ§ÙØª ÛŒÚ© Ø±Ú©ÙˆØ±Ø¯
   getRecordById(id: number): Observable<ApiResult<TCreateDto>> {
     return this.http
       .get<ApiResult<TCreateDto>>(
@@ -264,33 +263,34 @@ export abstract class BaseService<TViewDto, TCreateDto = TViewDto> {
       .pipe(catchError(err => this.handleError(err)));
   }
 
-// --- Ø­Ø°Ù Ú˜Ù†Ø±ÛŒÚ© Ø§Ø² getCreateForm ---
-getCreateForm(): Observable<ApiResult<any>> {
-  return this.http
-    .get<ApiResult<any>>(
-      `${this.apiUrl}${this.endpoint}/getcreateform`,
-      { headers: this.getJsonHeaders() }
-    )
-    .pipe(catchError(err => this.handleError(err)));
-}
+  // ÙØ±Ù… Ø§ÛŒØ¬Ø§Ø¯ (Ù…Ø«Ù„ roles, permissions)
+  getCreateForm<U = any>(): Observable<ApiResult<U>> {
+    return this.http
+      .get<ApiResult<U>>(
+        `${this.apiUrl}${this.endpoint}/getcreateform`,
+        { headers: this.getJsonHeaders() }
+      )
+      .pipe(catchError(err => this.handleError(err)));
+  }
 
-  // --- ÙÙ‚Ø· throw Ø®Ø·Ø§ â€” Toast Ø¯Ø± Ø§ÛŒÙ†ØªØ±Ø³Ù¾ØªÙˆØ± ---
+  // --- Ø®Ø·Ø§ ---
   protected handleError(error: any): Observable<never> {
+    // Ù…ÛŒâ€ŒØªÙˆÙ†ÛŒ Ø§ÛŒÙ†Ø¬Ø§ Ù„Ø§Ú¯ Ø¨Ø²Ù†ÛŒ
+    console.error('API Error:', error);
     return throwError(() => error);
   }
 
-  // --- ÙÙ‚Ø· Ù†Ù…Ø§ÛŒØ´ Ù¾ÛŒØ§Ù… Ø§Ø² ApiResult (Ø¨Ø¯ÙˆÙ† fallback) ---
+  // --- Ù†Ù…Ø§ÛŒØ´ Ù¾ÛŒØ§Ù… ---
   protected showApiResultToast(result: ApiResult<any>): void {
+    if (!result) return;
+
     if (result.isSucceeded) {
       if (result.message) {
         this.toast.success(result.message);
       }
-      // Ø§Ú¯Ø± message Ù†Ø¨ÙˆØ¯ â†’ Ù‡ÛŒÚ† ØªÙˆØ³ØªÛŒ Ù†Ù…Ø§ÛŒØ´ Ø¯Ø§Ø¯Ù‡ Ù†Ù…ÛŒâ€ŒØ´ÙˆØ¯
     } else {
-      const errorMsg = result.errors?.[0] ?? result.message;
-      if (errorMsg) {
-        this.toast.error(errorMsg);
-      }
+      const errorMsg = result.errors?.[0] ?? result.message ?? 'Ø®Ø·Ø§ÛŒÛŒ Ø±Ø® Ø¯Ø§Ø¯';
+      this.toast.error(errorMsg);
     }
   }
 }

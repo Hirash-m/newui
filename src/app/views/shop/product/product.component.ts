@@ -38,7 +38,7 @@ export class ProductComponent implements OnInit {
   // درخواست لیست
   _request = new ListRequest();
   _productsView: ProductViewDto[] = [];
-  _baseResponse: ApiResult<ProductViewDto> = createApiResult<ProductViewDto>();
+  _baseResponse: ApiResult<ProductViewDto[]> = createApiResult<ProductViewDto[]>();
 
   // فرم
   showModal = false;
@@ -91,7 +91,7 @@ export class ProductComponent implements OnInit {
 loadProducts(): void {
   this._request.pageSize = 5;
   this.productService.getRecords(this._request).subscribe({
-    next: (res: ApiResult<ProductViewDto>) => {
+    next: (res: ApiResult<ProductViewDto[]>) => {
       if (res.isSucceeded) {
         this._baseResponse = res;
         this._productsView = res.data || [];
@@ -151,8 +151,8 @@ loadProducts(): void {
     this.editingProductId = productId;
 
     this.productService.getRecordById(productId).subscribe((res: ApiResult<ProductCreateDto>) => {
-      if (res.isSucceeded && res.singleData) {
-        const product = res.singleData;
+      if (res.isSucceeded && res.data) {
+        const product = res.data;
         this.productForm.patchValue({
           id: product.id,
           name: product.name,
@@ -209,7 +209,7 @@ loadProducts(): void {
   // ---------------------------
   onSearch() {
     this.productService.searchProducts(this.searchData).subscribe(
-      (result: ApiResult<ProductViewDto>) => {
+      (result: ApiResult<ProductViewDto[]>) => {
         if (result.isSucceeded) {
           this._baseResponse = result;
           this._productsView = result.data || [];

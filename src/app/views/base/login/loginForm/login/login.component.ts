@@ -19,6 +19,7 @@ import {
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../../../services/auth/login/auth.service';
 import { ToastService } from '../../../../../services/utilities/toast.service';
+import { ApiResult } from 'src/app/dto/api-result';
 
 @Component({
   selector: 'app-login',
@@ -53,28 +54,32 @@ export class LoginComponent {
     private toast: ToastService,
     private router: Router
   ) {}
-
   onLogin() {
     if (!this.email || !this.password) {
- 
+      this.toast.error('لطفاً ایمیل و رمز عبور را وارد کنید');
       return;
     }
-
+  
     this.loading = true;
-
+  
     this.authService.login(this.email, this.password).subscribe({
-      next: (res) => {
+      next: (res: ApiResult<any>) => {
         this.loading = false;
-        if (res.isSucceeded) {
-
+  
+        if (res.isSucceeded && res.data?.token) {
+          this.toast.success('ورود با موفقیت انجام شد');
           this.router.navigate(['/dashboard']);
+          
         } else {
-     
+          // این قسمت حیاتی است!
+          const errorMsg = res. message || res.errors?.join(', ') || 'ورود ناموفق';
+          this.toast.error(errorMsg);
         }
       },
       error: (err) => {
         this.loading = false;
-      
+        this.toast.error('خطا در ارتباط با سرور');
+        console.error('HTTP Error:', err);
       }
     });
   }
