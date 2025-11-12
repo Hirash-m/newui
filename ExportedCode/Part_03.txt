@@ -186,7 +186,7 @@ export class DefaultHeaderComponent extends HeaderComponent {
   // ...
 
   logout(event: Event) {
-  event.preventDefault(); // Ø¬Ù„ÙˆÚ¯ÛŒØ±ÛŒ Ø§Ø² Ù¾Ø±Ø´ ØµÙØ­Ù‡
+  event.preventDefault(); 
   localStorage.removeItem('token');
   localStorage.removeItem('user');
   this.router.navigate(['/login']);
@@ -235,7 +235,7 @@ export class DefaultHeaderComponent extends HeaderComponent {
   <!--app-body-->
   <div class="body flex-grow-1">
     <c-container breakpoint="lg" class="h-auto px-4">
-      <app-toast-container />
+    <!-- <app-toast-container />--> 
 
       <router-outlet />
 
@@ -288,11 +288,12 @@ export class DefaultHeaderComponent extends HeaderComponent {
 
 ===== FILE: src\app\layout\default-layout\default-layout.component.ts =====
 
-import {  Component } from '@angular/core';
+import {  Component, inject } from '@angular/core';
 import { RouterLink, RouterOutlet } from '@angular/router';
 import { NgScrollbar } from 'ngx-scrollbar';
 import {ToastContainerComponent} from './../../views/utilities/toast-container/toast-container.component'
 import { IconDirective } from '@coreui/icons-angular';
+import { NavigationService } from './_nav';
 import {
   ContainerComponent,
   ShadowOnScrollDirective,
@@ -307,7 +308,7 @@ import {
 } from '@coreui/angular';
 
 import { DefaultFooterComponent, DefaultHeaderComponent } from './';
-import { navItems } from './_nav';
+
 
 
 
@@ -342,7 +343,11 @@ function isOverflown(element: HTMLElement) {
   ]
 })
 export class DefaultLayoutComponent   {
-  public navItems = [...navItems];
+
+  private navService = inject(NavigationService);
+  get navItems() {
+    return this.navService.getNavItems();
+  }
 
 
 }
@@ -355,403 +360,7 @@ export * from './default-layout.component';
 
 
 ===== FILE: src\app\layout\default-layout\_nav.ts =====
-import { INavData } from '@coreui/angular';
-
-export const navItems: INavData[] = [
-  {
-    title: true,
-    name: 'main'
-  },
-
-  //base group 
-
-
-  {
-    name: 'base',
-    url: '/base',
-    iconComponent: { name: 'cil-cart' },
-    children: [{
-
-      name: 'user',
-      url: '/base/user',
-      badge: {
-        color: 'info',
-        text: 'NEW'
-      },
-      iconComponent: { name: 'cib-codesandbox' }
-
-    }
-
-    ]
-  } ,
-
-
-
-  // shop
-  {
-    name: 'shop',
-    url: '/shop',
-    iconComponent: { name: 'cil-cart' },
-    children: [{
-
-      name: 'product',
-      url: '/shop/product',
-      badge: {
-        color: 'info',
-        text: 'NEW'
-      },
-      iconComponent: { name: 'cib-codesandbox' }
-
-    },
-
-    {
-
-      name: 'countType',
-      url: '/shop/countType',
-      badge: {
-        color: 'info',
-        text: 'NEW'
-      },
-      iconComponent: { name: 'cib-codesandbox' }
-
-    }
-      ,
-
-    {
-
-      name: 'inventory',
-      url: '/shop/inventory',
-      badge: {
-        color: 'info',
-        text: 'NEW'
-      },
-      iconComponent: { name: 'cib-codesandbox' }
-
-    }
-
-    ]
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  //template core ui
-
-  , {
-    title: true,
-    name: 'them'
-  }
-  , {
-    name: 'template',
-    url: '/template',
-    iconComponent: { name: 'cil-puzzle' },
-    children: [
-
-      {
-        name: 'Dashboard',
-        url: '/template/dashboard',
-        iconComponent: { name: 'cil-speedometer' },
-        badge: {
-          color: 'info',
-          text: 'NEW'
-        }
-      },
-      {
-        title: true,
-        name: 'Theme'
-      },
-      {
-        name: 'Colors',
-        url: '/template/theme/colors',
-        iconComponent: { name: 'cil-drop' }
-      },
-      {
-        name: 'Typography',
-        url: '/template/theme/typography',
-        linkProps: { fragment: 'headings' },
-        iconComponent: { name: 'cil-pencil' }
-      },
-      {
-        name: 'Components',
-        title: true
-      },
-      {
-        name: 'Base',
-        url: '/template/base',
-        iconComponent: { name: 'cil-puzzle' },
-        children: [
-          {
-            name: 'Accordion',
-            url: '/template/base/accordion',
-            icon: 'nav-icon-bullet'
-          },
-          {
-            name: 'Breadcrumbs',
-            url: '/template/base/breadcrumbs',
-            icon: 'nav-icon-bullet'
-          },
-          {
-            name: 'Cards',
-            url: '/template/base/cards',
-            icon: 'nav-icon-bullet'
-          },
-          {
-            name: 'Carousel',
-            url: '/template/base/carousel',
-            icon: 'nav-icon-bullet'
-          },
-          {
-            name: 'Collapse',
-            url: '/template/base/collapse',
-            icon: 'nav-icon-bullet'
-          },
-          {
-            name: 'List Group',
-            url: '/template/base/list-group',
-            icon: 'nav-icon-bullet'
-          },
-          {
-            name: 'Navs & Tabs',
-            url: '/template/base/navs',
-            icon: 'nav-icon-bullet'
-          },
-          {
-            name: 'Pagination',
-            url: '/template/base/pagination',
-            icon: 'nav-icon-bullet'
-          },
-          {
-            name: 'Placeholder',
-            url: '/template/base/placeholder',
-            icon: 'nav-icon-bullet'
-          },
-          {
-            name: 'Popovers',
-            url: '/template/base/popovers',
-            icon: 'nav-icon-bullet'
-          },
-          {
-            name: 'Progress',
-            url: '/template/base/progress',
-            icon: 'nav-icon-bullet'
-          },
-          {
-            name: 'Spinners',
-            url: '/template/base/spinners',
-            icon: 'nav-icon-bullet'
-          },
-          {
-            name: 'Tables',
-            url: '/template/base/tables',
-            icon: 'nav-icon-bullet'
-          },
-          {
-            name: 'Tabs',
-            url: '/template/base/tabs',
-            icon: 'nav-icon-bullet'
-          },
-          {
-            name: 'Tooltips',
-            url: '/template/base/tooltips',
-            icon: 'nav-icon-bullet'
-          }
-        ]
-      },
-      {
-        name: 'Buttons',
-        url: '/template/buttons',
-        iconComponent: { name: 'cil-cursor' },
-        children: [
-          {
-            name: 'Buttons',
-            url: '/template/buttons/buttons',
-            icon: 'nav-icon-bullet'
-          },
-          {
-            name: 'Button groups',
-            url: '/template/buttons/button-groups',
-            icon: 'nav-icon-bullet'
-          },
-          {
-            name: 'Dropdowns',
-            url: '/template/buttons/dropdowns',
-            icon: 'nav-icon-bullet'
-          }
-        ]
-      },
-      {
-        name: 'Forms',
-        url: '/template/forms',
-        iconComponent: { name: 'cil-notes' },
-        children: [
-          {
-            name: 'Form Control',
-            url: '/template/forms/form-control',
-            icon: 'nav-icon-bullet'
-          },
-          {
-            name: 'Select',
-            url: '/template/forms/select',
-            icon: 'nav-icon-bullet'
-          },
-          {
-            name: 'Checks & Radios',
-            url: '/template/forms/checks-radios',
-            icon: 'nav-icon-bullet'
-          },
-          {
-            name: 'Range',
-            url: '/template/forms/range',
-            icon: 'nav-icon-bullet'
-          },
-          {
-            name: 'Input Group',
-            url: '/template/forms/input-group',
-            icon: 'nav-icon-bullet'
-          },
-          {
-            name: 'Floating Labels',
-            url: '/template/forms/floating-labels',
-            icon: 'nav-icon-bullet'
-          },
-          {
-            name: 'Layout',
-            url: '/template/forms/layout',
-            icon: 'nav-icon-bullet'
-          },
-          {
-            name: 'Validation',
-            url: '/template/forms/validation',
-            icon: 'nav-icon-bullet'
-          }
-        ]
-      },
-      {
-        name: 'Charts',
-        iconComponent: { name: 'cil-chart-pie' },
-        url: '/template/charts'
-      },
-      {
-        name: 'Icons',
-        iconComponent: { name: 'cil-star' },
-        url: '/template/icons',
-        children: [
-          {
-            name: 'CoreUI Free',
-            url: '/template/icons/coreui-icons',
-            icon: 'nav-icon-bullet',
-            badge: {
-              color: 'success',
-              text: 'FREE'
-            }
-          },
-          {
-            name: 'CoreUI Flags',
-            url: '/template/icons/flags',
-            icon: 'nav-icon-bullet'
-          },
-          {
-            name: 'CoreUI Brands',
-            url: '/template/icons/brands',
-            icon: 'nav-icon-bullet'
-          }
-        ]
-      },
-      {
-        name: 'Notifications',
-        url: '/template/notifications',
-        iconComponent: { name: 'cil-bell' },
-        children: [
-          {
-            name: 'Alerts',
-            url: '/template/notifications/alerts',
-            icon: 'nav-icon-bullet'
-          },
-          {
-            name: 'Badges',
-            url: '/template/notifications/badges',
-            icon: 'nav-icon-bullet'
-          },
-          {
-            name: 'Modal',
-            url: '/template/notifications/modal',
-            icon: 'nav-icon-bullet'
-          },
-          {
-            name: 'Toast',
-            url: '/template/notifications/toasts',
-            icon: 'nav-icon-bullet'
-          }
-        ]
-      },
-      {
-        name: 'Widgets',
-        url: '/template/widgets',
-        iconComponent: { name: 'cil-calculator' },
-        badge: {
-          color: 'info',
-          text: 'NEW'
-        }
-      },
-      {
-        title: true,
-        name: 'Extras'
-      },
-      {
-        name: 'Pages',
-        url: '/template/login',
-        iconComponent: { name: 'cil-star' },
-        children: [
-          {
-            name: 'Login',
-            url: '/template/login',
-            icon: 'nav-icon-bullet'
-          },
-          {
-            name: 'Register',
-            url: '/template/register',
-            icon: 'nav-icon-bullet'
-          },
-          {
-            name: 'Error 404',
-            url: '/template/404',
-            icon: 'nav-icon-bullet'
-          },
-          {
-            name: 'Error 500',
-            url: '/template/500',
-            icon: 'nav-icon-bullet'
-          }
-        ]
-      },
-      {
-        title: true,
-        name: 'Links',
-        class: 'mt-auto'
-      },
-      {
-        name: 'Docs',
-        url: 'https://coreui.io/angular/docs/',
-        iconComponent: { name: 'cil-description' },
-        attributes: { target: '_blank' }
-      }
-    ]
-  }
-];
-
+export { NavigationService } from 'src/app/services/base/navigation/navigation.service';
 
 ===== FILE: src\app\layout\index.ts =====
 export * from './default-layout';
@@ -797,9 +406,11 @@ describe('AuthService', () => {
 
 
 ===== FILE: src\app\services\auth\login\auth.service.ts =====
+// src/app/services/auth/login/auth.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, catchError, map, throwError } from 'rxjs';
+import { Observable, BehaviorSubject, throwError, of } from 'rxjs';
+import { catchError, map, tap } from 'rxjs/operators';
 import { ToastService } from '../../utilities/toast.service';
 import { Domain } from '../../../../utilities/path';
 import { ApiResult } from 'src/app/dto/api-result';
@@ -810,59 +421,103 @@ import { ApiResult } from 'src/app/dto/api-result';
 export class AuthService {
   private apiUrl = `${Domain}/api/Auth`;
 
-  constructor(private http: HttpClient, private toast: ToastService) { }
+  // Ø°Ø®ÛŒØ±Ù‡ Ù¾Ø±Ù…ÛŒØ´Ù†â€ŒÙ‡Ø§
+  private permissions = new BehaviorSubject<string[]>([]);
+  public readonly permissions$ = this.permissions.asObservable();
 
-  /** ØªØ§Ø¨Ø¹ Ù„Ø§Ú¯ÛŒÙ† */
-  login(email: string, password: string): Observable<any> {
-    const body = { email, password };
-
-    return this.http.post<ApiResult<any>>(`${this.apiUrl}/login`, body, {
-      headers: new HttpHeaders({ 'Content-Type': 'application/json' })
-    }).pipe(
-      map(response => {
-        if (response.isSucceeded && response.data?.token) {
-          // Ø°Ø®ÛŒØ±Ù‡ ØªÙˆÚ©Ù† Ø¯Ø± localStorage
-          localStorage.setItem('token', response.data.token);
-          localStorage.setItem('user', JSON.stringify(response.data));
-        }
-        return response;
-      }),
-      catchError(error => {
-        this.toast.error( 'Ø®Ø·Ø§ Ø¯Ø± ÙˆØ±ÙˆØ¯ Ø¨Ù‡ Ø³ÛŒØ³ØªÙ…' );
-        return throwError(() => error);
-      })
-    );
+  constructor(private http: HttpClient, private toast: ToastService) {
+    this.loadPermissionsFromStorage();
   }
 
-  /** Ø®Ø±ÙˆØ¬ Ø§Ø² Ø³ÛŒØ³ØªÙ… */
-  logout() {
+  private loadPermissionsFromStorage(): void {
+    const stored = localStorage.getItem('permissions');
+    if (stored) {
+      this.permissions.next(JSON.parse(stored)); // Ø§ÛŒÙ†Ø¬Ø§ Ø§ØµÙ„Ø§Ø­ Ø´Ø¯: Ø¯Ø§Ø®Ù„ Ø¨Ù„Ø§Ú© if
+    }
+  }
+
+// src/app/services/auth/login/auth.service.ts
+
+login(username: string, password: string): Observable<any> {
+  const body = { username, password };
+
+  return this.http.post<ApiResult<any>>(`${this.apiUrl}/login`, body).pipe(
+    map(response => {
+      if (response.isSucceeded && response.data?.token) {
+        const token = response.data.token;
+        const user = response.data;
+
+        // Ø²Ù…Ø§Ù† Ø§Ù†Ù‚Ø¶Ø§: Û²Û´ Ø³Ø§Ø¹Øª Ø§Ø² Ø§Ù„Ø§Ù†
+        const expiresAt = Date.now() + 24 * 60 * 60 * 1000; // 24 Ø³Ø§Ø¹Øª Ø¨Ù‡ Ù…ÛŒÙ„ÛŒâ€ŒØ«Ø§Ù†ÛŒÙ‡
+
+        // Ø°Ø®ÛŒØ±Ù‡ Ø¯Ø± localStorage
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(user));
+        localStorage.setItem('token_expires_at', expiresAt.toString());
+
+        // Ø¨Ø§Ø±Ú¯Ø°Ø§Ø±ÛŒ permissions
+        this.fetchPermissions();
+      }
+      return response;
+    }),
+    tap(() => this.fetchPermissions()),
+    catchError(error => {
+      this.toast.error('Ø®Ø·Ø§ Ø¯Ø± ÙˆØ±ÙˆØ¯ Ø¨Ù‡ Ø³ÛŒØ³ØªÙ…');
+      return throwError(() => error);
+    })
+  );
+}
+
+  private fetchPermissions(): void {
+    this.http.get<ApiResult<string[]>>(`/api/user/permissions`).pipe(
+      catchError(() => {
+        this.toast.error('Ø®Ø·Ø§ Ø¯Ø± Ø¯Ø±ÛŒØ§ÙØª Ø¯Ø³ØªØ±Ø³ÛŒâ€ŒÙ‡Ø§');
+        return of(null);
+      })
+    ).subscribe(res => {
+      if (res?.isSucceeded && res.data) {
+        this.permissions.next(res.data);
+        localStorage.setItem('permissions', JSON.stringify(res.data));
+      }
+    });
+  }
+
+  hasPermission(permission: string): boolean {
+    return this.permissions.value.includes(permission);
+  }
+
+  logout(): void {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('permissions');
+    this.permissions.next([]);
   }
 
-  /** Ø¨Ø±Ø±Ø³ÛŒ Ù„Ø§Ú¯ÛŒÙ† Ø¨ÙˆØ¯Ù† Ú©Ø§Ø±Ø¨Ø± */
   isLoggedIn(): boolean {
     return !!localStorage.getItem('token');
   }
 
-  /** Ú¯Ø±ÙØªÙ† ØªÙˆÚ©Ù† Ø°Ø®ÛŒØ±Ù‡â€ŒØ´Ø¯Ù‡ */
   getToken(): string | null {
     return localStorage.getItem('token');
   }
+
+  // Ù…ØªØ¯ Ø¨Ø±Ø§ÛŒ Ø¨Ø±ÙˆØ²Ø±Ø³Ø§Ù†ÛŒ Ø¯Ø³ØªÛŒ (Ø§Ø®ØªÛŒØ§Ø±ÛŒ)
+  refreshPermissions(): void {
+    this.fetchPermissions();
+  }
 }
 
-
-===== FILE: src\app\services\base\userManage\user-manage.service.spec.ts =====
+===== FILE: src\app\services\base\navigation\navigation.service.spec.ts =====
 import { TestBed } from '@angular/core/testing';
 
-import { UserManageService } from './user-manage.service';
+import { NavigationService } from './navigation.service';
 
-describe('UserManageService', () => {
-  let service: UserManageService;
+describe('NavigationService', () => {
+  let service: NavigationService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
-    service = TestBed.inject(UserManageService);
+    service = TestBed.inject(NavigationService);
   });
 
   it('should be created', () => {

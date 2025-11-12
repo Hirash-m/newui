@@ -50,6 +50,9 @@ src
 |   |   |   |   +-- auth.guard.ts
 |   |   |   |   +-- auth.service.spec.ts
 |   |   |   |   +-- auth.service.ts
+|   |   |   +-- navigation
+|   |   |   |   +-- navigation.service.spec.ts
+|   |   |   |   +-- navigation.service.ts
 |   |   |   +-- userManage
 |   |   |   |   +-- user-manage.service.spec.ts
 |   |   |   |   +-- user-manage.service.ts

@@ -1,4 +1,223 @@
-﻿===== FILE: src\app\services\base\userManage\user-manage.service.ts =====
+﻿===== FILE: src\app\services\base\navigation\navigation.service.ts =====
+// src/app/services/navigation/navigation.service.ts
+import { Injectable, inject } from '@angular/core';
+import { INavData } from '@coreui/angular';
+import { AuthService } from 'src/app/services/auth/login/auth.service';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class NavigationService {
+  private authService = inject(AuthService);
+
+  // Ú©Ø´ Ù…Ù†ÙˆÙ‡Ø§
+  private cachedNavItems: INavData[] | null = null;
+
+  getNavItems(): INavData[] {
+    // Ø§Ú¯Ø± Ù‚Ø¨Ù„Ø§Ù‹ Ø³Ø§Ø®ØªÙ‡ Ø´Ø¯Ù‡ØŒ Ù‡Ù…ÙˆÙ† Ø±Ùˆ Ø¨Ø±Ú¯Ø±Ø¯ÙˆÙ†
+    if (this.cachedNavItems) {
+      return this.cachedNavItems;
+    }
+
+    const hasPermission = (perm: string) => this.authService.hasPermission(perm);
+
+    const baseChildren: INavData[] = [
+      {
+        name: 'Ú©Ø§Ø±Ø¨Ø±Ø§Ù†',
+        url: '/base/user',
+        badge: { color: 'info', text: 'NEW' },
+        iconComponent: { name: 'cil-user' },
+        visible: hasPermission('User.View')
+      }
+    ].filter(item => item.visible !== false);
+
+    const shopChildren: INavData[] = [
+      {
+        name: 'Ù…Ø­ØµÙˆÙ„Ø§Øª',
+        url: '/shop/product',
+        badge: { color: 'info', text: 'NEW' },
+        iconComponent: { name: 'cil-basket' },
+        visible: hasPermission('Product.View')
+      },
+      {
+        name: 'ÙˆØ§Ø­Ø¯ Ø´Ù…Ø§Ø±Ø´',
+        url: '/shop/countType',
+        badge: { color: 'info', text: 'NEW' },
+        iconComponent: { name: 'cil-calculator' },
+        visible: hasPermission('CountType.View')
+      },
+      {
+        name: 'Ø§Ù†Ø¨Ø§Ø±',
+        url: '/shop/inventory',
+        badge: { color: 'info', text: 'NEW' },
+        iconComponent: { name: 'cil-storage' },
+        visible: hasPermission('Inventory.View')
+      }
+    ].filter(item => item.visible !== false);
+
+    const templateChildren: INavData[] = [
+      {
+        name: 'Dashboard',
+        url: '/template/dashboard',
+        iconComponent: { name: 'cil-speedometer' },
+        badge: { color: 'info', text: 'NEW' }
+      },
+      { title: true, name: 'Theme' },
+      { name: 'Colors', url: '/template/theme/colors', iconComponent: { name: 'cil-drop' } },
+      { name: 'Typography', url: '/template/theme/typography', linkProps: { fragment: 'headings' }, iconComponent: { name: 'cil-pencil' } },
+      { name: 'Components', title: true },
+      {
+        name: 'Base',
+        url: '/template/base',
+        iconComponent: { name: 'cil-puzzle' },
+        children: [
+          { name: 'Accordion', url: '/template/base/accordion', icon: 'nav-icon-bullet' },
+          { name: 'Breadcrumbs', url: '/template/base/breadcrumbs', icon: 'nav-icon-bullet' },
+          { name: 'Cards', url: '/template/base/cards', icon: 'nav-icon-bullet' },
+          { name: 'Carousel', url: '/template/base/carousel', icon: 'nav-icon-bullet' },
+          { name: 'Collapse', url: '/template/base/collapse', icon: 'nav-icon-bullet' },
+          { name: 'List Group', url: '/template/base/list-group', icon: 'nav-icon-bullet' },
+          { name: 'Navs & Tabs', url: '/template/base/navs', icon: 'nav-icon-bullet' },
+          { name: 'Pagination', url: '/template/base/pagination', icon: 'nav-icon-bullet' },
+          { name: 'Placeholder', url: '/template/base/placeholder', icon: 'nav-icon-bullet' },
+          { name: 'Popovers', url: '/template/base/popovers', icon: 'nav-icon-bullet' },
+          { name: 'Progress', url: '/template/base/progress', icon: 'nav-icon-bullet' },
+          { name: 'Spinners', url: '/template/base/spinners', icon: 'nav-icon-bullet' },
+          { name: 'Tables', url: '/template/base/tables', icon: 'nav-icon-bullet' },
+          { name: 'Tabs', url: '/template/base/tabs', icon: 'nav-icon-bullet' },
+          { name: 'Tooltips', url: '/template/base/tooltips', icon: 'nav-icon-bullet' }
+        ]
+      },
+      {
+        name: 'Buttons',
+        url: '/template/buttons',
+        iconComponent: { name: 'cil-cursor' },
+        children: [
+          { name: 'Buttons', url: '/template/buttons/buttons', icon: 'nav-icon-bullet' },
+          { name: 'Button groups', url: '/template/buttons/button-groups', icon: 'nav-icon-bullet' },
+          { name: 'Dropdowns', url: '/template/buttons/dropdowns', icon: 'nav-icon-bullet' }
+        ]
+      },
+      {
+        name: 'Forms',
+        url: '/template/forms',
+        iconComponent: { name: 'cil-notes' },
+        children: [
+          { name: 'Form Control', url: '/template/forms/form-control', icon: 'nav-icon-bullet' },
+          { name: 'Select', url: '/template/forms/select', icon: 'nav-icon-bullet' },
+          { name: 'Checks & Radios', url: '/template/forms/checks-radios', icon: 'nav-icon-bullet' },
+          { name: 'Range', url: '/template/forms/range', icon: 'nav-icon-bullet' },
+          { name: 'Input Group', url: '/template/forms/input-group', icon: 'nav-icon-bullet' },
+          { name: 'Floating Labels', url: '/template/forms/floating-labels', icon: 'nav-icon-bullet' },
+          { name: 'Layout', url: '/template/forms/layout', icon: 'nav-icon-bullet' },
+          { name: 'Validation', url: '/template/forms/validation', icon: 'nav-icon-bullet' }
+        ]
+      },
+      { name: 'Charts', iconComponent: { name: 'cil-chart-pie' }, url: '/template/charts' },
+      {
+        name: 'Icons',
+        iconComponent: { name: 'cil-star' },
+        url: '/template/icons',
+        children: [
+          { name: 'CoreUI Free', url: '/template/icons/coreui-icons', icon: 'nav-icon-bullet', badge: { color: 'success', text: 'FREE' } },
+          { name: 'CoreUI Flags', url: '/template/icons/flags', icon: 'nav-icon-bullet' },
+          { name: 'CoreUI Brands', url: '/template/icons/brands', icon: 'nav-icon-bullet' }
+        ]
+      },
+      {
+        name: 'Notifications',
+        url: '/template/notifications',
+        iconComponent: { name: 'cil-bell' },
+        children: [
+          { name: 'Alerts', url: '/template/notifications/alerts', icon: 'nav-icon-bullet' },
+          { name: 'Badges', url: '/template/notifications/badges', icon: 'nav-icon-bullet' },
+          { name: 'Modal', url: '/template/notifications/modal', icon: 'nav-icon-bullet' },
+          { name: 'Toast', url: '/template/notifications/toasts', icon: 'nav-icon-bullet' }
+        ]
+      },
+      {
+        name: 'Widgets',
+        url: '/template/widgets',
+        iconComponent: { name: 'cil-calculator' },
+        badge: { color: 'info', text: 'NEW' }
+      },
+      { title: true, name: 'Extras' },
+      {
+        name: 'Pages',
+        url: '/template/login',
+        iconComponent: { name: 'cil-star' },
+        children: [
+          { name: 'Login', url: '/template/login', icon: 'nav-icon-bullet' },
+          { name: 'Register', url: '/template/register', icon: 'nav-icon-bullet' },
+          { name: 'Error 404', url: '/template/404', icon: 'nav-icon-bullet' },
+          { name: 'Error 500', url: '/template/500', icon: 'nav-icon-bullet' }
+        ]
+      },
+      { title: true, name: 'Links', class: 'mt-auto' },
+      {
+        name: 'Docs',
+        url: 'https://coreui.io/angular/docs/',
+        iconComponent: { name: 'cil-description' },
+        attributes: { target: '_blank' }
+      }
+    ];
+
+    const navItems: INavData[] = [
+      { title: true, name: 'Ø§ØµÙ„ÛŒ' },
+
+      ...(baseChildren.length > 0 ? [{
+        name: 'Ù¾Ø§ÛŒÙ‡',
+        url: '/base',
+        iconComponent: { name: 'cil-cart' },
+        children: baseChildren
+      }] : []),
+
+      ...(shopChildren.length > 0 ? [{
+        name: 'ÙØ±ÙˆØ´Ú¯Ø§Ù‡',
+        url: '/shop',
+        iconComponent: { name: 'cil-cart' },
+        children: shopChildren
+      }] : []),
+
+      {
+        name: 'Ù‚Ø§Ù„Ø¨',
+        url: '/template',
+        iconComponent: { name: 'cil-puzzle' },
+        children: templateChildren
+      }
+    ];
+
+    // Ú©Ø´ Ú©Ø±Ø¯Ù†
+    this.cachedNavItems = navItems;
+    return navItems;
+  }
+
+  // Ù…ØªØ¯ Ø¨Ø±Ø§ÛŒ Ù¾Ø§Ú© Ú©Ø±Ø¯Ù† Ú©Ø´ (Ù…Ø«Ù„Ø§Ù‹ Ø¨Ø¹Ø¯ Ø§Ø² Ù„Ø§Ú¯ÛŒÙ†/Ù„Ø§Ú¯â€ŒØ§ÙˆØª)
+  invalidateCache(): void {
+    this.cachedNavItems = null;
+  }
+}
+
+===== FILE: src\app\services\base\userManage\user-manage.service.spec.ts =====
+import { TestBed } from '@angular/core/testing';
+
+import { UserManageService } from './user-manage.service';
+
+describe('UserManageService', () => {
+  let service: UserManageService;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({});
+    service = TestBed.inject(UserManageService);
+  });
+
+  it('should be created', () => {
+    expect(service).toBeTruthy();
+  });
+});
+
+
+===== FILE: src\app\services\base\userManage\user-manage.service.ts =====
 // src/app/services/base/userManage/user-manage.service.ts
 
 import { HttpClient } from '@angular/common/http';
@@ -18,7 +237,63 @@ import { ApiResult } from 'src/app/dto/api-result';
 export class UserManageService extends BaseService<UserDto, UserDto> {
   protected override endpoint = '/api/user';
 
+  constructor(
+    http: HttpClient,
+    private toastService: ToastService  // Ø§ÛŒÙ†Ø¬Ø§ ØªØ²Ø±ÛŒÙ‚ Ù…ÛŒâ€ŒØ´Ù‡
+  ) {
+    super(http , toastService ); // ÙØ±Ø§Ø®ÙˆØ§Ù†ÛŒ constructor Ù¾Ø¯Ø±
+  }
 
+
+  // === Override insertRecord Ø¨Ø§ FormData ===
+  override insertRecord(data: UserDto): Observable<ApiResult<any>> {
+    const formData = this.buildFormData(data);
+    return this.http.post<ApiResult<any>>(`${Domain}${this.endpoint}/create`, formData).pipe(
+      catchError(err => {
+        this.toastService.error('Ø®Ø·Ø§ Ø¯Ø± Ø§ÛŒØ¬Ø§Ø¯ Ú©Ø§Ø±Ø¨Ø±');
+        throw err;
+      })
+    );
+  }
+
+  // === Override updateRecord Ø¨Ø§ FormData ===
+  override updateRecord(data: UserDto): Observable<ApiResult<any>> {
+    const formData = this.buildFormData(data);
+    return this.http.post<ApiResult<any>>(`${Domain}${this.endpoint}/update`, formData).pipe(
+      catchError(err => {
+        this.toastService.error('Ø®Ø·Ø§ Ø¯Ø± Ø¨Ù‡â€ŒØ±ÙˆØ²Ø±Ø³Ø§Ù†ÛŒ Ú©Ø§Ø±Ø¨Ø±');
+        throw err;
+      })
+    );
+  }
+
+  // === Ù…ØªØ¯ Ú©Ù…Ú©ÛŒ Ø¨Ø±Ø§ÛŒ Ø³Ø§Ø®Øª FormData ===
+  private buildFormData(data: UserDto): FormData {
+    const formData = new FormData();
+
+    // ÙÛŒÙ„Ø¯Ù‡Ø§ÛŒ Ø³Ø§Ø¯Ù‡
+    if (data.id) formData.append('Id', data.id.toString());
+    formData.append('FullName', data.fullName || '');
+    formData.append('Username', data.username || '');
+    formData.append('Email', data.email || '');
+    formData.append('Password', data.Password || '');
+
+    // Ø¢Ø±Ø§ÛŒÙ‡ RoleIds (ØªÚ©Ø±Ø§Ø±ÛŒ Ø¨Ø±Ø§ÛŒ Ù‡Ø± Ù…Ù‚Ø¯Ø§Ø±)
+    if (data.roleIds && data.roleIds.length > 0) {
+      data.roleIds.forEach(id => formData.append('RoleIds', id.toString()));
+    } else {
+      formData.append('RoleIds', ''); // ÛŒØ§ Ø­Ø°Ù Ú©Ù† Ø§Ú¯Ø± backend Ø§Ø¬Ø§Ø²Ù‡ Ù…ÛŒâ€ŒØ¯Ù‡
+    }
+
+    // ÙØ§ÛŒÙ„ ProfilePicture (Ø§Ú¯Ø± File Ø¨Ø§Ø´Ø¯)
+    if (data.profilePicture instanceof File) {
+      formData.append('ProfilePicture', data.profilePicture, data.profilePicture.name);
+    } else {
+      formData.append('ProfilePicture', ''); // ÛŒØ§ Ø­Ø°Ù Ú©Ù†
+    }
+
+    return formData;
+  }
 }
 
 ===== FILE: src\app\services\shop\countType\count-type.service.spec.ts =====
@@ -312,236 +587,5 @@ describe('ToastService', () => {
     expect(service).toBeTruthy();
   });
 });
-
-
-===== FILE: src\app\services\utilities\toast.service.ts =====
-// src/app/services/utilities/toast.service.ts
-
-import { Injectable, signal } from '@angular/core';
-import { HttpErrorResponse } from '@angular/common/http';
-import { ApiResult } from 'src/app/dto/api-result';
-
-export type ToastType = 'success' | 'error' | 'warning' | 'info';
-
-export interface ToastData {
-  id: number;
-  title: string;
-  message: string;
-  type: ToastType;
-  duration?: number;
-}
-
-@Injectable({ providedIn: 'root' })
-export class ToastService {
-  private counter = 0;
-  toasts = signal<ToastData[]>([]);
-
-  // ØªÙ†Ø¸ÛŒÙ…Ø§Øª Ù¾ÛŒØ´â€ŒÙØ±Ø¶
-  private defaults = {
-    success: { title: 'Ø¹Ù…Ù„ÛŒØ§Øª Ù…ÙˆÙÙ‚', duration: 4000 },
-    error: { title: 'Ø®Ø·Ø§', duration: 6000 },
-    warning: { title: 'Ø§Ø®Ø·Ø§Ø±', duration: 5000 },
-    info: { title: 'Ø§Ø·Ù„Ø§Ø¹Ø§Øª', duration: 4000 },
-  };
-
-  // Ù…ØªØ¯ Ø§ØµÙ„ÛŒ Ù†Ù…Ø§ÛŒØ´ Toast
-  private show(type: ToastType, message: string, title?: string, duration?: number): void {
-    const id = this.counter++;
-    const config = this.defaults[type];
-
-    const toast: ToastData = {
-      id,
-      type,
-      title: title ?? config.title,
-      message,
-      duration: duration ?? config.duration,
-    };
-
-    this.toasts.update(list => [...list, toast]);
-    setTimeout(() => this.remove(id), toast.duration);
-  }
-
-  // Ù…ØªØ¯Ù‡Ø§ÛŒ Ø¹Ù…ÙˆÙ…ÛŒ
-  success(message: string, title?: string): void {
-    this.show('success', message, title);
-  }
-
-  error(message: string, title?: string): void {
-    this.show('error', message, title);
-  }
-
-  warning(message: string, title?: string): void {
-    this.show('warning', message, title);
-  }
-
-  info(message: string, title?: string): void {
-    this.show('info', message, title);
-  }
-
-  remove(id: number): void {
-    this.toasts.update(list => list.filter(t => t.id !== id));
-  }
-  removeToast(id: number): void {
-    this.toasts.update(list => list.filter(t => t.id !== id));
-  }
-  // --- ÙÙ‚Ø· Ù¾ÛŒØ§Ù… Ø§Ø² ApiResult â€” Ø¨Ø¯ÙˆÙ† fallback Ù…Ø­Ù„ÛŒ ---
-  handleApiResponse<T>(result: ApiResult<T>): void {
-    if (result.isSucceeded) {
-      if (result.message) {
-        this.success(result.message);
-      }
-      // Ø§Ú¯Ø± message Ù†Ø¨ÙˆØ¯ â†’ Ù‡ÛŒÚ† ØªÙˆØ³ØªÛŒ Ù†Ù…Ø§ÛŒØ´ Ø¯Ø§Ø¯Ù‡ Ù†Ù…ÛŒâ€ŒØ´ÙˆØ¯
-    } else {
-      this.handleApiError(result);
-    }
-  }
-  
-
-  // --- Ù‡Ù†Ø¯Ù„ Ú©Ø±Ø¯Ù† Ø®Ø·Ø§Ù‡Ø§ÛŒ ApiResult Ø¨Ø§ Ú†Ú© statusCode Ø§ÛŒÙ…Ù† ---
-  private handleApiError(result: ApiResult): void {
-    const errors = result.errors ?? [];
-    const message = errors.length > 0 ? errors[0] : result.message ?? 'Ø®Ø·Ø§ÛŒÛŒ Ø±Ø® Ø¯Ø§Ø¯.';
-
-    const status = result.statusCode;
-
-    if (status === 401) {
-      this.warning(message, 'Ø§Ø­Ø±Ø§Ø² Ù‡ÙˆÛŒØª');
-    } else if (status === 403) {
-      this.warning(message, 'Ø¯Ø³ØªØ±Ø³ÛŒ Ù…Ù…Ù†ÙˆØ¹');
-    } else if (status != null && status >= 400 && status < 500) {
-      this.error(message, 'Ø®Ø·Ø§ÛŒ Ø§Ø¹ØªØ¨Ø§Ø±Ø³Ù†Ø¬ÛŒ');
-    } else {
-      this.error(message); // 500 ÛŒØ§ Ø¨Ø¯ÙˆÙ† statusCode
-    }
-  }
-
-  // --- ÙÙ‚Ø· Ø®Ø·Ø§Ù‡Ø§ÛŒ Ø®Ø§Ù… HTTP (Ø¨Ø¯ÙˆÙ† ApiResult) ---
-  handleHttpError(error: HttpErrorResponse): void {
-    let message = 'Ø®Ø·Ø§ÛŒ Ø§Ø±ØªØ¨Ø§Ø· Ø¨Ø§ Ø³Ø±ÙˆØ±';
-
-    if (error.error instanceof ErrorEvent) {
-      // Ø®Ø·Ø§ÛŒ Ú©Ù„Ø§ÛŒÙ†Øª
-      message = `Ø®Ø·Ø§: ${error.error.message}`;
-    } else {
-      // Ø®Ø·Ø§ÛŒ Ø³Ø±ÙˆØ±
-      const status = error.status;
-      const body = error.error;
-
-      if (status === 0) {
-        message = 'Ø§ØªØµØ§Ù„ Ø¨Ù‡ Ø³Ø±ÙˆØ± Ø¨Ø±Ù‚Ø±Ø§Ø± Ù†ÛŒØ³Øª.';
-      } else if (status === 500) {
-        message = 'Ø®Ø·Ø§ÛŒ Ø¯Ø§Ø®Ù„ÛŒ Ø³Ø±ÙˆØ±.';
-      } else if (status === 404) {
-        message = 'Ù…Ù†Ø¨Ø¹ Ù…ÙˆØ±Ø¯ Ù†Ø¸Ø± ÛŒØ§ÙØª Ù†Ø´Ø¯.';
-      } else if (body && typeof body === 'object' && 'message' in body) {
-        message = (body as any).message;
-      } else if (typeof body === 'string') {
-        message = body;
-      }
-    }
-
-    this.error(message);
-  
-  
-  }
-
-  
-}
-
-===== FILE: src\app\views\base\login\loginForm\login\login.component.html =====
-<div class="bg-light dark:bg-transparent min-vh-100 d-flex flex-row align-items-center">
-  <c-container breakpoint="md">
-    <c-row class="justify-content-center">
-      <c-col lg="10" xl="8">
-        <c-card-group>
-          <c-card class="p-4">
-            <c-card-body>
-              <form cForm (ngSubmit)="onLogin()">
-                <h1>ÙˆØ±ÙˆØ¯ Ø¨Ù‡ Ø³ÛŒØ³ØªÙ…</h1>
-                <p class="text-body-secondary">Ù„Ø·ÙØ§Ù‹ Ø§Ø·Ù„Ø§Ø¹Ø§Øª Ú©Ø§Ø±Ø¨Ø±ÛŒ Ø®ÙˆØ¯ Ø±Ø§ ÙˆØ§Ø±Ø¯ Ú©Ù†ÛŒØ¯</p>
-
-                <c-input-group class="mb-3">
-                  <span cInputGroupText>
-                    <svg cIcon name="cilUser"></svg>
-                  </span>
-                  <input
-                    type="email"
-                    autoComplete="username"
-                    cFormControl
-                    placeholder="Ø§ÛŒÙ…ÛŒÙ„"
-                    [(ngModel)]="email"
-                    name="email"
-                    required
-                  />
-                </c-input-group>
-
-                <c-input-group class="mb-4">
-                  <span cInputGroupText>
-                    <svg cIcon name="cilLockLocked"></svg>
-                  </span>
-                  <input
-                    type="password"
-                    autoComplete="current-password"
-                    cFormControl
-                    placeholder="Ø±Ù…Ø² Ø¹Ø¨ÙˆØ±"
-                    [(ngModel)]="password"
-                    name="password"
-                    required
-                  />
-                </c-input-group>
-
-                <c-row>
-                  <c-col xs="12" class="text-center">
-                    <button
-                      cButton
-                      class="px-4"
-                      color="primary"
-                      type="submit"
-                      [disabled]="loading"
-                    >
-                      {{ loading ? 'Ø¯Ø± Ø­Ø§Ù„ ÙˆØ±ÙˆØ¯...' : 'ÙˆØ±ÙˆØ¯' }}
-                    </button>
-                  </c-col>
-                </c-row>
-
-                <!--
-                <c-row class="mt-3">
-                  <c-col class="text-right" xs="6">
-                    <button cButton class="px-0" color="link" type="button">
-                      ÙØ±Ø§Ù…ÙˆØ´ÛŒ Ø±Ù…Ø² Ø¹Ø¨ÙˆØ±ØŸ
-                    </button>
-                  </c-col>
-                </c-row>
-                -->
-              </form>
-            </c-card-body>
-          </c-card>
-
-          <!--
-          <c-card [ngStyle]="{'minWidth.%': 44}" class="text-white bg-primary py-5">
-            <c-card-body class="text-center">
-              <div>
-                <h2>Ø«Ø¨Øªâ€ŒÙ†Ø§Ù…</h2>
-                <p>
-                  Ø¨Ø±Ø§ÛŒ Ø§Ø³ØªÙØ§Ø¯Ù‡ Ø§Ø² Ø§Ù…Ú©Ø§Ù†Ø§Øª Ø³Ø§Ù…Ø§Ù†Ù‡ØŒ ÛŒÚ© Ø­Ø³Ø§Ø¨ Ú©Ø§Ø±Ø¨Ø±ÛŒ Ø¬Ø¯ÛŒØ¯ Ø§ÛŒØ¬Ø§Ø¯ Ú©Ù†ÛŒØ¯.
-                </p>
-                <button
-                  [active]="true"
-                  cButton
-                  class="mt-3"
-                  color="primary"
-                  routerLink="/register"
-                >
-                  Ø«Ø¨Øªâ€ŒÙ†Ø§Ù… Ú©Ù†ÛŒØ¯
-                </button>
-              </div>
-            </c-card-body>
-          </c-card>
-          -->
-        </c-card-group>
-      </c-col>
-    </c-row>
-  </c-container>
-</div>
 
 

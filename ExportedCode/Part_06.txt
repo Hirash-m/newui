@@ -1,4 +1,232 @@
-﻿===== FILE: src\app\views\shop\inventory\inventory.component.html =====
+﻿===== FILE: src\app\views\shop\count-type\count-type.component.spec.ts =====
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+
+import { CountTypeComponent } from './count-type.component';
+
+describe('CountTypeComponent', () => {
+  let component: CountTypeComponent;
+  let fixture: ComponentFixture<CountTypeComponent>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [CountTypeComponent]
+    })
+    .compileComponents();
+
+    fixture = TestBed.createComponent(CountTypeComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+});
+
+
+===== FILE: src\app\views\shop\count-type\count-type.component.ts =====
+// ---------------------------
+// Import Dependencies
+// ---------------------------
+import { CommonModule } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+
+// CoreUI components & directives
+import {
+  ButtonDirective, ColComponent,
+  FormDirective, FormFeedbackComponent, FormLabelDirective, ModalModule,
+  PageItemDirective, PageLinkDirective,
+  PaginationComponent, RowDirective, TableDirective
+} from '@coreui/angular';
+
+// DTOs & Services
+import { ApiResult, createApiResult } from 'src/app/dto/api-result'; // ØªØºÛŒÛŒØ± Ø§Ø² baseResponse
+import { ListRequest } from 'src/app/dto/ListRequestDto';
+import { CountTypeDto } from 'src/app/dto/shop/CountTypeDto';
+import { CountTypeService } from 'src/app/services/shop/countType/count-type.service';
+import { ToastService } from 'src/app/services/utilities/toast.service';
+
+// ---------------------------
+// Component Definition
+// ---------------------------
+@Component({
+  selector: 'app-count-type',
+  standalone: true,
+  imports: [
+    CommonModule, TableDirective, PaginationComponent, PageItemDirective, PageLinkDirective,
+    ButtonDirective, ColComponent, FormDirective, FormFeedbackComponent,
+    FormLabelDirective, RowDirective, ModalModule,
+    FormsModule, ReactiveFormsModule,
+  ],
+  templateUrl: './count-type.component.html',
+  styleUrl: './count-type.component.scss'
+})
+export class CountTypeComponent implements OnInit {
+
+  // Ø¯Ø±Ø®ÙˆØ§Ø³Øª Ù„ÛŒØ³Øª
+  _request = new ListRequest();
+  _objectsView: CountTypeDto[] = [];
+  _baseResponse: ApiResult<CountTypeDto[]> = createApiResult<CountTypeDto[]>();
+
+  // ÙØ±Ù…
+  ObjectForm!: FormGroup;
+  showModal = false;
+
+  // ÙˆÛŒØ±Ø§ÛŒØ´
+  editMode = false;
+  editingId: number | null = null;
+
+  // Ø­Ø°Ù Ú¯Ø±ÙˆÙ‡ÛŒ
+  selectedIds: number[] = [];
+  showDeleteConfirm = false;
+
+  constructor(
+    private fb: FormBuilder,
+    private countTypeService: CountTypeService,
+    private toastService: ToastService
+  ) {}
+
+  ngOnInit(): void {
+    this.initForm();
+    this.loadDataTable();
+  }
+
+  // ---------------------------
+  // ÙØ±Ù…
+  // ---------------------------
+  initForm() {
+    this.ObjectForm = this.fb.group({
+      id: [null],
+      name: ['', Validators.required],
+    });
+  }
+
+  // ---------------------------
+  // Ø¨Ø§Ø±Ú¯Ø°Ø§Ø±ÛŒ Ù„ÛŒØ³Øª
+  // ---------------------------
+  loadDataTable(): void {
+    this._request.pageSize = 5;
+    this.countTypeService.getRecords(this._request).subscribe({
+      next: (res: ApiResult<CountTypeDto[]>) => {
+        if (res.isSucceeded) {
+          this._baseResponse = res;
+          this._objectsView = res.data ?? [];
+        } else {
+          this.toastService.error(res.message || 'Ø®Ø·Ø§ Ø¯Ø± Ø¨Ø§Ø±Ú¯Ø°Ø§Ø±ÛŒ Ø§Ù†ÙˆØ§Ø¹ Ø´Ù…Ø§Ø±Ø´');
+        }
+      },
+      error: (err) => {
+        console.error('Ø®Ø·Ø§ Ø¯Ø± Ø¯Ø±ÛŒØ§ÙØª Ù„ÛŒØ³Øª:', err);
+        this.toastService.error('Ø®Ø·Ø§ÛŒ Ø§Ø±ØªØ¨Ø§Ø· Ø¨Ø§ Ø³Ø±ÙˆØ±');
+      }
+    });
+  }
+
+  // ---------------------------
+  // Ø§ÛŒØ¬Ø§Ø¯ / ÙˆÛŒØ±Ø§ÛŒØ´
+  // ---------------------------
+  onSubmit1() {
+    if (this.ObjectForm.valid) {
+      const data: CountTypeDto = this.ObjectForm.value;
+
+      const request$ = this.editMode && this.editingId != null
+        ? this.countTypeService.updateRecord(data)
+        : this.countTypeService.insertRecord(data);
+
+      request$.subscribe({
+        next: (res: ApiResult<any>) => {
+          if (res.isSucceeded) {
+            this.afterSubmit();
+            this.toastService.success(
+              this.editMode ? 'Ù†ÙˆØ¹ Ø´Ù…Ø§Ø±Ø´ Ø¨Ø§ Ù…ÙˆÙÙ‚ÛŒØª ÙˆÛŒØ±Ø§ÛŒØ´ Ø´Ø¯' : 'Ù†ÙˆØ¹ Ø´Ù…Ø§Ø±Ø´ Ø¨Ø§ Ù…ÙˆÙÙ‚ÛŒØª Ø§ÛŒØ¬Ø§Ø¯ Ø´Ø¯'
+            );
+          } else {
+            this.toastService.error(res.message || 'Ø®Ø·Ø§ Ø¯Ø± Ø¹Ù…Ù„ÛŒØ§Øª');
+          }
+        },
+        error: (err) => {
+          console.error('Ø®Ø·Ø§ Ø¯Ø± Ø°Ø®ÛŒØ±Ù‡:', err);
+          this.toastService.error('Ø®Ø·Ø§ÛŒ Ø§Ø±ØªØ¨Ø§Ø· Ø¨Ø§ Ø³Ø±ÙˆØ±');
+        }
+      });
+    }
+  }
+
+  afterSubmit() {
+    this.loadDataTable();
+    this.showModal = false;
+    this.ObjectForm.reset();
+    this.editMode = false;
+    this.editingId = null;
+  }
+
+  // ---------------------------
+  // ÙˆÛŒØ±Ø§ÛŒØ´
+  // ---------------------------
+  onEdit(id: number) {
+    this.editMode = true;
+    this.editingId = id;
+
+    this.countTypeService.getRecordById(id).subscribe({
+      next: (res: ApiResult<CountTypeDto>) => {
+        if (res.isSucceeded && res.data) {
+          this.ObjectForm.patchValue(res.data);
+          this.showModal = true;
+        } else {
+          this.toastService.error('Ù…ÙˆØ±Ø¯ Ù¾ÛŒØ¯Ø§ Ù†Ø´Ø¯');
+        }
+      },
+      error: (err) => {
+        this.toastService.error('Ø®Ø·Ø§ Ø¯Ø± Ø¯Ø±ÛŒØ§ÙØª Ø§Ø·Ù„Ø§Ø¹Ø§Øª');
+      }
+    });
+  }
+
+  // ---------------------------
+  // ØµÙØ­Ù‡â€ŒØ¨Ù†Ø¯ÛŒ
+  // ---------------------------
+  changePage(pageNumber: number) {
+    this._request.pageNumber = pageNumber;
+    this.loadDataTable();
+  }
+
+  // ---------------------------
+  // Ø­Ø°Ù Ú¯Ø±ÙˆÙ‡ÛŒ
+  // ---------------------------
+  isSelected(id: number): boolean {
+    return this.selectedIds.includes(id);
+  }
+
+  toggleSelection(id: number): void {
+    const index = this.selectedIds.indexOf(id);
+    if (index > -1) {
+      this.selectedIds.splice(index, 1);
+    } else {
+      this.selectedIds.push(id);
+    }
+  }
+
+  deleteSelectedRecords(): void {
+    this.countTypeService.deleteRecords(this.selectedIds).subscribe({
+      next: (res: ApiResult<any>) => {
+        if (res.isSucceeded) {
+          this.afterSubmit();
+          this.selectedIds = [];
+          this.toastService.success('Ø§Ù†ÙˆØ§Ø¹ Ø§Ù†ØªØ®Ø§Ø¨â€ŒØ´Ø¯Ù‡ Ø­Ø°Ù Ø´Ø¯Ù†Ø¯');
+        } else {
+          this.toastService.error(res.message || 'Ø®Ø·Ø§ Ø¯Ø± Ø­Ø°Ù');
+        }
+        this.showDeleteConfirm = false;
+      },
+      error: () => {
+        this.toastService.error('Ø®Ø·Ø§ Ø¯Ø± Ø­Ø°Ù Ú¯Ø±ÙˆÙ‡ÛŒ');
+      }
+    });
+  }
+}
+
+===== FILE: src\app\views\shop\inventory\inventory.component.html =====
 
 
 <!-- Ø¯Ú©Ù…Ù‡â€ŒÛŒ Ø¨Ø§Ø² Ú©Ø±Ø¯Ù† ÙØ±Ù… Ù¾Ø§Ù¾â€ŒØ¢Ù¾ -->
@@ -956,34 +1184,5 @@ export const routes: Routes = [
 
 ===== FILE: src\app\views\utilities\toast-container\toast-container.component.html =====
 <p>toast-container works!</p>
-
-
-===== FILE: src\app\views\utilities\toast-container\toast-container.component.scss =====
-
-
-===== FILE: src\app\views\utilities\toast-container\toast-container.component.spec.ts =====
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-
-import { ToastContainerComponent } from './toast-container.component';
-
-describe('ToastContainerComponent', () => {
-  let component: ToastContainerComponent;
-  let fixture: ComponentFixture<ToastContainerComponent>;
-
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [ToastContainerComponent]
-    })
-    .compileComponents();
-
-    fixture = TestBed.createComponent(ToastContainerComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
-
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
-});
 
 

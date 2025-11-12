@@ -1,4 +1,235 @@
-﻿===== FILE: src\app\views\base\login\loginForm\login\login.component.scss =====
+﻿===== FILE: src\app\services\utilities\toast.service.ts =====
+// src/app/services/utilities/toast.service.ts
+
+import { Injectable, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
+import { ApiResult } from 'src/app/dto/api-result';
+
+export type ToastType = 'success' | 'error' | 'warning' | 'info';
+
+export interface ToastData {
+  id: number;
+  title: string;
+  message: string;
+  type: ToastType;
+  duration?: number;
+}
+
+@Injectable({ providedIn: 'root' })
+export class ToastService {
+  private counter = 0;
+  toasts = signal<ToastData[]>([]);
+
+  // ØªÙ†Ø¸ÛŒÙ…Ø§Øª Ù¾ÛŒØ´â€ŒÙØ±Ø¶
+  private defaults = {
+    success: { title: 'Ø¹Ù…Ù„ÛŒØ§Øª Ù…ÙˆÙÙ‚', duration: 4000 },
+    error: { title: 'Ø®Ø·Ø§', duration: 6000 },
+    warning: { title: 'Ø§Ø®Ø·Ø§Ø±', duration: 5000 },
+    info: { title: 'Ø§Ø·Ù„Ø§Ø¹Ø§Øª', duration: 4000 },
+  };
+
+  // Ù…ØªØ¯ Ø§ØµÙ„ÛŒ Ù†Ù…Ø§ÛŒØ´ Toast
+  private show(type: ToastType, message: string, title?: string, duration?: number): void {
+    const id = this.counter++;
+    const config = this.defaults[type];
+
+    const toast: ToastData = {
+      id,
+      type,
+      title: title ?? config.title,
+      message,
+      duration: duration ?? config.duration,
+    };
+
+    this.toasts.update(list => [...list, toast]);
+    setTimeout(() => this.remove(id), toast.duration);
+  }
+
+  // Ù…ØªØ¯Ù‡Ø§ÛŒ Ø¹Ù…ÙˆÙ…ÛŒ
+  success(message: string, title?: string): void {
+    this.show('success', message, title);
+  }
+
+  error(message: string, title?: string): void {
+    this.show('error', message, title);
+  }
+
+  warning(message: string, title?: string): void {
+    this.show('warning', message, title);
+  }
+
+  info(message: string, title?: string): void {
+    this.show('info', message, title);
+  }
+
+  remove(id: number): void {
+    this.toasts.update(list => list.filter(t => t.id !== id));
+  }
+  removeToast(id: number): void {
+    this.toasts.update(list => list.filter(t => t.id !== id));
+  }
+  // --- ÙÙ‚Ø· Ù¾ÛŒØ§Ù… Ø§Ø² ApiResult â€” Ø¨Ø¯ÙˆÙ† fallback Ù…Ø­Ù„ÛŒ ---
+  handleApiResponse<T>(result: ApiResult<T>): void {
+    if (result.isSucceeded) {
+      if (result.message) {
+        this.success(result.message);
+      }
+      // Ø§Ú¯Ø± message Ù†Ø¨ÙˆØ¯ â†’ Ù‡ÛŒÚ† ØªÙˆØ³ØªÛŒ Ù†Ù…Ø§ÛŒØ´ Ø¯Ø§Ø¯Ù‡ Ù†Ù…ÛŒâ€ŒØ´ÙˆØ¯
+    } else {
+      this.handleApiError(result);
+    }
+  }
+  
+
+  // --- Ù‡Ù†Ø¯Ù„ Ú©Ø±Ø¯Ù† Ø®Ø·Ø§Ù‡Ø§ÛŒ ApiResult Ø¨Ø§ Ú†Ú© statusCode Ø§ÛŒÙ…Ù† ---
+  private handleApiError(result: ApiResult): void {
+    const errors = result.errors ?? [];
+    const message = errors.length > 0 ? errors[0] : result.message ?? 'Ø®Ø·Ø§ÛŒÛŒ Ø±Ø® Ø¯Ø§Ø¯.';
+
+    const status = result.statusCode;
+
+    if (status === 401) {
+      this.warning(message, 'Ø§Ø­Ø±Ø§Ø² Ù‡ÙˆÛŒØª');
+    } else if (status === 403) {
+      this.warning(message, 'Ø¯Ø³ØªØ±Ø³ÛŒ Ù…Ù…Ù†ÙˆØ¹');
+    } else if (status != null && status >= 400 && status < 500) {
+      this.error(message, 'Ø®Ø·Ø§ÛŒ Ø§Ø¹ØªØ¨Ø§Ø±Ø³Ù†Ø¬ÛŒ');
+    } else {
+      this.error(message); // 500 ÛŒØ§ Ø¨Ø¯ÙˆÙ† statusCode
+    }
+  }
+
+  // --- ÙÙ‚Ø· Ø®Ø·Ø§Ù‡Ø§ÛŒ Ø®Ø§Ù… HTTP (Ø¨Ø¯ÙˆÙ† ApiResult) ---
+  handleHttpError(error: HttpErrorResponse): void {
+    let message = 'Ø®Ø·Ø§ÛŒ Ø§Ø±ØªØ¨Ø§Ø· Ø¨Ø§ Ø³Ø±ÙˆØ±';
+
+    if (error.error instanceof ErrorEvent) {
+      // Ø®Ø·Ø§ÛŒ Ú©Ù„Ø§ÛŒÙ†Øª
+      message = `Ø®Ø·Ø§: ${error.error.message}`;
+    } else {
+      // Ø®Ø·Ø§ÛŒ Ø³Ø±ÙˆØ±
+      const status = error.status;
+      const body = error.error;
+
+      if (status === 0) {
+        message = 'Ø§ØªØµØ§Ù„ Ø¨Ù‡ Ø³Ø±ÙˆØ± Ø¨Ø±Ù‚Ø±Ø§Ø± Ù†ÛŒØ³Øª.';
+      } else if (status === 500) {
+        message = 'Ø®Ø·Ø§ÛŒ Ø¯Ø§Ø®Ù„ÛŒ Ø³Ø±ÙˆØ±.';
+      } else if (status === 404) {
+        message = 'Ù…Ù†Ø¨Ø¹ Ù…ÙˆØ±Ø¯ Ù†Ø¸Ø± ÛŒØ§ÙØª Ù†Ø´Ø¯.';
+      } else if (body && typeof body === 'object' && 'message' in body) {
+        message = (body as any).message;
+      } else if (typeof body === 'string') {
+        message = body;
+      }
+    }
+
+    this.error(message);
+  
+  
+  }
+
+  
+}
+
+===== FILE: src\app\views\base\login\loginForm\login\login.component.html =====
+<div class="bg-light dark:bg-transparent min-vh-100 d-flex flex-row align-items-center">
+  <c-container breakpoint="md">
+    <c-row class="justify-content-center">
+      <c-col lg="10" xl="8">
+        <c-card-group>
+          <c-card class="p-4">
+            <c-card-body>
+              <form cForm (ngSubmit)="onLogin()">
+                <h1>ÙˆØ±ÙˆØ¯ Ø¨Ù‡ Ø³ÛŒØ³ØªÙ…</h1>
+                <p class="text-body-secondary">Ù„Ø·ÙØ§Ù‹ Ø§Ø·Ù„Ø§Ø¹Ø§Øª Ú©Ø§Ø±Ø¨Ø±ÛŒ Ø®ÙˆØ¯ Ø±Ø§ ÙˆØ§Ø±Ø¯ Ú©Ù†ÛŒØ¯</p>
+
+                <c-input-group class="mb-3">
+                  <span cInputGroupText>
+                    <svg cIcon name="cilUser"></svg>
+                  </span>
+                  <input
+                    type="text"
+                    autoComplete="username"
+                    cFormControl
+                    placeholder="Ù†Ø§Ù…â€ŒÚ©Ø§Ø±Ø¨Ø±ÛŒ"
+                    [(ngModel)]="username"
+                    name="username"
+                    required
+                  />
+                </c-input-group>
+
+                <c-input-group class="mb-4">
+                  <span cInputGroupText>
+                    <svg cIcon name="cilLockLocked"></svg>
+                  </span>
+                  <input
+                    type="password"
+                    autoComplete="current-password"
+                    cFormControl
+                    placeholder="Ø±Ù…Ø² Ø¹Ø¨ÙˆØ±"
+                    [(ngModel)]="password"
+                    name="password"
+                    required
+                  />
+                </c-input-group>
+
+                <c-row>
+                  <c-col xs="12" class="text-center">
+                    <button
+                      cButton
+                      class="px-4"
+                      color="primary"
+                      type="submit"
+                      [disabled]="loading"
+                    >
+                      {{ loading ? 'Ø¯Ø± Ø­Ø§Ù„ ÙˆØ±ÙˆØ¯...' : 'ÙˆØ±ÙˆØ¯' }}
+                    </button>
+                  </c-col>
+                </c-row>
+
+                <!--
+                <c-row class="mt-3">
+                  <c-col class="text-right" xs="6">
+                    <button cButton class="px-0" color="link" type="button">
+                      ÙØ±Ø§Ù…ÙˆØ´ÛŒ Ø±Ù…Ø² Ø¹Ø¨ÙˆØ±ØŸ
+                    </button>
+                  </c-col>
+                </c-row>
+                -->
+              </form>
+            </c-card-body>
+          </c-card>
+
+          <!--
+          <c-card [ngStyle]="{'minWidth.%': 44}" class="text-white bg-primary py-5">
+            <c-card-body class="text-center">
+              <div>
+                <h2>Ø«Ø¨Øªâ€ŒÙ†Ø§Ù…</h2>
+                <p>
+                  Ø¨Ø±Ø§ÛŒ Ø§Ø³ØªÙØ§Ø¯Ù‡ Ø§Ø² Ø§Ù…Ú©Ø§Ù†Ø§Øª Ø³Ø§Ù…Ø§Ù†Ù‡ØŒ ÛŒÚ© Ø­Ø³Ø§Ø¨ Ú©Ø§Ø±Ø¨Ø±ÛŒ Ø¬Ø¯ÛŒØ¯ Ø§ÛŒØ¬Ø§Ø¯ Ú©Ù†ÛŒØ¯.
+                </p>
+                <button
+                  [active]="true"
+                  cButton
+                  class="mt-3"
+                  color="primary"
+                  routerLink="/register"
+                >
+                  Ø«Ø¨Øªâ€ŒÙ†Ø§Ù… Ú©Ù†ÛŒØ¯
+                </button>
+              </div>
+            </c-card-body>
+          </c-card>
+          -->
+        </c-card-group>
+      </c-col>
+    </c-row>
+  </c-container>
+</div>
+
+
+===== FILE: src\app\views\base\login\loginForm\login\login.component.scss =====
 
 
 ===== FILE: src\app\views\base\login\loginForm\login\login.component.spec.ts =====
@@ -87,7 +318,7 @@ import { ApiResult } from 'src/app/dto/api-result';
   ]
 })
 export class LoginComponent {
-  email: string = '';
+  username: string = '';
   password: string = '';
   loading: boolean = false;
 
@@ -97,14 +328,14 @@ export class LoginComponent {
     private router: Router
   ) {}
   onLogin() {
-    if (!this.email || !this.password) {
-      this.toast.error('Ù„Ø·ÙØ§Ù‹ Ø§ÛŒÙ…ÛŒÙ„ Ùˆ Ø±Ù…Ø² Ø¹Ø¨ÙˆØ± Ø±Ø§ ÙˆØ§Ø±Ø¯ Ú©Ù†ÛŒØ¯');
+    if (!this.username || !this.password) {
+      this.toast.error('Ù„Ø·ÙØ§Ù‹ Ù†Ø§Ù…â€ŒÚ©Ø§Ø±Ø¨Ø±ÛŒ Ùˆ Ø±Ù…Ø² Ø¹Ø¨ÙˆØ± Ø±Ø§ ÙˆØ§Ø±Ø¯ Ú©Ù†ÛŒØ¯');
       return;
     }
   
     this.loading = true;
   
-    this.authService.login(this.email, this.password).subscribe({
+    this.authService.login(this.username, this.password).subscribe({
       next: (res: ApiResult<any>) => {
         this.loading = false;
   
@@ -288,6 +519,19 @@ export class LoginComponent {
         <c-form-feedback [valid]="false">Ú©Ù„Ù…Ù‡ Ø¹Ø¨ÙˆØ±  Ø±Ø§ ÙˆØ§Ø±Ø¯ Ú©Ù†ÛŒØ¯.</c-form-feedback>
       </c-col>
 
+
+      <!-- Ø¢Ù¾Ù„ÙˆØ¯ ØªØµÙˆÛŒØ± -->
+      <div class="mb-3">
+        <label cFormLabel>ØªØµÙˆÛŒØ± Ù¾Ø±ÙˆÙØ§ÛŒÙ„</label>
+        <input
+          type="file"
+          cFormControl
+          accept="image/*"
+          (change)="onFileSelected($event)"
+          class="form-control"
+        >
+        <small class="text-muted">ÙÙ‚Ø· ØªØµØ§ÙˆÛŒØ± (JPG, PNG)</small>
+      </div>
  
 <!-- Ø¨Ø®Ø´ Ù†Ù‚Ø´â€ŒÙ‡Ø§ -->
 <c-col [md]="12">
@@ -306,6 +550,8 @@ export class LoginComponent {
     </label>
   </div>
 </c-col>
+
+
 
 
     </form>
@@ -434,9 +680,21 @@ export class UserComponent implements OnInit {
       email: ['', [Validators.required, Validators.email]],
       Password: ['', this.editMode ? [] : Validators.required],
       fullName: ['', Validators.required],
-      roleIds: [[]]
+      roleIds: [[]],
+      profilePicture: [null]  
     });
   }
+
+
+  // Ø§Ù†ØªØ®Ø§Ø¨ ÙØ§ÛŒÙ„
+onFileSelected(event: Event): void {
+  const input = event.target as HTMLInputElement;
+  if (input.files && input.files[0]) {
+    const file = input.files[0];
+    this.ObjectForm.patchValue({ profilePicture: file });
+    this.ObjectForm.get('profilePicture')?.updateValueAndValidity();
+  }
+}
 
   // ---------------------------
   // Ø¨Ø§Ø±Ú¯Ø°Ø§Ø±ÛŒ Ù„ÛŒØ³Øª Ú©Ø§Ø±Ø¨Ø±Ø§Ù†
@@ -506,12 +764,16 @@ export class UserComponent implements OnInit {
   // ---------------------------
   onSubmit1() {
     if (this.ObjectForm.valid) {
-      const data: UserDto = this.ObjectForm.value;
-
+      const formValue = this.ObjectForm.value;
+      const data: UserDto = {
+        ...formValue,
+        profilePicture: formValue.profilePicture // File object
+      };
+  
       const request$ = this.editMode && this.editingId != null
         ? this.ObjectService.updateRecord(data)
         : this.ObjectService.insertRecord(data);
-
+  
       request$.subscribe({
         next: (res: ApiResult<any>) => {
           if (res.isSucceeded) {
@@ -544,6 +806,7 @@ export class UserComponent implements OnInit {
       fullName: '',
       email: '',
       Password: '',
+      profilePicture: null,
       roleIds: []
     });
     this.editMode = false;
@@ -557,12 +820,11 @@ export class UserComponent implements OnInit {
   onEdit(id: number) {
     this.editMode = true;
     this.editingId = id;
-
-    // Ø­Ø°Ù ÙˆÙ„ÛŒØ¯Ø§ØªÙˆØ± Ø±Ù…Ø² Ø¹Ø¨ÙˆØ± Ø¯Ø± Ø­Ø§Ù„Øª ÙˆÛŒØ±Ø§ÛŒØ´
+  
     const passwordControl = this.ObjectForm.get('Password');
     passwordControl?.clearValidators();
     passwordControl?.updateValueAndValidity();
-
+  
     this.ObjectService.getRecordById(id).subscribe({
       next: (res: ApiResult<UserDto>) => {
         if (res.isSucceeded && res.data) {
@@ -573,7 +835,8 @@ export class UserComponent implements OnInit {
             fullName: user.fullName,
             email: user.email,
             Password: '',
-            roleIds: user.roleIds || []
+            roleIds: user.roleIds || [],
+            profilePicture: null  // ÙØ§ÛŒÙ„ Ù‚Ø¨Ù„ÛŒ Ø­Ø°Ù Ù…ÛŒØ´Ù‡
           });
           this.showModal = true;
         } else {
@@ -585,7 +848,6 @@ export class UserComponent implements OnInit {
       }
     });
   }
-
   // ---------------------------
   // ØµÙØ­Ù‡â€ŒØ¨Ù†Ø¯ÛŒ
   // ---------------------------
@@ -831,232 +1093,4 @@ export const routes: Routes = [
 
 ===== FILE: src\app\views\shop\count-type\count-type.component.scss =====
 
-
-===== FILE: src\app\views\shop\count-type\count-type.component.spec.ts =====
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-
-import { CountTypeComponent } from './count-type.component';
-
-describe('CountTypeComponent', () => {
-  let component: CountTypeComponent;
-  let fixture: ComponentFixture<CountTypeComponent>;
-
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [CountTypeComponent]
-    })
-    .compileComponents();
-
-    fixture = TestBed.createComponent(CountTypeComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
-
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
-});
-
-
-===== FILE: src\app\views\shop\count-type\count-type.component.ts =====
-// ---------------------------
-// Import Dependencies
-// ---------------------------
-import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-
-// CoreUI components & directives
-import {
-  ButtonDirective, ColComponent,
-  FormDirective, FormFeedbackComponent, FormLabelDirective, ModalModule,
-  PageItemDirective, PageLinkDirective,
-  PaginationComponent, RowDirective, TableDirective
-} from '@coreui/angular';
-
-// DTOs & Services
-import { ApiResult, createApiResult } from 'src/app/dto/api-result'; // ØªØºÛŒÛŒØ± Ø§Ø² baseResponse
-import { ListRequest } from 'src/app/dto/ListRequestDto';
-import { CountTypeDto } from 'src/app/dto/shop/CountTypeDto';
-import { CountTypeService } from 'src/app/services/shop/countType/count-type.service';
-import { ToastService } from 'src/app/services/utilities/toast.service';
-
-// ---------------------------
-// Component Definition
-// ---------------------------
-@Component({
-  selector: 'app-count-type',
-  standalone: true,
-  imports: [
-    CommonModule, TableDirective, PaginationComponent, PageItemDirective, PageLinkDirective,
-    ButtonDirective, ColComponent, FormDirective, FormFeedbackComponent,
-    FormLabelDirective, RowDirective, ModalModule,
-    FormsModule, ReactiveFormsModule,
-  ],
-  templateUrl: './count-type.component.html',
-  styleUrl: './count-type.component.scss'
-})
-export class CountTypeComponent implements OnInit {
-
-  // Ø¯Ø±Ø®ÙˆØ§Ø³Øª Ù„ÛŒØ³Øª
-  _request = new ListRequest();
-  _objectsView: CountTypeDto[] = [];
-  _baseResponse: ApiResult<CountTypeDto[]> = createApiResult<CountTypeDto[]>();
-
-  // ÙØ±Ù…
-  ObjectForm!: FormGroup;
-  showModal = false;
-
-  // ÙˆÛŒØ±Ø§ÛŒØ´
-  editMode = false;
-  editingId: number | null = null;
-
-  // Ø­Ø°Ù Ú¯Ø±ÙˆÙ‡ÛŒ
-  selectedIds: number[] = [];
-  showDeleteConfirm = false;
-
-  constructor(
-    private fb: FormBuilder,
-    private countTypeService: CountTypeService,
-    private toastService: ToastService
-  ) {}
-
-  ngOnInit(): void {
-    this.initForm();
-    this.loadDataTable();
-  }
-
-  // ---------------------------
-  // ÙØ±Ù…
-  // ---------------------------
-  initForm() {
-    this.ObjectForm = this.fb.group({
-      id: [null],
-      name: ['', Validators.required],
-    });
-  }
-
-  // ---------------------------
-  // Ø¨Ø§Ø±Ú¯Ø°Ø§Ø±ÛŒ Ù„ÛŒØ³Øª
-  // ---------------------------
-  loadDataTable(): void {
-    this._request.pageSize = 5;
-    this.countTypeService.getRecords(this._request).subscribe({
-      next: (res: ApiResult<CountTypeDto[]>) => {
-        if (res.isSucceeded) {
-          this._baseResponse = res;
-          this._objectsView = res.data ?? [];
-        } else {
-          this.toastService.error(res.message || 'Ø®Ø·Ø§ Ø¯Ø± Ø¨Ø§Ø±Ú¯Ø°Ø§Ø±ÛŒ Ø§Ù†ÙˆØ§Ø¹ Ø´Ù…Ø§Ø±Ø´');
-        }
-      },
-      error: (err) => {
-        console.error('Ø®Ø·Ø§ Ø¯Ø± Ø¯Ø±ÛŒØ§ÙØª Ù„ÛŒØ³Øª:', err);
-        this.toastService.error('Ø®Ø·Ø§ÛŒ Ø§Ø±ØªØ¨Ø§Ø· Ø¨Ø§ Ø³Ø±ÙˆØ±');
-      }
-    });
-  }
-
-  // ---------------------------
-  // Ø§ÛŒØ¬Ø§Ø¯ / ÙˆÛŒØ±Ø§ÛŒØ´
-  // ---------------------------
-  onSubmit1() {
-    if (this.ObjectForm.valid) {
-      const data: CountTypeDto = this.ObjectForm.value;
-
-      const request$ = this.editMode && this.editingId != null
-        ? this.countTypeService.updateRecord(data)
-        : this.countTypeService.insertRecord(data);
-
-      request$.subscribe({
-        next: (res: ApiResult<any>) => {
-          if (res.isSucceeded) {
-            this.afterSubmit();
-            this.toastService.success(
-              this.editMode ? 'Ù†ÙˆØ¹ Ø´Ù…Ø§Ø±Ø´ Ø¨Ø§ Ù…ÙˆÙÙ‚ÛŒØª ÙˆÛŒØ±Ø§ÛŒØ´ Ø´Ø¯' : 'Ù†ÙˆØ¹ Ø´Ù…Ø§Ø±Ø´ Ø¨Ø§ Ù…ÙˆÙÙ‚ÛŒØª Ø§ÛŒØ¬Ø§Ø¯ Ø´Ø¯'
-            );
-          } else {
-            this.toastService.error(res.message || 'Ø®Ø·Ø§ Ø¯Ø± Ø¹Ù…Ù„ÛŒØ§Øª');
-          }
-        },
-        error: (err) => {
-          console.error('Ø®Ø·Ø§ Ø¯Ø± Ø°Ø®ÛŒØ±Ù‡:', err);
-          this.toastService.error('Ø®Ø·Ø§ÛŒ Ø§Ø±ØªØ¨Ø§Ø· Ø¨Ø§ Ø³Ø±ÙˆØ±');
-        }
-      });
-    }
-  }
-
-  afterSubmit() {
-    this.loadDataTable();
-    this.showModal = false;
-    this.ObjectForm.reset();
-    this.editMode = false;
-    this.editingId = null;
-  }
-
-  // ---------------------------
-  // ÙˆÛŒØ±Ø§ÛŒØ´
-  // ---------------------------
-  onEdit(id: number) {
-    this.editMode = true;
-    this.editingId = id;
-
-    this.countTypeService.getRecordById(id).subscribe({
-      next: (res: ApiResult<CountTypeDto>) => {
-        if (res.isSucceeded && res.data) {
-          this.ObjectForm.patchValue(res.data);
-          this.showModal = true;
-        } else {
-          this.toastService.error('Ù…ÙˆØ±Ø¯ Ù¾ÛŒØ¯Ø§ Ù†Ø´Ø¯');
-        }
-      },
-      error: (err) => {
-        this.toastService.error('Ø®Ø·Ø§ Ø¯Ø± Ø¯Ø±ÛŒØ§ÙØª Ø§Ø·Ù„Ø§Ø¹Ø§Øª');
-      }
-    });
-  }
-
-  // ---------------------------
-  // ØµÙØ­Ù‡â€ŒØ¨Ù†Ø¯ÛŒ
-  // ---------------------------
-  changePage(pageNumber: number) {
-    this._request.pageNumber = pageNumber;
-    this.loadDataTable();
-  }
-
-  // ---------------------------
-  // Ø­Ø°Ù Ú¯Ø±ÙˆÙ‡ÛŒ
-  // ---------------------------
-  isSelected(id: number): boolean {
-    return this.selectedIds.includes(id);
-  }
-
-  toggleSelection(id: number): void {
-    const index = this.selectedIds.indexOf(id);
-    if (index > -1) {
-      this.selectedIds.splice(index, 1);
-    } else {
-      this.selectedIds.push(id);
-    }
-  }
-
-  deleteSelectedRecords(): void {
-    this.countTypeService.deleteRecords(this.selectedIds).subscribe({
-      next: (res: ApiResult<any>) => {
-        if (res.isSucceeded) {
-          this.afterSubmit();
-          this.selectedIds = [];
-          this.toastService.success('Ø§Ù†ÙˆØ§Ø¹ Ø§Ù†ØªØ®Ø§Ø¨â€ŒØ´Ø¯Ù‡ Ø­Ø°Ù Ø´Ø¯Ù†Ø¯');
-        } else {
-          this.toastService.error(res.message || 'Ø®Ø·Ø§ Ø¯Ø± Ø­Ø°Ù');
-        }
-        this.showDeleteConfirm = false;
-      },
-      error: () => {
-        this.toastService.error('Ø®Ø·Ø§ Ø¯Ø± Ø­Ø°Ù Ú¯Ø±ÙˆÙ‡ÛŒ');
-      }
-    });
-  }
-}
 

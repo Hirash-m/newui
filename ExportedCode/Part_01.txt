@@ -432,16 +432,18 @@ export function authInterceptor(
 
 ===== FILE: src\app\dto\base\UserDto.ts =====
 export class UserDto {
-    id!: number;
-    fullName!: string;
-    username!: string;
-    email!: string;
-    Password: string = "";
-    profilePictureUrl?: string;     // Ø¬Ø¯ÛŒØ¯
-  status!: UserStatus;            // Ø¬Ø¯ÛŒØ¯
+  id!: number;
+  fullName!: string;
+  username!: string;
+  email!: string;
+  Password: string = "";
+  profilePicture?: File | null;  // ØªØºÛŒÛŒØ± Ø¨Ù‡ File
+  status!: UserStatus;
   lastSeen?: string;
-    roleIds: number[] = [];
+  roleIds: number[] = [];
 }
+
+
 
 
 export enum UserStatus {

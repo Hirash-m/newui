@@ -45,7 +45,7 @@ import { ApiResult } from 'src/app/dto/api-result';
   ]
 })
 export class LoginComponent {
-  email: string = '';
+  username: string = '';
   password: string = '';
   loading: boolean = false;
 
@@ -55,14 +55,14 @@ export class LoginComponent {
     private router: Router
   ) {}
   onLogin() {
-    if (!this.email || !this.password) {
-      this.toast.error('لطفاً ایمیل و رمز عبور را وارد کنید');
+    if (!this.username || !this.password) {
+      this.toast.error('لطفاً نام‌کاربری و رمز عبور را وارد کنید');
       return;
     }
   
     this.loading = true;
   
-    this.authService.login(this.email, this.password).subscribe({
+    this.authService.login(this.username, this.password).subscribe({
       next: (res: ApiResult<any>) => {
         this.loading = false;
   

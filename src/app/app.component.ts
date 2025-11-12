@@ -7,11 +7,15 @@ import { delay, filter, map, tap } from 'rxjs/operators';
 import { ColorModeService } from '@coreui/angular';
 import { IconSetService } from '@coreui/icons-angular';
 import { iconSubset } from './icons/icon-subset';
+import { ToastContainerComponent } from './views/utilities/toast-container/toast-container.component';
 
 @Component({
     selector: 'app-root',
-    template: '<router-outlet />',
-    imports: [RouterOutlet]
+    template: `
+    <app-toast-container></app-toast-container> 
+    <router-outlet />
+  `,
+    imports: [RouterOutlet , ToastContainerComponent]
 })
 export class AppComponent implements OnInit {
   title = 'CRM';

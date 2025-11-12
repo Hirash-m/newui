@@ -1,9 +1,10 @@
 
-import {  Component } from '@angular/core';
+import {  Component, inject } from '@angular/core';
 import { RouterLink, RouterOutlet } from '@angular/router';
 import { NgScrollbar } from 'ngx-scrollbar';
 import {ToastContainerComponent} from './../../views/utilities/toast-container/toast-container.component'
 import { IconDirective } from '@coreui/icons-angular';
+import { NavigationService } from './_nav';
 import {
   ContainerComponent,
   ShadowOnScrollDirective,
@@ -18,7 +19,7 @@ import {
 } from '@coreui/angular';
 
 import { DefaultFooterComponent, DefaultHeaderComponent } from './';
-import { navItems } from './_nav';
+
 
 
 
@@ -53,7 +54,11 @@ function isOverflown(element: HTMLElement) {
   ]
 })
 export class DefaultLayoutComponent   {
-  public navItems = [...navItems];
+
+  private navService = inject(NavigationService);
+  get navItems() {
+    return this.navService.getNavItems();
+  }
 
 
 }

@@ -1,4 +1,33 @@
-﻿===== FILE: src\app\views\utilities\toast-container\toast-container.component.ts =====
+﻿===== FILE: src\app\views\utilities\toast-container\toast-container.component.scss =====
+
+
+===== FILE: src\app\views\utilities\toast-container\toast-container.component.spec.ts =====
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+
+import { ToastContainerComponent } from './toast-container.component';
+
+describe('ToastContainerComponent', () => {
+  let component: ToastContainerComponent;
+  let fixture: ComponentFixture<ToastContainerComponent>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [ToastContainerComponent]
+    })
+    .compileComponents();
+
+    fixture = TestBed.createComponent(ToastContainerComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+});
+
+
+===== FILE: src\app\views\utilities\toast-container\toast-container.component.ts =====
 // toast-container.component.ts
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -122,11 +151,15 @@ import { delay, filter, map, tap } from 'rxjs/operators';
 import { ColorModeService } from '@coreui/angular';
 import { IconSetService } from '@coreui/icons-angular';
 import { iconSubset } from './icons/icon-subset';
+import { ToastContainerComponent } from './views/utilities/toast-container/toast-container.component';
 
 @Component({
     selector: 'app-root',
-    template: '<router-outlet />',
-    imports: [RouterOutlet]
+    template: `
+    <app-toast-container></app-toast-container> 
+    <router-outlet />
+  `,
+    imports: [RouterOutlet , ToastContainerComponent]
 })
 export class AppComponent implements OnInit {
   title = 'CRM';
@@ -433,45 +466,5 @@ export const routes: Routes = [
     background-color: var(--#{$prefix}secondary-bg);
   }
 }
-
-
-===== FILE: src\scss\_fixes.scss =====
-// Place for temp fixes
-
-
-
-
-
-===== FILE: src\scss\_scrollbar.scss =====
-// scrollbar tinkering
-
-@supports (scrollbar-width: thin) {
-  * {
-    scrollbar-width: thin;
-    scrollbar-color: #444 transparent;
-  }
-}
-
-//::-webkit-scrollbar {
-//  width: .7em;
-//  height: .7em;
-//}
-
-::-webkit-scrollbar-track {
-  background: var(--cui-body-bg, #fff);
-  border-radius: 100vw;
-  margin-block: .2em;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #999;
-  border: .15em solid var(--cui-body-bg, #fff);
-  border-radius: 100vw;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #444;
-}
-
 
 

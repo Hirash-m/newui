@@ -137,7 +137,7 @@ export class DefaultHeaderComponent extends HeaderComponent {
   // ...
 
   logout(event: Event) {
-  event.preventDefault(); // جلوگیری از پرش صفحه
+  event.preventDefault(); 
   localStorage.removeItem('token');
   localStorage.removeItem('user');
   this.router.navigate(['/login']);
