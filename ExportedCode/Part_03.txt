@@ -1,52 +1,4 @@
-﻿===== FILE: src\app\layout\default-layout\default-header\default-header.component.spec.ts =====
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ReactiveFormsModule } from '@angular/forms';
-import { RouterTestingModule } from '@angular/router/testing';
-import {
-  AvatarModule,
-  BadgeModule,
-  BreadcrumbModule,
-  ButtonGroupModule,
-  DropdownModule,
-  GridModule,
-  HeaderModule,
-  NavModule,
-  ProgressModule,
-  SidebarModule
-} from '@coreui/angular';
-import { IconModule, IconSetService } from '@coreui/icons-angular';
-import { iconSubset } from '../../../icons/icon-subset';
-import { DefaultHeaderComponent } from './default-header.component';
-
-describe('DefaultHeaderComponent', () => {
-  let component: DefaultHeaderComponent;
-  let fixture: ComponentFixture<DefaultHeaderComponent>;
-  let iconSetService: IconSetService;
-
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-    imports: [GridModule, HeaderModule, IconModule, NavModule, BadgeModule, AvatarModule, DropdownModule, BreadcrumbModule, RouterTestingModule, SidebarModule, ProgressModule, ButtonGroupModule, ReactiveFormsModule, DefaultHeaderComponent],
-    providers: [IconSetService]
-})
-      .compileComponents();
-  });
-
-  beforeEach(() => {
-    iconSetService = TestBed.inject(IconSetService);
-    iconSetService.icons = { ...iconSubset };
-
-    fixture = TestBed.createComponent(DefaultHeaderComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
-
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
-});
-
-
-===== FILE: src\app\layout\default-layout\default-header\default-header.component.ts =====
+﻿===== FILE: src\app\layout\default-layout\default-header\default-header.component.ts =====
 import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, inject, input } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
@@ -366,6 +318,32 @@ export { NavigationService } from 'src/app/services/base/navigation/navigation.s
 export * from './default-layout';
 
 
+===== FILE: src\app\pipes\filter.pipe.spec.ts =====
+import { FilterPipe } from './filter.pipe';
+
+describe('FilterPipe', () => {
+  it('create an instance', () => {
+    const pipe = new FilterPipe();
+    expect(pipe).toBeTruthy();
+  });
+});
+
+
+===== FILE: src\app\pipes\filter.pipe.ts =====
+// src/app/pipes/filter.pipe.ts
+import { Pipe, PipeTransform } from '@angular/core';
+
+@Pipe({ name: 'filter', standalone: true })
+export class FilterPipe implements PipeTransform {
+  transform(items: any[], term: string, field: string): any[] {
+    if (!items || !term) return items;
+    const lower = term.toLowerCase();
+    return items.filter(item => 
+      (item[field] || '').toString().toLowerCase().includes(lower)
+    );
+  }
+}
+
 ===== FILE: src\app\services\auth\login\auth.guard.ts =====
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
@@ -466,6 +444,19 @@ login(username: string, password: string): Observable<any> {
       return throwError(() => error);
     })
   );
+}
+
+getUserId(): number {
+  const user = localStorage.getItem('user');
+  if (!user) return 0;
+
+  try {
+    const parsed = JSON.parse(user);
+    // Ù¾Ø´ØªÛŒØ¨Ø§Ù†ÛŒ Ø§Ø² Ø³Ø§Ø®ØªØ§Ø±Ù‡Ø§ÛŒ Ù…Ø®ØªÙ„Ù
+    return parsed.data?.userId || parsed.userId || parsed.id || 0;
+  } catch {
+    return 0;
+  }
 }
 
   private fetchPermissions(): void {

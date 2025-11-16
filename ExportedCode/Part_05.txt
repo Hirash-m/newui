@@ -1,4 +1,23 @@
-﻿===== FILE: src\app\services\utilities\toast.service.ts =====
+﻿===== FILE: src\app\services\utilities\toast.service.spec.ts =====
+import { TestBed } from '@angular/core/testing';
+
+import { ToastService } from './toast.service';
+
+describe('ToastService', () => {
+  let service: ToastService;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({});
+    service = TestBed.inject(ToastService);
+  });
+
+  it('should be created', () => {
+    expect(service).toBeTruthy();
+  });
+});
+
+
+===== FILE: src\app\services\utilities\toast.service.ts =====
 // src/app/services/utilities/toast.service.ts
 
 import { Injectable, signal } from '@angular/core';
@@ -417,55 +436,55 @@ export class LoginComponent {
 
   <!-- Ø®ÙˆØ¯ pagination -->
   <c-pagination aria-label="Page navigation example">
-    <li cPageItem *ngIf="_baseResponse.totalPages!!! > 3">
+    <li cPageItem *ngIf="_baseResponse.pageNumber! > 3">
       <button cPageLink aria-label="First" (click)="changePage(1)">
         <span aria-hidden="true">&laquo;</span>
       </button>
     </li>
 
-    <li cPageItem *ngIf="_baseResponse.totalPages!!! > 1">
-      <button cPageLink aria-label="Previous" (click)="changePage(_baseResponse.totalPages!!! - 1)">
+    <li cPageItem *ngIf="_baseResponse.pageNumber! > 1">
+      <button cPageLink aria-label="Previous" (click)="changePage(_baseResponse.pageNumber! - 1)">
         <span aria-hidden="true">&lt;</span>
       </button>
     </li>
 
-    <li cPageItem *ngIf="_baseResponse.totalPages!!! > 2">
-      <button cPageLink (click)="changePage(_baseResponse.totalPages!!! - 2)">
-        {{ _baseResponse.totalPages!!! - 2 }}
+    <li cPageItem *ngIf="_baseResponse.pageNumber! > 2">
+      <button cPageLink (click)="changePage(_baseResponse.pageNumber! - 2)">
+        {{ _baseResponse.pageNumber!- 2 }}
       </button>
     </li>
 
-    <li cPageItem *ngIf="_baseResponse.totalPages!!! > 1">
-      <button cPageLink (click)="changePage(_baseResponse.totalPages!!! - 1)">
-        {{ _baseResponse.totalPages!!! - 1 }}
+    <li cPageItem *ngIf="_baseResponse.pageNumber! > 1">
+      <button cPageLink (click)="changePage(_baseResponse.pageNumber! - 1)">
+        {{ _baseResponse.pageNumber! - 1 }}
       </button>
     </li>
 
     <li cPageItem>
       <button cPageLink class="active" disabled>
-        {{ _baseResponse.totalPages!!! }}
+        {{ _baseResponse.pageNumber }}
       </button>
     </li>
 
-    <li cPageItem *ngIf="_baseResponse.totalPages! > _baseResponse.totalPages!!!">
-      <button cPageLink (click)="changePage(_baseResponse.totalPages!!! + 1)">
-        {{ _baseResponse.totalPages!!! + 1 }}
+    <li cPageItem *ngIf="_baseResponse.totalPages! > _baseResponse.pageNumber!">
+      <button cPageLink (click)="changePage(_baseResponse.pageNumber! + 1)">
+        {{ _baseResponse.pageNumber! + 1 }}
       </button>
     </li>
 
-    <li cPageItem *ngIf="_baseResponse.totalPages! > _baseResponse.totalPages!!! + 1">
-      <button cPageLink (click)="changePage(_baseResponse.totalPages!!! + 2)">
-        {{ _baseResponse.totalPages!!! + 2 }}
+    <li cPageItem *ngIf="_baseResponse.totalPages! > _baseResponse.pageNumber! + 1">
+      <button cPageLink (click)="changePage(_baseResponse.pageNumber! + 2)">
+        {{ _baseResponse.pageNumber! + 2 }}
       </button>
     </li>
 
-    <li cPageItem *ngIf="_baseResponse.totalPages! > _baseResponse.totalPages!!!">
-      <button cPageLink aria-label="Next" (click)="changePage(_baseResponse.totalPages!!! + 1)">
+    <li cPageItem *ngIf="_baseResponse.totalPages! > _baseResponse.pageNumber!">
+      <button cPageLink aria-label="Next" (click)="changePage(_baseResponse.pageNumber! + 1)">
         <span aria-hidden="true">&gt;</span>
       </button>
     </li>
 
-    <li cPageItem *ngIf="_baseResponse.totalPages! > _baseResponse.totalPages!!! + 2">
+    <li cPageItem *ngIf="_baseResponse.totalPages! > _baseResponse.pageNumber! + 2">
       <button cPageLink aria-label="Last" (click)="changePage(_baseResponse.totalPages!)">
         <span aria-hidden="true">&raquo;</span>
       </button>
@@ -474,7 +493,7 @@ export class LoginComponent {
 
   <!-- Ø§Ø·Ù„Ø§Ø¹Ø§Øª Ø±Ú©ÙˆØ±Ø¯ -->
   <div class="text-muted">
-    <strong>{{_baseResponse.totalRecords}}</strong> Ø±Ú©ÙˆØ±Ø¯ Ø¯Ø± <strong>{{_baseResponse.totalPages!}}</strong> ØµÙØ­Ù‡
+    <strong>{{_baseResponse.totalRecords}}</strong> Ø±Ú©ÙˆØ±Ø¯ Ø¯Ø± <strong>{{_baseResponse.totalPages}}</strong> ØµÙØ­Ù‡
   </div>
 
 </div>
@@ -919,178 +938,118 @@ export const routes: Routes = [
 ];
 
 
-===== FILE: src\app\views\shop\count-type\count-type.component.html =====
+===== FILE: src\app\views\chat\chat\chat.component.html =====
+<!-- src/app/views/chat/chat/chat.component.html -->
+<c-row>
+    <c-col md="4">
+      <c-card class="h-100">
+        <c-card-header class="d-flex justify-content-between align-items-center">
+          <span>Ú†Øªâ€ŒÙ‡Ø§</span>
+          <div>
+            <c-badge color="danger" *ngIf="totalUnread > 0">{{ totalUnread }}</c-badge>
+            <button cButton color="primary" size="sm" class="ms-2" (click)="showUserList = !showUserList">
+              Ú†Øª Ø¬Ø¯ÛŒØ¯
+            </button>
+          </div>
+        </c-card-header>
+  
+        <!-- Ù„ÛŒØ³Øª Ú©Ø§Ø±Ø¨Ø±Ø§Ù† Ø¨Ø±Ø§ÛŒ Ú†Øª Ø¬Ø¯ÛŒØ¯ -->
+        <div *ngIf="showUserList" class="p-3 border-bottom bg-light">
+          <input 
+            type="text" 
+            class="form-control form-control-sm mb-2" 
+            placeholder="Ø¬Ø³ØªØ¬Ùˆ..." 
+            [(ngModel)]="searchTerm"
+          >
+          <div class="list-group list-group-flush" style="max-height: 200px; overflow-y: auto;">
+            <a 
+              *ngFor="let user of allUsers | filter:searchTerm:'name'" 
+              (click)="startNewChat(user)" 
+              class="list-group-item list-group-item-action py-2"
+              style="cursor: pointer;"
+            >
+              <strong>{{ user.name || user.username }}</strong>
+              <small class="text-muted d-block">{{ user.email }}</small>
+            </a>
+          </div>
+        </div>
+  
+        <!-- Ù„ÛŒØ³Øª Ú†Øªâ€ŒÙ‡Ø§ÛŒ Ù‚Ø¨Ù„ÛŒ -->
+        <ul class="list-group list-group-flush">
+          <li
+            *ngFor="let user of chatList"
+            (click)="selectUser(user)"
+            [class.active]="selectedUser?.userId === user.userId"
+            class="list-group-item d-flex justify-content-between align-items-center cursor-pointer"
+          >
+            <div class="d-flex align-items-center">
+              <c-icon 
+                [name]="user.isOnline ? 'cil-user-follow' : 'cil-user-unfollow'"
+                [class.text-success]="user.isOnline"
+                [class.text-secondary]="!user.isOnline"
+              ></c-icon>
+              <span class="mx-2">{{ user.userName }}</span>
+            </div>
+            <c-badge color="danger" *ngIf="user.unreadCount > 0">{{ user.unreadCount }}</c-badge>
+          </li>
+        </ul>
+      </c-card>
+    </c-col>
+  
+    <c-col md="8">
+      <c-card class="h-100 d-flex flex-column" *ngIf="selectedUser; else noChat">
+        <c-card-header>
+          <strong>{{ selectedUser.userName }}</strong>
+          <small class="text-muted d-block">
+            {{ selectedUser.isOnline ? 'Ø¢Ù†Ù„Ø§ÛŒÙ†' : 'Ø¢Ø®Ø±ÛŒÙ† Ø¨Ø§Ø²Ø¯ÛŒØ¯: ' + (selectedUser.lastSeen | date:'short') }}
+          </small>
+        </c-card-header>
+  
+        <c-card-body #chatBody class="flex-grow-1 overflow-auto p-3">
+          <div *ngFor="let msg of messages" class="mb-3" [class.text-end]="msg.isMine">
+            <div [class]="msg.isMine ? 'd-inline-block bg-primary text-white p-2 rounded' : 'd-inline-block bg-light p-2 rounded'">
+              <p class="mb-1">{{ msg.content }}</p>
+              <img *ngIf="msg.type === 'Image'" [src]="msg.fileUrl" class="img-fluid rounded" style="max-width: 200px;">
+              <a *ngIf="msg.type === 'File'" [href]="msg.fileUrl" download class="text-decoration-underline">
+                Ø¯Ø§Ù†Ù„ÙˆØ¯ ÙØ§ÛŒÙ„
+              </a>
+              <small class="d-block opacity-75">
+                {{ msg.sentAt | date:'short' }}
+                <span *ngIf="msg.seenAt"> (Ø®ÙˆØ§Ù†Ø¯Ù‡â€ŒØ´Ø¯Ù‡)</span>
+              </small>
+            </div>
+          </div>
+        </c-card-body>
+  
+        <c-card-footer>
+          <div class="d-flex align-items-center gap-2">
+            <input 
+              type="text" 
+              [(ngModel)]="newMessage" 
+              placeholder="Ù¾ÛŒØ§Ù…..." 
+              class="form-control" 
+              (keydown.enter)="sendMessage()"
+            >
+            <input 
+              type="file" 
+              (change)="onFileSelected($event)" 
+              class="form-control" 
+              style="width: auto;"
+            >
+            <button cButton color="primary" (click)="sendMessage()">Ø§Ø±Ø³Ø§Ù„</button>
+          </div>
+        </c-card-footer>
+      </c-card>
+  
+      <ng-template #noChat>
+        <div class="text-center text-muted mt-5 p-5">
+          <h5>Ú©Ø§Ø±Ø¨Ø±ÛŒ Ø§Ù†ØªØ®Ø§Ø¨ Ú©Ù†ÛŒØ¯</h5>
+          <p class="text-muted">Ø¨Ø±Ø§ÛŒ Ø´Ø±ÙˆØ¹ Ú†ØªØŒ Ø±ÙˆÛŒ "Ú†Øª Ø¬Ø¯ÛŒØ¯" Ú©Ù„ÛŒÚ© Ú©Ù†ÛŒØ¯</p>
+        </div>
+      </ng-template>
+    </c-col>
+  </c-row>
 
-
-<!-- Ø¯Ú©Ù…Ù‡â€ŒÛŒ Ø¨Ø§Ø² Ú©Ø±Ø¯Ù† ÙØ±Ù… Ù¾Ø§Ù¾â€ŒØ¢Ù¾ -->
-<button cButton color="primary" (click)="showModal = true">âž• Ø§ÛŒØ¬Ø§Ø¯ </button>
-<button
-  cButton
-  color="danger"
-  [disabled]="selectedIds.length === 0"
-  (click)="showDeleteConfirm = true"
->
-ðŸ—‘ Ø­Ø°Ù Ø§Ù†ØªØ®Ø§Ø¨â€ŒØ´Ø¯Ù‡â€ŒÙ‡Ø§ ({{ selectedIds.length }})
-</button>
-
-
-<!-- Table -->
-
-<table cTable>
-  <thead>
-    <tr>
-      <th>Ø§Ù†ØªØ®Ø§Ø¨</th>
-      <th>Ø´Ù†Ø§Ø³Ù‡</th>
-      <th>Ù†Ø§Ù…</th>
-      <th>Ø¹Ù…Ù„ÛŒØ§Øª</th>
-    </tr>
-  </thead>
-  <tbody>
-     <tr *ngFor="let row of _objectsView">
-      <th> <input type="checkbox" [checked]="isSelected(row.id)" (change)="toggleSelection(row.id)" /> </th>
-      <th>{{row.id}}</th>
-      <th>{{row.name}}</th>
-         <td>
-          <button class="btn btn-sm btn-warning me-1"    (click)="onEdit(row.id)" > âœ ÙˆÛŒØ±Ø§ÛŒØ´</button>
-        </td>
-    </tr>
-  </tbody>
-</table>
-
-
-
-<!--nodata banner -->
-
-<div *ngIf="_objectsView.length === 0" class="alert alert-info text-center">
-  â• Ù‡ÛŒÚ† Ø¯Ø§Ø¯Ù‡â€ŒØ§ÛŒ ÛŒØ§ÙØª Ù†Ø´Ø¯.
-</div>
-
-
-
-<div class="d-flex justify-content-between align-items-center mt-3">
-
-  <!-- Ø®ÙˆØ¯ pagination -->
-  <c-pagination aria-label="Page navigation example">
-    <li cPageItem *ngIf="_baseResponse.pageNumber! > 3">
-      <button cPageLink aria-label="First" (click)="changePage(1)">
-        <span aria-hidden="true">&laquo;</span>
-      </button>
-    </li>
-
-    <li cPageItem *ngIf="_baseResponse.pageNumber! > 1">
-      <button cPageLink aria-label="Previous" (click)="changePage(_baseResponse.pageNumber! - 1)">
-        <span aria-hidden="true">&lt;</span>
-      </button>
-    </li>
-
-    <li cPageItem *ngIf="_baseResponse.pageNumber! > 2">
-      <button cPageLink (click)="changePage(_baseResponse.pageNumber! - 2)">
-        {{ _baseResponse.pageNumber! - 2 }}
-      </button>
-    </li>
-
-    <li cPageItem *ngIf="_baseResponse.pageNumber! > 1">
-      <button cPageLink (click)="changePage(_baseResponse.pageNumber! - 1)">
-        {{ _baseResponse.pageNumber! - 1 }}
-      </button>
-    </li>
-
-    <li cPageItem>
-      <button cPageLink class="active" disabled>
-        {{ _baseResponse.pageNumber! }}
-      </button>
-    </li>
-
-    <li cPageItem *ngIf="_baseResponse.totalPages! > _baseResponse.pageNumber!">
-      <button cPageLink (click)="changePage(_baseResponse.pageNumber! + 1)">
-        {{ _baseResponse.pageNumber! + 1 }}
-      </button>
-    </li>
-
-    <li cPageItem *ngIf="_baseResponse.totalPages! > _baseResponse.pageNumber! + 1">
-      <button cPageLink (click)="changePage(_baseResponse.pageNumber! + 2)">
-        {{ _baseResponse.pageNumber! + 2 }}
-      </button>
-    </li>
-
-    <li cPageItem *ngIf="_baseResponse.totalPages! > _baseResponse.pageNumber!">
-      <button cPageLink aria-label="Next" (click)="changePage(_baseResponse.pageNumber! + 1)">
-        <span aria-hidden="true">&gt;</span>
-      </button>
-    </li>
-
-    <li cPageItem *ngIf="_baseResponse.totalPages! > _baseResponse.pageNumber! + 2">
-      <button cPageLink aria-label="Last" (click)="changePage(_baseResponse.totalPages!)">
-        <span aria-hidden="true">&raquo;</span>
-      </button>
-    </li>
-  </c-pagination>
-
-  <!-- Ø§Ø·Ù„Ø§Ø¹Ø§Øª Ø±Ú©ÙˆØ±Ø¯ -->
-  <div class="text-muted">
-    <strong>{{_baseResponse.totalRecords}}</strong> Ø±Ú©ÙˆØ±Ø¯ Ø¯Ø± <strong>{{_baseResponse.totalPages!}}</strong> ØµÙØ­Ù‡
-  </div>
-
-</div>
-
-
-
-
-
-
-<!-- Ù…ÙˆØ¯Ø§Ù„ ÙØ±Ù… Ø§ÙØ²ÙˆØ¯Ù† Ù…Ø­ØµÙˆÙ„ -->
-<c-modal [(visible)]="showModal" size="lg" backdrop="static">
-  <c-modal-header>
-    <h5 class="modal-title">{{ editMode ? 'ÙˆÛŒØ±Ø§ÛŒØ´ ' : 'Ø§ÙØ²ÙˆØ¯Ù†' }}</h5>
-    <button type="button" class="btn-close" aria-label="Close" (click)="showModal = false"></button>
-  </c-modal-header>
-
-  <c-modal-body>
-    <!-- ÙØ±Ù… Ø¯Ø§Ø®Ù„ Ù…ÙˆØ¯Ø§Ù„ -->
-    <form [formGroup]="ObjectForm"  (ngSubmit)="onSubmit1()" class="needs-validation" novalidate cForm cRow>
-
-      <!-- Ù†Ø§Ù… -->
-      <c-col [md]="6">
-        <label cLabel for="name">Ù†Ø§Ù… </label>
-        <input cFormControl id="name" name="name" type="text" required formControlName="name" />
-        <c-form-feedback [valid]="false">Ù†Ø§Ù… Ø±Ø§ ÙˆØ§Ø±Ø¯ Ú©Ù†ÛŒØ¯.</c-form-feedback>
-      </c-col>
-
-
-
-
-
-
-
-    </form>
-  </c-modal-body>
-
-  <c-modal-footer>
-    <!-- Ø¯Ú©Ù…Ù‡â€ŒÙ‡Ø§ÛŒ Ø§Ø±Ø³Ø§Ù„ Ùˆ Ø¨Ø³ØªÙ† -->
-    <button cButton color="secondary" (click)="showModal = false">Ø¨Ø³ØªÙ†</button>
-    <button cButton color="primary" type="submit" (click)="onSubmit1()"  [disabled]="!ObjectForm.valid "  >Ø°Ø®ÛŒØ±Ù‡</button>
-  </c-modal-footer>
-</c-modal>
-
-
-
-<c-modal [(visible)]="showDeleteConfirm" col="6" backdrop="static">
-  <c-modal-header>
-    <h5 class="modal-title">â— ØªØ£ÛŒÛŒØ¯ Ø­Ø°Ù</h5>
-    <button type="button" class="btn-close" (click)="showDeleteConfirm = false" aria-label="Close"></button>
-  </c-modal-header>
-
-  <c-modal-body>
-    <p>Ø¢ÛŒØ§ Ù…Ø·Ù…Ø¦Ù† Ù‡Ø³ØªÛŒØ¯ Ú©Ù‡ Ù…ÛŒâ€ŒØ®ÙˆØ§Ù‡ÛŒØ¯ <strong>{{ selectedIds.length }}</strong> Ù…Ø­ØµÙˆÙ„ Ø§Ù†ØªØ®Ø§Ø¨â€ŒØ´Ø¯Ù‡ Ø±Ø§ Ø­Ø°Ù Ú©Ù†ÛŒØ¯ØŸ</p>
-  </c-modal-body>
-
-  <c-modal-footer>
-    <button cButton color="secondary" (click)="showDeleteConfirm = false">Ø§Ù†ØµØ±Ø§Ù</button>
-    <button cButton color="danger" (click)="deleteSelectedRecords()">ØªØ£ÛŒÛŒØ¯ Ø­Ø°Ù</button>
-  </c-modal-footer>
-</c-modal>
-
-
-===== FILE: src\app\views\shop\count-type\count-type.component.scss =====
+===== FILE: src\app\views\chat\chat\chat.component.scss =====
 
 

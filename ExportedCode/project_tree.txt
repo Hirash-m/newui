@@ -14,6 +14,8 @@ src
 |   +-- dto
 |   |   +-- base
 |   |   |   +-- UserDto.ts
+|   |   +-- chat
+|   |   |   +-- MessageDto.ts
 |   |   +-- shop
 |   |   |   +-- CountTypeDto.ts
 |   |   |   +-- InventoryDto.ts
@@ -44,6 +46,9 @@ src
 |   |   |   +-- index.ts
 |   |   |   +-- _nav.ts
 |   |   +-- index.ts
+|   +-- pipes
+|   |   +-- filter.pipe.spec.ts
+|   |   +-- filter.pipe.ts
 |   +-- services
 |   |   +-- auth
 |   |   |   +-- login
@@ -56,6 +61,8 @@ src
 |   |   |   +-- userManage
 |   |   |   |   +-- user-manage.service.spec.ts
 |   |   |   |   +-- user-manage.service.ts
+|   |   |   +-- chat.service.spec.ts
+|   |   |   +-- chat.service.ts
 |   |   |   +-- countType
 |   |   |   |   +-- count-type.service.spec.ts
 |   |   |   |   +-- count-type.service.ts
@@ -83,6 +90,11 @@ src
 |   |   |   |   |   +-- user.component.spec.ts
 |   |   |   |   |   +-- user.component.ts
 |   |   |   +-- routes.ts
+|   |   |   +-- chat
+|   |   |   |   +-- chat.component.html
+|   |   |   |   +-- chat.component.scss
+|   |   |   |   +-- chat.component.spec.ts
+|   |   |   |   +-- chat.component.ts
 |   |   |   +-- count-type
 |   |   |   |   +-- count-type.component.html
 |   |   |   |   +-- count-type.component.scss

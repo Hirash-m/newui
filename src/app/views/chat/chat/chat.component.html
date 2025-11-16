@@ -1,0 +1,110 @@
+<!-- src/app/views/chat/chat/chat.component.html -->
+<c-row>
+    <c-col md="4">
+      <c-card class="h-100">
+        <c-card-header class="d-flex justify-content-between align-items-center">
+          <span>چت‌ها</span>
+          <div>
+            <c-badge color="danger" *ngIf="totalUnread > 0">{{ totalUnread }}</c-badge>
+            <button cButton color="primary" size="sm" class="ms-2" (click)="showUserList = !showUserList">
+              چت جدید
+            </button>
+          </div>
+        </c-card-header>
+  
+        <!-- لیست کاربران برای چت جدید -->
+        <div *ngIf="showUserList" class="p-3 border-bottom bg-light">
+          <input 
+            type="text" 
+            class="form-control form-control-sm mb-2" 
+            placeholder="جستجو..." 
+            [(ngModel)]="searchTerm"
+          >
+          <div class="list-group list-group-flush" style="max-height: 200px; overflow-y: auto;">
+            <a 
+              *ngFor="let user of allUsers | filter:searchTerm:'name'" 
+              (click)="startNewChat(user)" 
+              class="list-group-item list-group-item-action py-2"
+              style="cursor: pointer;"
+            >
+              <strong>{{ user.name || user.username }}</strong>
+              <small class="text-muted d-block">{{ user.email }}</small>
+            </a>
+          </div>
+        </div>
+  
+        <!-- لیست چت‌های قبلی -->
+        <ul class="list-group list-group-flush">
+          <li
+            *ngFor="let user of chatList"
+            (click)="selectUser(user)"
+            [class.active]="selectedUser?.userId === user.userId"
+            class="list-group-item d-flex justify-content-between align-items-center cursor-pointer"
+          >
+            <div class="d-flex align-items-center">
+              <c-icon 
+                [name]="user.isOnline ? 'cil-user-follow' : 'cil-user-unfollow'"
+                [class.text-success]="user.isOnline"
+                [class.text-secondary]="!user.isOnline"
+              ></c-icon>
+              <span class="mx-2">{{ user.userName }}</span>
+            </div>
+            <c-badge color="danger" *ngIf="user.unreadCount > 0">{{ user.unreadCount }}</c-badge>
+          </li>
+        </ul>
+      </c-card>
+    </c-col>
+  
+    <c-col md="8">
+      <c-card class="h-100 d-flex flex-column" *ngIf="selectedUser; else noChat">
+        <c-card-header>
+          <strong>{{ selectedUser.userName }}</strong>
+          <small class="text-muted d-block">
+            {{ selectedUser.isOnline ? 'آنلاین' : 'آخرین بازدید: ' + (selectedUser.lastSeen | date:'short') }}
+          </small>
+        </c-card-header>
+  
+        <c-card-body #chatBody class="flex-grow-1 overflow-auto p-3">
+          <div *ngFor="let msg of messages" class="mb-3" [class.text-end]="msg.isMine">
+            <div [class]="msg.isMine ? 'd-inline-block bg-primary text-white p-2 rounded' : 'd-inline-block bg-light p-2 rounded'">
+              <p class="mb-1">{{ msg.content }}</p>
+              <img *ngIf="msg.type === 'Image'" [src]="msg.fileUrl" class="img-fluid rounded" style="max-width: 200px;">
+              <a *ngIf="msg.type === 'File'" [href]="msg.fileUrl" download class="text-decoration-underline">
+                دانلود فایل
+              </a>
+              <small class="d-block opacity-75">
+                {{ msg.sentAt | date:'short' }}
+                <span *ngIf="msg.seenAt"> (خوانده‌شده)</span>
+              </small>
+            </div>
+          </div>
+        </c-card-body>
+  
+        <c-card-footer>
+          <div class="d-flex align-items-center gap-2">
+            <input 
+              type="text" 
+              [(ngModel)]="newMessage" 
+              placeholder="پیام..." 
+              class="form-control" 
+              (keydown.enter)="sendMessage()"
+            >
+            <input 
+              type="file" 
+              (change)="onFileSelected($event)" 
+              class="form-control" 
+              style="width: auto;"
+            >
+            <button cButton color="primary" (click)="sendMessage()">ارسال</button>
+          </div>
+        </c-card-footer>
+      </c-card>
+  
+      <ng-template #noChat>
+        <div class="text-center text-muted mt-5 p-5">
+          <h5>کاربری انتخاب کنید</h5>
+          <p class="text-muted">برای شروع چت، روی "چت جدید" کلیک کنید</p>
+        </div>
+      </ng-template>
+    </c-col>
+  </c-row>

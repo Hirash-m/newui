@@ -35,7 +35,13 @@ export const routes: Routes = [
       {
         path: 'template',
         loadChildren: () => import('./views/template/routes').then((m) => m.routes)
+      },
+      {
+        path: 'chat',
+        loadComponent: () => import('./views/chat/chat/chat.component').then(m => m.ChatComponent),
+        data: { title: 'چت' }
       }
+
     ]
   } ,
     // 👇 مسیر لاگین جدا باشه بدون گارد

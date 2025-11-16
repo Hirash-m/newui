@@ -1,4 +1,278 @@
-﻿===== FILE: src\app\views\utilities\toast-container\toast-container.component.scss =====
+﻿===== FILE: src\app\views\shop\product\product.component.ts =====
+// ---------------------------
+// Import Dependencies
+// ---------------------------
+import { CommonModule } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+
+// CoreUI components & directives
+import {
+  ButtonDirective, ColComponent,
+  FormDirective, FormFeedbackComponent, FormLabelDirective, ModalModule,
+  PageItemDirective, PageLinkDirective,
+  PaginationComponent, RowDirective, TableDirective,
+  AccordionButtonDirective, AccordionComponent, AccordionItemComponent, TemplateIdDirective
+} from '@coreui/angular';
+
+// DTOs & Services
+import { ApiResult, createApiResult } from 'src/app/dto/api-result'; // ØªØºÛŒÛŒØ± Ø§Ø² baseResponse
+import { ListRequest } from 'src/app/dto/ListRequestDto';
+import { ProductCreateDto, ProductViewDto } from 'src/app/dto/shop/ProductDto';
+import { ProductService } from 'src/app/services/shop/product/product.service';
+import { ToastService } from 'src/app/services/utilities/toast.service';
+
+@Component({
+  selector: 'app-product',
+  templateUrl: './product.component.html',
+  styleUrl: './product.component.scss',
+  imports: [
+    CommonModule, TableDirective, PaginationComponent, PageItemDirective, PageLinkDirective,
+    ButtonDirective, ColComponent, FormDirective, FormFeedbackComponent,
+    FormLabelDirective, RowDirective, FormsModule, ReactiveFormsModule, ModalModule,
+    AccordionComponent, AccordionItemComponent, TemplateIdDirective, AccordionButtonDirective
+  ],
+  standalone: true
+})
+export class ProductComponent implements OnInit {
+
+  // Ø¯Ø±Ø®ÙˆØ§Ø³Øª Ù„ÛŒØ³Øª
+  _request = new ListRequest();
+  _productsView: ProductViewDto[] = [];
+  _baseResponse: ApiResult<ProductViewDto[]> = createApiResult<ProductViewDto[]>();
+
+  // ÙØ±Ù…
+  showModal = false;
+  productForm!: FormGroup;
+
+  // ÙˆÛŒØ±Ø§ÛŒØ´
+  editMode = false;
+  editingProductId: number | null = null;
+
+  // Ø­Ø°Ù Ú¯Ø±ÙˆÙ‡ÛŒ
+  selectedProductIds: number[] = [];
+  showDeleteConfirm = false;
+
+  // Ø¬Ø³ØªØ¬Ùˆ
+  searchData = {
+    pageNumber: 1,
+    pageSize: 3,
+    sortBy: 'Id',
+    sortDirection: true,
+    name: '',
+    minPrice: 0,
+    maxPrice: 0
+  };
+
+  constructor(
+    private fb: FormBuilder,
+    private productService: ProductService,
+    private toastService: ToastService
+  ) {}
+
+  ngOnInit(): void {
+    this.initForm();
+    this.loadProducts();
+  }
+
+  // ---------------------------
+  // ÙØ±Ù…
+  // ---------------------------
+  initForm() {
+    this.productForm = this.fb.group({
+      id: [null],
+      name: ['', Validators.required],
+      productCode: ['', Validators.required],
+      price: [0, [Validators.required, Validators.min(0)]],
+      countTypeId: [0, Validators.required],
+    });
+  }
+
+// Ø¨Ø§Ø±Ú¯Ø°Ø§Ø±ÛŒ Ù„ÛŒØ³Øª
+loadProducts(): void {
+  this._request.pageSize = 5;
+  this.productService.getRecords(this._request).subscribe({
+    next: (res: ApiResult<ProductViewDto[]>) => {
+      if (res.isSucceeded) {
+        this._baseResponse = res;
+        this._productsView = res.data || [];
+      } else {
+        this.toastService.error(res.message || 'Ø®Ø·Ø§ Ø¯Ø± Ø¨Ø§Ø±Ú¯Ø°Ø§Ø±ÛŒ Ù…Ø­ØµÙˆÙ„Ø§Øª');
+      }
+    },
+    error: (error) => {
+      console.error('Ø®Ø·Ø§ Ø¯Ø± Ø¯Ø±ÛŒØ§ÙØª Ù„ÛŒØ³Øª Ù…Ø­ØµÙˆÙ„Ø§Øª:', error);
+      this.toastService.error('Ø®Ø·Ø§ Ø¯Ø± Ø§Ø±ØªØ¨Ø§Ø· Ø¨Ø§ Ø³Ø±ÙˆØ±');
+    }
+  });
+}
+
+  // ---------------------------
+  // Ø§ÛŒØ¬Ø§Ø¯ / ÙˆÛŒØ±Ø§ÛŒØ´
+  // ---------------------------
+  onSubmit1() {
+    if (this.productForm.valid) {
+      const productData: ProductCreateDto = this.productForm.value;
+
+      if (this.editMode && this.editingProductId != null) {
+        this.productService.updateRecord(productData).subscribe((res: ApiResult<any>) => {
+          if (res.isSucceeded) {
+            this.afterSubmit();
+            this.toastService.success('Ù…Ø­ØµÙˆÙ„ Ø¨Ø§ Ù…ÙˆÙÙ‚ÛŒØª ÙˆÛŒØ±Ø§ÛŒØ´ Ø´Ø¯');
+          } else {
+            this.toastService.error(res.message || 'Ø®Ø·Ø§ Ø¯Ø± ÙˆÛŒØ±Ø§ÛŒØ´');
+          }
+        });
+      } else {
+        this.productService.insertRecord(productData).subscribe((res: ApiResult<any>) => {
+          if (res.isSucceeded) {
+            this.afterSubmit();
+            this.toastService.success('Ù…Ø­ØµÙˆÙ„ Ø¨Ø§ Ù…ÙˆÙÙ‚ÛŒØª Ø§ÛŒØ¬Ø§Ø¯ Ø´Ø¯');
+          } else {
+            this.toastService.error(res.message || 'Ø®Ø·Ø§ Ø¯Ø± Ø§ÛŒØ¬Ø§Ø¯');
+          }
+        });
+      }
+    }
+  }
+
+  afterSubmit() {
+    this.loadProducts();
+    this.showModal = false;
+    this.productForm.reset();
+    this.editMode = false;
+    this.editingProductId = null;
+  }
+
+  // ---------------------------
+  // ÙˆÛŒØ±Ø§ÛŒØ´
+  // ---------------------------
+  onEdit(productId: number) {
+    this.editMode = true;
+    this.editingProductId = productId;
+
+    this.productService.getRecordById(productId).subscribe((res: ApiResult<ProductCreateDto>) => {
+      if (res.isSucceeded && res.data) {
+        const product = res.data;
+        this.productForm.patchValue({
+          id: product.id,
+          name: product.name,
+          productCode: product.productCode,
+          price: product.price,
+          countTypeId: product.countTypeId
+        });
+        this.showModal = true;
+      } else {
+        this.toastService.error('Ù…Ø­ØµÙˆÙ„ Ù¾ÛŒØ¯Ø§ Ù†Ø´Ø¯ ÛŒØ§ Ø®Ø·Ø§ Ø¯Ø± Ø¯Ø±ÛŒØ§ÙØª Ø§Ø·Ù„Ø§Ø¹Ø§Øª!');
+      }
+    });
+  }
+
+  // ---------------------------
+  // ØµÙØ­Ù‡â€ŒØ¨Ù†Ø¯ÛŒ
+  // ---------------------------
+  changePage(pageNumber: number) {
+    this._request.pageNumber = pageNumber;
+    this.loadProducts();
+  }
+
+  // ---------------------------
+  // Ø­Ø°Ù Ú¯Ø±ÙˆÙ‡ÛŒ
+  // ---------------------------
+  isSelected(productId: number): boolean {
+    return this.selectedProductIds.includes(productId);
+  }
+
+  toggleSelection(productId: number): void {
+    const index = this.selectedProductIds.indexOf(productId);
+    if (index > -1) {
+      this.selectedProductIds.splice(index, 1);
+    } else {
+      this.selectedProductIds.push(productId);
+    }
+  }
+
+  deleteSelectedProducts(): void {
+    this.productService.deleteRecords(this.selectedProductIds).subscribe((res: ApiResult<any>) => {
+      if (res.isSucceeded) {
+        this.afterSubmit();
+        this.selectedProductIds = [];
+        this.toastService.success('Ù…Ø­ØµÙˆÙ„Ø§Øª Ø§Ù†ØªØ®Ø§Ø¨â€ŒØ´Ø¯Ù‡ Ø­Ø°Ù Ø´Ø¯Ù†Ø¯');
+      } else {
+        this.toastService.error(res.message || 'Ø®Ø·Ø§ Ø¯Ø± Ø­Ø°Ù Ú¯Ø±ÙˆÙ‡ÛŒ');
+      }
+      this.showDeleteConfirm = false;
+    });
+  }
+
+  // ---------------------------
+  // Ø¬Ø³ØªØ¬Ùˆ
+  // ---------------------------
+  onSearch() {
+    this.productService.searchProducts(this.searchData).subscribe(
+      (result: ApiResult<ProductViewDto[]>) => {
+        if (result.isSucceeded) {
+          this._baseResponse = result;
+          this._productsView = result.data || [];
+          console.log('Ù†ØªØ§ÛŒØ¬ Ø¬Ø³ØªØ¬Ùˆ:', this._productsView);
+        } else {
+          this.toastService.error(result.message || 'Ø®Ø·Ø§ Ø¯Ø± Ø¬Ø³ØªØ¬Ùˆ');
+        }
+      },
+      (error) => {
+        console.error('Ø®Ø·Ø§ Ø¯Ø± Ø¬Ø³ØªØ¬Ùˆ', error);
+        this.toastService.error('Ø®Ø·Ø§ÛŒ Ø§Ø±ØªØ¨Ø§Ø· Ø¨Ø§ Ø³Ø±ÙˆØ±');
+      }
+    );
+  }
+}
+
+===== FILE: src\app\views\shop\routes.ts =====
+import { Routes } from '@angular/router';
+
+export const routes: Routes = [
+  {
+    path: '',
+    data: {
+      title: 'shop'
+    },
+    children: [
+      {
+        path: '',
+        redirectTo: 'coreui-icons',
+        pathMatch: 'full'
+      },
+      {
+        path: 'product',
+        loadComponent: () => import('./product/product.component').then(m => m.ProductComponent),
+        data: {
+          title: 'Ù„ÛŒØ³Øª Ù…Ø­ØµÙˆÙ„Ø§Øª '
+        }
+      },
+      {
+        path: 'countType',
+        loadComponent: () => import('./count-type/count-type.component').then(m => m.CountTypeComponent),
+        data: {
+          title: ' ÙˆØ§Ø­Ø¯ Ø´Ù…Ø§Ø±Ø´ '
+        }
+      },
+      {
+        path: 'inventory',
+        loadComponent: () => import('./inventory/inventory.component').then(m => m.InventoryComponent),
+        data: {
+          title: ' Ø§Ù†Ø¨Ø§Ø±'
+        }
+      }
+    ]
+  }
+];
+
+
+===== FILE: src\app\views\utilities\toast-container\toast-container.component.html =====
+<p>toast-container works!</p>
+
+
+===== FILE: src\app\views\utilities\toast-container\toast-container.component.scss =====
 
 
 ===== FILE: src\app\views\utilities\toast-container\toast-container.component.spec.ts =====
@@ -283,7 +557,13 @@ export const routes: Routes = [
       {
         path: 'template',
         loadChildren: () => import('./views/template/routes').then((m) => m.routes)
+      },
+      {
+        path: 'chat',
+        loadComponent: () => import('./views/chat/chat/chat.component').then(m => m.ChatComponent),
+        data: { title: 'Ú†Øª' }
       }
+
     ]
   } ,
     // ðŸ‘‡ Ù…Ø³ÛŒØ± Ù„Ø§Ú¯ÛŒÙ† Ø¬Ø¯Ø§ Ø¨Ø§Ø´Ù‡ Ø¨Ø¯ÙˆÙ† Ú¯Ø§Ø±Ø¯
@@ -327,144 +607,6 @@ export const routes: Routes = [
   padding-bottom: 0 !important;
   padding-top: 0 !important;
   font-size: smaller;
-}
-
-
-===== FILE: src\scss\_custom.scss =====
-// Here you can add other styles
-
-// custom .chartjs-tooltip-body-item padding
-@use "charts";
-
-// custom tweaks for scrollbar styling (wip)
-@use "scrollbar";
-
- // custom calendar today cell color
-.calendar-cell.today {
-  --cui-calendar-cell-today-color: var(--cui-info) !important;
-}
-
-// custom select week cursor pointer
-.select-week .calendar-row.current {
-  cursor: pointer;
-}
-
-
-===== FILE: src\scss\_examples.scss =====
-@use "@coreui/coreui/scss/variables" as *;
-@use "@coreui/coreui/scss/mixins/breakpoints" as *;
-@use "@coreui/coreui/scss/mixins/color-mode" as *;
-
-.example {
-  &:not(:first-child) {
-    margin-top: 1.5rem;
-  }
-
-  .tab-content {
-    background-color: var(--#{$prefix}tertiary-bg);
-  }
-
-  & + p {
-    margin-top: 1.5rem;
-  }
-
-  // Components examples
-  .preview {
-    + p {
-      margin-top: 2rem;
-    }
-
-    > .form-control {
-      + .form-control {
-        margin-top: .5rem;
-      }
-    }
-
-    > .nav + .nav,
-    > .alert + .alert,
-    > .navbar + .navbar,
-    > .progress + .progress {
-      margin-top: 1rem;
-    }
-
-    > .dropdown-menu {
-      position: static;
-      display: block;
-    }
-
-    > :last-child {
-      margin-bottom: 0;
-    }
-
-    // Images
-    > svg + svg,
-    > img + img {
-      margin-left: .5rem;
-    }
-
-    // Buttons
-    .col > .btn,
-    .col-auto > .btn,
-    .d-md-block > .btn,
-    > .btn,
-    > .btn-group {
-      margin: .25rem .125rem;
-    }
-
-    > .btn-toolbar + .btn-toolbar {
-      margin-top: .5rem;
-    }
-
-    // List groups
-    > .list-group {
-      max-width: 400px;
-    }
-
-    > [class*="list-group-horizontal"] {
-      max-width: 100%;
-    }
-
-    // Navbars
-    .fixed-top,
-    .sticky-top {
-      position: static;
-      margin: -1rem -1rem 1rem;
-    }
-
-    .fixed-bottom {
-      position: static;
-      margin: 1rem -1rem -1rem;
-    }
-
-    @include media-breakpoint-up(sm) {
-      .fixed-top,
-      .sticky-top {
-        margin: -1.5rem -1.5rem 1rem;
-      }
-      .fixed-bottom {
-        margin: 1rem -1.5rem -1.5rem;
-      }
-    }
-
-    // Pagination
-    .pagination {
-      margin-top: .5rem;
-      margin-bottom: .5rem;
-    }
-
-    .docs-example-modal {
-      .modal {
-        position: static;
-        display: block;
-      }
-    }
-  }
-}
-
-@include color-mode(dark) {
-  .example .tab-content {
-    background-color: var(--#{$prefix}secondary-bg);
-  }
 }
 
 

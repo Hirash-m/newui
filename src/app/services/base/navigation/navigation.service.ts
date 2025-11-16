@@ -30,6 +30,14 @@ export class NavigationService {
       }
     ].filter(item => item.visible !== false);
 
+    const chatItem = {
+      name: 'چت',
+      url: '/chat',
+      badge: { color: 'info', text: 'NEW' },
+      iconComponent: { name: 'cil-comment-square' },
+      //visible: hasPermission('Chat.Access') // اگر مجوز داره
+    };
+
     const shopChildren: INavData[] = [
       {
         name: 'محصولات',
@@ -51,7 +59,8 @@ export class NavigationService {
         badge: { color: 'info', text: 'NEW' },
         iconComponent: { name: 'cil-storage' },
         visible: hasPermission('Inventory.View')
-      }
+      },
+      
     ].filter(item => item.visible !== false);
 
     const templateChildren: INavData[] = [

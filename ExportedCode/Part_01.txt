@@ -468,6 +468,39 @@ export interface PermissionDto {
 }
 
 
+===== FILE: src\app\dto\chat\MessageDto.ts =====
+// src/app/dto/chat/MessageDto.ts
+export interface MessageDto {
+    id: number;
+    senderId: number;
+    receiverId: number;
+    content: string;
+    fileUrl?: string;
+    type: 'Text' | 'Image' | 'File';
+    sentAt: Date;
+    deliveredAt?: Date;
+    seenAt?: Date;
+    isMine?: boolean; // Ø¨Ø±Ø§ÛŒ UI
+    senderName?: string; // Ø¨Ø±Ø§ÛŒ UI
+  }
+  
+  export interface SendMessageDto {
+    receiverId: number;
+    content: string;
+    file?: File;
+    type: 'Text' | 'Image' | 'File';
+  }
+  
+  export interface ChatListItem {
+    userId: number;
+    userName: string;
+    lastMessage?: string;
+    lastMessageTime?: Date;
+    unreadCount: number;
+    isOnline: boolean;
+    lastSeen?: Date;
+  }
+
 ===== FILE: src\app\dto\shop\CountTypeDto.ts =====
 export class CountTypeDto {
   id!: number;
@@ -525,4 +558,19 @@ export const createApiResult = <T>(): ApiResult<T> => ({
   isSucceeded: false,
   data: undefined,
 });
+
+export const ApiResult = {
+  Success: <T>(data: T, message?: string): ApiResult<T> => ({
+    isSucceeded: true,
+    data,
+    message,
+    statusCode: 200
+  }),
+  Failed: (message: string = 'Ø®Ø·Ø§', errors?: string[]): ApiResult<any> => ({
+    isSucceeded: false,
+    message,
+    errors,
+    statusCode: 400
+  })
+};
 

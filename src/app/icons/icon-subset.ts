@@ -92,10 +92,10 @@ import {
   cilUnderline,
   cilUser,
   cilUserFemale,
-  cilUserFollow,
-  cilUserUnfollow,
   cilCart ,
-  cibCodesandbox
+  cibCodesandbox,
+  cilUserUnfollow,
+  cilUserFollow
 } from '@coreui/icons';
 
 import { signet } from './signet';

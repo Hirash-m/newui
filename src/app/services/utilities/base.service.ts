@@ -37,6 +37,19 @@ export abstract class BaseService<TViewDto, TCreateDto = TViewDto> {
       .pipe(catchError(err => this.handleError(err)));
   }
 
+
+
+    // لیست: همیشه TViewDto[]
+    getRecordList(): Observable<ApiResult<TViewDto[]>> {
+      return this.http
+        .get<ApiResult<TViewDto[]>>(
+          `${this.apiUrl}${this.endpoint}/GetList`,
+          
+          { headers: this.getJsonHeaders() }
+        )
+        .pipe(catchError(err => this.handleError(err)));
+    }
+  
   // ایجاد
   insertRecord(data: TCreateDto): Observable<ApiResult<TCreateDto>> {
     return this.http

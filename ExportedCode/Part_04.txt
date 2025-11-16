@@ -31,6 +31,14 @@ export class NavigationService {
       }
     ].filter(item => item.visible !== false);
 
+    const chatItem = {
+      name: 'Ú†Øª',
+      url: '/chat',
+      badge: { color: 'info', text: 'NEW' },
+      iconComponent: { name: 'cil-comment-square' },
+      //visible: hasPermission('Chat.Access') // Ø§Ú¯Ø± Ù…Ø¬ÙˆØ² Ø¯Ø§Ø±Ù‡
+    };
+
     const shopChildren: INavData[] = [
       {
         name: 'Ù…Ø­ØµÙˆÙ„Ø§Øª',
@@ -52,7 +60,8 @@ export class NavigationService {
         badge: { color: 'info', text: 'NEW' },
         iconComponent: { name: 'cil-storage' },
         visible: hasPermission('Inventory.View')
-      }
+      },
+      
     ].filter(item => item.visible !== false);
 
     const templateChildren: INavData[] = [
@@ -256,6 +265,9 @@ export class UserManageService extends BaseService<UserDto, UserDto> {
     );
   }
 
+
+
+ 
   // === Override updateRecord Ø¨Ø§ FormData ===
   override updateRecord(data: UserDto): Observable<ApiResult<any>> {
     const formData = this.buildFormData(data);
@@ -295,6 +307,120 @@ export class UserManageService extends BaseService<UserDto, UserDto> {
     return formData;
   }
 }
+
+===== FILE: src\app\services\chat\chat.service.spec.ts =====
+import { TestBed } from '@angular/core/testing';
+
+import { ChatService } from './chat.service';
+
+describe('ChatService', () => {
+  let service: ChatService;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({});
+    service = TestBed.inject(ChatService);
+  });
+
+  it('should be created', () => {
+    expect(service).toBeTruthy();
+  });
+});
+
+
+===== FILE: src\app\services\chat\chat.service.ts =====
+// src/app/services/chat/chat.service.ts
+import { Injectable } from '@angular/core';
+import { HubConnection, HubConnectionBuilder, LogLevel } from '@microsoft/signalr';
+import { BehaviorSubject, Observable } from 'rxjs';
+import { MessageDto, ChatListItem, SendMessageDto } from 'src/app/dto/chat/MessageDto';
+import { ListRequest } from 'src/app/dto/ListRequestDto';
+import { ApiResult } from 'src/app/dto/api-result';
+import { HttpClient } from '@angular/common/http';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class ChatService {
+  private readonly baseUrl = 'http://localhost:90';
+  private readonly hubUrl = `${this.baseUrl}/chatHub`;
+
+  private hubConnection!: HubConnection;
+  private messageReceived = new BehaviorSubject<MessageDto | null>(null);
+
+  constructor(private http: HttpClient) {}
+
+  // ---------------- SignalR ----------------
+  public async connect(): Promise<void> {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      console.error('ØªÙˆÚ©Ù† ÙˆØ¬ÙˆØ¯ Ù†Ø¯Ø§Ø±Ø¯. Ù„Ø·ÙØ§Ù‹ Ù„Ø§Ú¯ÛŒÙ† Ú©Ù†ÛŒØ¯.');
+      return;
+    }
+
+    this.hubConnection = new HubConnectionBuilder()
+      .withUrl(this.hubUrl, {
+        accessTokenFactory: () => token
+      })
+      .withAutomaticReconnect([0, 2000, 10000])
+      .configureLogging(LogLevel.Information)
+      .build();
+
+    this.hubConnection.on('ReceiveMessage', (message: MessageDto) => {
+      console.log('Ù¾ÛŒØ§Ù… Ø¯Ø±ÛŒØ§ÙØª Ø´Ø¯:', message);
+      this.messageReceived.next(message);
+    });
+
+    try {
+      await this.hubConnection.start();
+      console.log('Ø§ØªØµØ§Ù„ SignalR Ø¨Ø±Ù‚Ø±Ø§Ø± Ø´Ø¯');
+    } catch (err) {
+      console.error('Ø®Ø·Ø§ Ø¯Ø± Ø§ØªØµØ§Ù„ SignalR:', err);
+    }
+  }
+
+  public disconnect(): void {
+    this.hubConnection?.stop().then(() => console.log('Ø§ØªØµØ§Ù„ SignalR Ù‚Ø·Ø¹ Ø´Ø¯'));
+  }
+
+  public getMessageReceived(): Observable<MessageDto | null> {
+    return this.messageReceived.asObservable();
+  }
+
+  public openChat(userId: number): void {
+    this.hubConnection?.invoke('OpenChat', userId)
+      .catch(err => console.error('OpenChat error:', err));
+  }
+
+  // ---------------- API ----------------
+  // ØªÙ…Ø§Ù… API Ù‡Ø§ Ø§Ø² Interceptor Ø§Ø³ØªÙØ§Ø¯Ù‡ Ù…ÛŒâ€ŒÚ©Ù†Ù†Ø¯
+  getChatList(): Observable<ApiResult<ChatListItem[]>> {
+    return this.http.get<ApiResult<ChatListItem[]>>(`${this.baseUrl}/api/chat/list`);
+  }
+
+  getTotalUnreadCount(): Observable<ApiResult<number>> {
+    return this.http.get<ApiResult<number>>(`${this.baseUrl}/api/chat/unread-count`);
+  }
+
+  getChatHistory(userId: number, request: ListRequest): Observable<ApiResult<MessageDto[]>> {
+    return this.http.post<ApiResult<MessageDto[]>>(`${this.baseUrl}/api/chat/history/${userId}`, request);
+  }
+
+  sendMessage(dto: SendMessageDto): Observable<ApiResult<MessageDto>> {
+    const formData = new FormData();
+    formData.append('receiverId', dto.receiverId.toString());
+    formData.append('content', dto.content || '');
+    formData.append('type', dto.type);
+    if (dto.file) formData.append('file', dto.file);
+
+    // Ù‡ÛŒÚ† Ù‡Ø¯Ø± Content-Type Ø¯Ø³ØªÛŒ Ø§Ø¶Ø§ÙÙ‡ Ù†Ù…ÛŒâ€ŒÚ©Ù†ÛŒÙ…ØŒ Ù…Ø±ÙˆØ±Ú¯Ø± Ø®ÙˆØ¯Ø´ Ø³Øª Ù…ÛŒâ€ŒÚ©Ù†Ù‡
+    return this.http.post<ApiResult<MessageDto>>(`${this.baseUrl}/api/chat/send`, formData);
+  }
+
+  markAsRead(userId: number): Observable<any> {
+    return this.http.post(`${this.baseUrl}/api/chat/mark-as-read/${userId}`, {});
+  }
+}
+
 
 ===== FILE: src\app\services\shop\countType\count-type.service.spec.ts =====
 import { TestBed } from '@angular/core/testing';
@@ -495,6 +621,19 @@ export abstract class BaseService<TViewDto, TCreateDto = TViewDto> {
       .pipe(catchError(err => this.handleError(err)));
   }
 
+
+
+    // Ù„ÛŒØ³Øª: Ù‡Ù…ÛŒØ´Ù‡ TViewDto[]
+    getRecordList(): Observable<ApiResult<TViewDto[]>> {
+      return this.http
+        .get<ApiResult<TViewDto[]>>(
+          `${this.apiUrl}${this.endpoint}/GetList`,
+          
+          { headers: this.getJsonHeaders() }
+        )
+        .pipe(catchError(err => this.handleError(err)));
+    }
+  
   // Ø§ÛŒØ¬Ø§Ø¯
   insertRecord(data: TCreateDto): Observable<ApiResult<TCreateDto>> {
     return this.http
@@ -569,23 +708,4 @@ export abstract class BaseService<TViewDto, TCreateDto = TViewDto> {
     }
   }
 }
-
-===== FILE: src\app\services\utilities\toast.service.spec.ts =====
-import { TestBed } from '@angular/core/testing';
-
-import { ToastService } from './toast.service';
-
-describe('ToastService', () => {
-  let service: ToastService;
-
-  beforeEach(() => {
-    TestBed.configureTestingModule({});
-    service = TestBed.inject(ToastService);
-  });
-
-  it('should be created', () => {
-    expect(service).toBeTruthy();
-  });
-});
-
 

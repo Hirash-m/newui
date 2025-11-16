@@ -15,3 +15,18 @@ export const createApiResult = <T>(): ApiResult<T> => ({
   isSucceeded: false,
   data: undefined,
 });
+
+export const ApiResult = {
+  Success: <T>(data: T, message?: string): ApiResult<T> => ({
+    isSucceeded: true,
+    data,
+    message,
+    statusCode: 200
+  }),
+  Failed: (message: string = 'خطا', errors?: string[]): ApiResult<any> => ({
+    isSucceeded: false,
+    message,
+    errors,
+    statusCode: 400
+  })
+};

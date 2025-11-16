@@ -3,5 +3,10 @@
       "target": "http://localhost:90",
       "secure": false,
       "changeOrigin": true
-    }
+    },
+    "/chatHub": {
+    "target": "http://localhost:90",
+    "secure": false,
+    "ws": true 
+  }
   }

@@ -60,6 +60,25 @@ login(username: string, password: string): Observable<any> {
   );
 }
 
+getUserId(): number {
+  const userStr = localStorage.getItem('user');
+  if (!userStr) {
+    console.warn('No user in localStorage');
+    return 0;
+  }
+
+  try {
+    const user = JSON.parse(userStr);
+    console.log('Parsed user:', user); // برای دیباگ
+
+    // ترتیب مهم است: اول user.userId، بعد data
+    return user.userId || user.data?.userId || user.id || 0;
+  } catch (e) {
+    console.error('Failed to parse user:', e);
+    return 0;
+  }
+}
+
   private fetchPermissions(): void {
     this.http.get<ApiResult<string[]>>(`/api/user/permissions`).pipe(
       catchError(() => {
