@@ -574,39 +574,17 @@ export const routes: Routes = [
 ];
 
 
-===== FILE: src\scss\styles.scss =====
-/* You can add global styles to this file, and also import other style files */
+===== FILE: src\environments\environment.prod.ts =====
+// src/environments/environment.prod.ts
+export const environment = {
+    production: true,
+    apiUrl: ''   // Ø¯Ø± Ù¾Ø±ÙˆØ¯Ø§Ú©Ø´Ù† Ù…Ø¹Ù…ÙˆÙ„Ø§Ù‹ Ø®Ø§Ù„ÛŒ Ù…ÛŒâ€ŒØ°Ø§Ø±ÛŒÙ… Ú†ÙˆÙ† Ø§Ø² Ù‡Ù…ÙˆÙ† Ø¯Ø§Ù…Ù†Ù‡ Ø³Ø±Ùˆ Ù…ÛŒâ€ŒØ´Ù‡
+  };
 
-// Import styles with default layout.
-@use "@coreui/coreui/scss/coreui" as * with (
-  $enable-deprecation-messages: false
-);
-
-// Import Chart.js custom tooltips styles
-@use "@coreui/chartjs/scss/coreui-chartjs";
-
-// Custom styles for this theme
-@use "theme";
-
-// Some temp fixes
-//@use "fixes";
-
-// If you want to add custom CSS you can put it here.
-@use "custom";
-
-// Examples
-// We use those styles to show code examples, you should remove them in your application.
-@use "examples";
-
-
-
-===== FILE: src\scss\_charts.scss =====
-// custom .chartjs-tooltip-body-item
-
-.chartjs-tooltip-body-item > td {
-  padding-bottom: 0 !important;
-  padding-top: 0 !important;
-  font-size: smaller;
-}
-
+===== FILE: src\environments\environment.ts =====
+// src/environments/environment.ts
+export const environment = {
+    production: false,
+    apiUrl: 'http://localhost:90'   // ÛŒØ§ Ù‡Ø± Ù¾ÙˆØ±ØªÛŒ Ú©Ù‡ Ø¨Ú©â€ŒØ§Ù†Ø¯Øª Ø¯Ø§Ø±Ù‡ (Ù…Ø¹Ù…ÙˆÙ„Ø§Ù‹ 90 ÛŒØ§ 5000)
+  };
 

@@ -1,41 +1,19 @@
 // src/app/views/chat/chat/chat.component.ts
-import { Component, OnDestroy, OnInit, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
+import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
 import { ChatService } from 'src/app/services/chat/chat.service';
-import { ToastService } from 'src/app/services/utilities/toast.service';
-import { MessageDto, ChatListItem, SendMessageDto } from 'src/app/dto/chat/MessageDto';
-import { ListRequest } from 'src/app/dto/ListRequestDto';
-import { ApiResult } from 'src/app/dto/api-result';
 import { AuthService } from 'src/app/services/auth/login/auth.service';
-import { RouterModule } from '@angular/router';
+import { ToastService } from 'src/app/services/utilities/toast.service';
+import { ChatListItem, MessageDto } from 'src/app/dto/chat/MessageDto';
+import { Subscription } from 'rxjs';
 
-// --- CoreUI Components ---
 import {
-  CardComponent,
-  CardHeaderComponent,
-  CardBodyComponent,
-  CardFooterComponent,
-  BadgeComponent,
-  ColComponent,
-  RowComponent,
-  ButtonDirective
+  CardComponent, CardHeaderComponent, CardBodyComponent,
+  CardFooterComponent, ColComponent, RowComponent,
+  BadgeComponent, ButtonDirective
 } from '@coreui/angular';
-
-// --- IconComponent ---
-import { IconComponent } from '@coreui/icons-angular';
-import { IconSetService } from '@coreui/icons-angular';
-import { iconSubset } from 'src/app/icons/icon-subset';
-
-// --- Filter Pipe ---
-import { FilterPipe } from 'src/app/pipes/filter.pipe';
-import { UserManageService } from 'src/app/services/base/userManage/user-manage.service';
-
-interface UserDto {
-  id: number;
-  fullname: string;
-}
 
 @Component({
   selector: 'app-chat',
@@ -43,176 +21,188 @@ interface UserDto {
   imports: [
     CommonModule,
     FormsModule,
-    RouterModule,
-    FilterPipe,
+    DatePipe,
 
+    RowComponent,
+    ColComponent,
     CardComponent,
     CardHeaderComponent,
     CardBodyComponent,
     CardFooterComponent,
     BadgeComponent,
-    ColComponent,
-    RowComponent,
-    ButtonDirective,
-    IconComponent
+    ButtonDirective
   ],
-  providers: [IconSetService],
   templateUrl: './chat.component.html',
-  styleUrls: ['./chat.component.scss']
+  styleUrl: './chat.component.scss'
 })
-export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
-  @ViewChild('chatBody') private chatBody?: ElementRef;
+export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
+  @ViewChild('chatBody') chatBody!: ElementRef<HTMLDivElement>;
 
-  chatList: ChatListItem[] = [];
-  allUsers: UserDto[] = [];
-  selectedUser?: ChatListItem;
   messages: MessageDto[] = [];
-  newMessage = '';
-  selectedFile?: File;
-  currentUserId = 0;
-  pagination = new ListRequest({ pageNumber: 1, pageSize: 50 });
-  totalUnread = 0;
-  private shouldScroll = true;
-  showUserList = false;
-  searchTerm = '';
+  chatList: ChatListItem[] = [];
+  selectedUser: ChatListItem | null = null;
+  newMessage: string = '';
+  selectedFile: File | null = null;
+  messageType: 'Text' | 'Image' | 'File' = 'Text';
+  searchText: string = '';
+  currentUserId = this.auth.getUserId();
 
-  private messageSub: any;
+  private subscriptions = new Subscription();
 
   constructor(
     private chatService: ChatService,
-    private toast: ToastService,
     private auth: AuthService,
-    private http: HttpClient,
-    public iconSet: IconSetService,
-    public userService: UserManageService
-  ) {
-    this.currentUserId = this.auth.getUserId();
-    this.iconSet.icons = { ...iconSubset };
-  }
-
+    private toast: ToastService
+  ) {}
 
   ngOnInit(): void {
-    this.chatService.connect();
     this.loadChatList();
-    this.loadTotalUnread();
-    this.loadAllUsers();
 
-    this.messageSub = this.chatService.getMessageReceived().subscribe(msg => {
-      if (!msg) return; // اگر null بود، نادیده بگیر
-    
-      msg.isMine = msg.senderId === this.currentUserId;
-      msg.senderName = msg.isMine ? 'شما' : this.selectedUser?.userName;
-    
-      if (this.selectedUser && 
-          (msg.senderId === this.selectedUser.userId || msg.receiverId === this.selectedUser.userId)) {
-        this.messages.push(msg);
-        this.shouldScroll = true;
-      } else {
-        this.loadChatList();
-      }
-    });
+    // دریافت پیام جدید از SignalR
+    this.subscriptions.add(
+      this.chatService.messageReceived.subscribe((msg: MessageDto) => {
+        const isCurrentChat = this.selectedUser &&
+          (msg.senderId === this.selectedUser.userId || msg.receiverId === this.selectedUser.userId);
+
+        if (isCurrentChat) {
+          this.messages.push({ ...msg, isMine: msg.senderId === this.currentUserId });
+          this.scrollToBottom();
+        }
+
+        // آپدیت unread و lastMessage در لیست
+        this.updateChatListOnNewMessage(msg);
+      })
+    );
   }
 
   ngAfterViewChecked(): void {
-    if (this.shouldScroll && this.chatBody) {
-      this.scrollToBottom();
-      this.shouldScroll = false;
-    }
+    this.scrollToBottom();
   }
 
   ngOnDestroy(): void {
-    this.messageSub?.unsubscribe();
-    this.chatService.disconnect();
-  }
-
-  private scrollToBottom(): void {
-    try {
-      this.chatBody!.nativeElement.scrollTop = this.chatBody!.nativeElement.scrollHeight;
-    } catch {}
+    this.subscriptions.unsubscribe();
   }
 
   loadChatList() {
-    this.chatService.getChatList().subscribe((res: ApiResult<ChatListItem[]>) => {
-      if (res.isSucceeded) this.chatList = res.data || [];
-    });
-  }
-
-  loadTotalUnread() {
-    this.chatService.getTotalUnreadCount().subscribe((res: ApiResult<number>) => {
-      if (res.isSucceeded) this.totalUnread = res.data || 0;
-    });
-  }
-
-  loadAllUsers() {
-    return this.userService.getRecordList()
-  ;
-  }
-
-  selectUser(user: ChatListItem) {
-    this.selectedUser = user;
-    this.messages = [];
-    this.loadMessages();
-    this.chatService.openChat(user.userId);
-    this.chatService.markAsRead(user.userId).subscribe();
-    this.loadTotalUnread();
-    this.shouldScroll = true;
-  }
-
-  startNewChat(user: UserDto) {
-    const existing = this.chatList.find(c => c.userId === user.id);
-    if (existing) {
-      this.selectUser(existing);
-    } else {
-      const newChat: ChatListItem = {
-        userId: user.id,
-        userName: user.fullname,
-        lastMessage: '',
-        lastMessageTime: new Date(),
-        unreadCount: 0,
-        isOnline: false,
-        lastSeen: new Date()
-      };
-      this.chatList.unshift(newChat);
-      this.selectUser(newChat);
-    }
-    this.showUserList = false;
-    this.searchTerm = '';
-  }
-
-  loadMessages() {
-    if (!this.selectedUser) return;
-    this.chatService.getChatHistory(this.selectedUser.userId, this.pagination).subscribe((res: ApiResult<MessageDto[]>) => {
-      if (res.isSucceeded) {
-        this.messages = (res.data || []).map(m => ({
-          ...m,
-          isMine: m.senderId === this.currentUserId
+    this.chatService.getChatList().subscribe(res => {
+      if (res.isSucceeded && res.data) {
+        this.chatList = res.data.map(item => ({
+          ...item,
+          lastMessage: item.lastMessage || 'بدون پیام',
+          lastMessageTime: item.lastMessageTime ? new Date(item.lastMessageTime) : undefined
         }));
-        this.shouldScroll = true;
       }
     });
   }
 
-  sendMessage() {
-    if (!this.selectedUser || (!this.newMessage.trim() && !this.selectedFile)) return;
+  selectChat(user: ChatListItem) {
+    if (this.selectedUser?.userId === user.userId) return;
 
-    const dto: SendMessageDto = {
-      receiverId: this.selectedUser.userId,
-      content: this.newMessage,
-      file: this.selectedFile,
-      type: this.selectedFile ? (this.selectedFile.type.startsWith('image') ? 'Image' : 'File') : 'Text'
-    };
+    this.selectedUser = user;
+    this.messages = [];
+    this.loadMessages(user.userId);
 
-    this.chatService.sendMessage(dto).subscribe((res: ApiResult<MessageDto>) => {
+    // مارک به عنوان خوانده شده
+    if (user.unreadCount > 0) {
+      this.chatService.markAsRead(user.userId).subscribe(() => {
+        user.unreadCount = 0;
+      });
+    }
+  }
+
+  private loadMessages(otherUserId: number) {
+    this.chatService.getChatHistory(otherUserId).subscribe(res => {
       if (res.isSucceeded && res.data) {
-        this.messages.push({ ...res.data, isMine: true });
-        this.newMessage = '';
-        this.selectedFile = undefined;
-        this.shouldScroll = true;
+        this.messages = res.data.map(m => ({
+          ...m,
+          isMine: m.senderId === this.currentUserId,
+          sentAt: new Date(m.sentAt)
+        })).reverse();
+
+        this.scrollToBottom();
       }
     });
   }
 
   onFileSelected(event: any) {
-    this.selectedFile = event.target.files[0];
+    const file: File = event.target.files[0];
+    if (!file) return;
+
+    this.selectedFile = file;
+    this.messageType = file.type.startsWith('image/') ? 'Image' : 'File';
+  }
+
+  sendMessage() {
+    if (!this.selectedUser) {
+      this.toast.error('کاربر انتخاب نشده');
+      return;
+    }
+  
+    if (!this.newMessage.trim() && !this.selectedFile) return;
+  
+    // ساخت FormData
+    const formData = new FormData();
+    formData.append('ReceiverId', this.selectedUser.userId.toString());
+    if (this.newMessage.trim()) formData.append('Content', this.newMessage);
+    if (this.selectedFile) formData.append('File', this.selectedFile, this.selectedFile.name);
+    formData.append('Type', this.messageType);
+  
+    // این خط رو تغییر بده: به جای SendMessageDto، مستقیم formData بفرست
+    this.chatService.sendMessage(formData).subscribe({
+      next: () => {
+        this.newMessage = '';
+        this.selectedFile = null;
+        this.messageType = 'Text';
+        const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+        if (fileInput) fileInput.value = '';
+        // پیام از طریق SignalR خودش اضافه می‌شه
+      },
+      error: (err) => {
+        console.error('Send message error:', err);
+        this.toast.error('خطا در ارسال پیام');
+      }
+    });
+  }
+
+  onKeydown(event: KeyboardEvent) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      this.sendMessage();
+    }
+  }
+
+  private scrollToBottom() {
+    if (this.chatBody) {
+      setTimeout(() => {
+        this.chatBody.nativeElement.scrollTop = this.chatBody.nativeElement.scrollHeight;
+      }, 100);
+    }
+  }
+
+  private updateChatListOnNewMessage(msg: MessageDto) {
+    if (msg.receiverId === this.currentUserId) {
+      const existing = this.chatList.find(c => c.userId === msg.senderId);
+      if (existing) {
+        existing.unreadCount++;
+        existing.lastMessage = msg.content || (msg.type === 'Image' ? 'تصویر' : 'فایل');
+        existing.lastMessageTime = new Date(msg.sentAt);
+
+        // ببر بالا
+        this.chatList = this.chatList.filter(c => c.userId !== msg.senderId);
+        this.chatList.unshift(existing);
+      } else {
+        // کاربر جدید → لیست رو رفرش کن
+        this.loadChatList();
+      }
+    }
+  }
+
+  // جستجو در لیست چت
+  get filteredChatList() {
+    if (!this.searchText.trim()) return this.chatList;
+
+    return this.chatList.filter(user =>
+      user.fullName.toLowerCase().includes(this.searchText.toLowerCase())
+    );
   }
 }

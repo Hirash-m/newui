@@ -330,97 +330,150 @@ describe('ChatService', () => {
 ===== FILE: src\app\services\chat\chat.service.ts =====
 // src/app/services/chat/chat.service.ts
 import { Injectable } from '@angular/core';
-import { HubConnection, HubConnectionBuilder, LogLevel } from '@microsoft/signalr';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { MessageDto, ChatListItem, SendMessageDto } from 'src/app/dto/chat/MessageDto';
-import { ListRequest } from 'src/app/dto/ListRequestDto';
-import { ApiResult } from 'src/app/dto/api-result';
 import { HttpClient } from '@angular/common/http';
+import { HubConnection, HubConnectionBuilder, HubConnectionState } from '@microsoft/signalr';
+import { BehaviorSubject, Observable, from } from 'rxjs';
+import { ApiResult } from '../../dto/api-result';
+import { MessageDto, ChatListItem, SendMessageDto } from '../../dto/chat/MessageDto';
+import { AuthService } from '../auth/login/auth.service';
+import { ToastService } from '../utilities/toast.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ChatService {
-  private readonly baseUrl = 'http://localhost:90';
-  private readonly hubUrl = `${this.baseUrl}/chatHub`;
-
   private hubConnection!: HubConnection;
-  private messageReceived = new BehaviorSubject<MessageDto | null>(null);
+  public messages$ = new BehaviorSubject<MessageDto[]>([]);
+  public chatList$ = new BehaviorSubject<ChatListItem[]>([]);
 
-  constructor(private http: HttpClient) {}
+  private currentUserId = this.authService.getUserId();
 
-  // ---------------- SignalR ----------------
-  public async connect(): Promise<void> {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      console.error('ØªÙˆÚ©Ù† ÙˆØ¬ÙˆØ¯ Ù†Ø¯Ø§Ø±Ø¯. Ù„Ø·ÙØ§Ù‹ Ù„Ø§Ú¯ÛŒÙ† Ú©Ù†ÛŒØ¯.');
-      return;
-    }
+  constructor(
+    private http: HttpClient,
+    private authService: AuthService,
+    private toast: ToastService
+  ) {
+    this.startConnection();
+  }
+
+  private startConnection(): void {
+    const token = this.authService.getToken();
 
     this.hubConnection = new HubConnectionBuilder()
-      .withUrl(this.hubUrl, {
-        accessTokenFactory: () => token
+      .withUrl('/chatHub', {  // Ø¨Ø§ proxy Ú©Ø§Ø± Ù…ÛŒâ€ŒÚ©Ù†Ù‡
+        accessTokenFactory: () => token || ''
       })
-      .withAutomaticReconnect([0, 2000, 10000])
-      .configureLogging(LogLevel.Information)
+      .withAutomaticReconnect()
       .build();
 
+    this.hubConnection.start()
+      .then(() => console.log('SignalR Connected'))
+      .catch(err => console.error('SignalR Connection Error:', err));
+
+    // Ø¯Ø±ÛŒØ§ÙØª Ù¾ÛŒØ§Ù… Ø¬Ø¯ÛŒØ¯
     this.hubConnection.on('ReceiveMessage', (message: MessageDto) => {
-      console.log('Ù¾ÛŒØ§Ù… Ø¯Ø±ÛŒØ§ÙØª Ø´Ø¯:', message);
-      this.messageReceived.next(message);
+      message.isMine = message.senderId === this.currentUserId;
+      this.messages$.next([...this.messages$.value, message]);
+      this.updateChatListOnNewMessage(message);
+      this.scrollToBottom.next(true);
     });
 
-    try {
-      await this.hubConnection.start();
-      console.log('Ø§ØªØµØ§Ù„ SignalR Ø¨Ø±Ù‚Ø±Ø§Ø± Ø´Ø¯');
-    } catch (err) {
-      console.error('Ø®Ø·Ø§ Ø¯Ø± Ø§ØªØµØ§Ù„ SignalR:', err);
+    this.hubConnection.on('UserStatusChanged', (userId: number, isOnline: boolean) => {
+      const list = this.chatList$.value;
+      const user = list.find(u => u.userId === userId);
+      if (user) {
+        user.isOnline = isOnline;
+        this.chatList$.next([...list]);
+      }
+    });
+  }
+
+  // Ø¨Ø±ÙˆØ²Ø±Ø³Ø§Ù†ÛŒ unread
+  private updateChatListOnNewMessage(message: MessageDto): void {
+    if (message.receiverId !== this.currentUserId) return;
+
+    const list = this.chatList$.value;
+    const user = list.find(u => u.userId === message.senderId);
+    if (user) {
+      user.lastMessage = message.type === 'Text' ? message.content : (message.type === 'Image' ? 'ØªØµÙˆÛŒØ±' : 'ÙØ§ÛŒÙ„');
+      user.lastMessageTime = message.sentAt;
+      if (this.selectedUserId !== message.senderId) {
+        user.unreadCount++;
+      }
+      this.chatList$.next([...list]);
     }
   }
 
-  public disconnect(): void {
-    this.hubConnection?.stop().then(() => console.log('Ø§ØªØµØ§Ù„ SignalR Ù‚Ø·Ø¹ Ø´Ø¯'));
+  private selectedUserId: number | null = null;
+
+  // 1. Ù„ÛŒØ³Øª Ú†Øª
+  public loadChatList(): void {
+    this.http.get<any>('/api/Chat/list').subscribe({
+      next: (res) => {
+        if (res.success && Array.isArray(res.data)) {
+          const list: ChatListItem[] = res.data.map((item: any) => ({
+            userId: item.userId,
+            fullName: item.userName || 'Ú©Ø§Ø±Ø¨Ø± Ù†Ø§Ø´Ù†Ø§Ø³',
+            lastMessage: item.lastMessage || 'Ø¨Ø¯ÙˆÙ† Ù¾ÛŒØ§Ù…',
+            lastMessageTime: item.lastMessageTime ? new Date(item.lastMessageTime) : undefined,
+            unreadCount: item.unreadCount || 0,
+            isOnline: item.isOnline || false,
+            lastSeen: item.lastSeen ? new Date(item.lastSeen) : null
+          }));
+          this.chatList$.next(list);
+          console.log('Chat list loaded:', list); // Ø¨Ø±Ø§ÛŒ Ø¯ÛŒØ¨Ø§Ú¯
+        }
+      },
+      error: (err) => {
+        console.error('Failed to load chat list:', err);
+        this.toast.error('Ø®Ø·Ø§ Ø¯Ø± Ø¨Ø§Ø±Ú¯Ø°Ø§Ø±ÛŒ Ù„ÛŒØ³Øª Ú†Øª');
+      }
+    });
   }
 
-  public getMessageReceived(): Observable<MessageDto | null> {
-    return this.messageReceived.asObservable();
+  // 2. ØªØ§Ø±ÛŒØ®Ú†Ù‡ Ú†Øª
+  public loadChatHistory(userId: number): void {
+    this.selectedUserId = userId;
+    this.http.get<ApiResult<MessageDto[]>>(`/api/Chat/history/${userId}`).subscribe(res => {
+      if (res.isSucceeded && res.data) {
+        const messages = res.data.map(m => ({
+          ...m,
+          isMine: m.senderId === this.currentUserId
+        }));
+        this.messages$.next(messages.reverse());
+        this.markAsRead(userId);
+        this.scrollToBottom.next(true);
+      }
+    });
   }
 
-  public openChat(userId: number): void {
-    this.hubConnection?.invoke('OpenChat', userId)
-      .catch(err => console.error('OpenChat error:', err));
-  }
+  // 3. Ø§Ø±Ø³Ø§Ù„ Ù¾ÛŒØ§Ù…
+  public sendMessage(dto: SendMessageDto): Observable<any> {
+    if (this.hubConnection.state === HubConnectionState.Connected) {
+      return from(this.hubConnection.invoke('SendMessage', dto));
+    }
 
-  // ---------------- API ----------------
-  // ØªÙ…Ø§Ù… API Ù‡Ø§ Ø§Ø² Interceptor Ø§Ø³ØªÙØ§Ø¯Ù‡ Ù…ÛŒâ€ŒÚ©Ù†Ù†Ø¯
-  getChatList(): Observable<ApiResult<ChatListItem[]>> {
-    return this.http.get<ApiResult<ChatListItem[]>>(`${this.baseUrl}/api/chat/list`);
-  }
-
-  getTotalUnreadCount(): Observable<ApiResult<number>> {
-    return this.http.get<ApiResult<number>>(`${this.baseUrl}/api/chat/unread-count`);
-  }
-
-  getChatHistory(userId: number, request: ListRequest): Observable<ApiResult<MessageDto[]>> {
-    return this.http.post<ApiResult<MessageDto[]>>(`${this.baseUrl}/api/chat/history/${userId}`, request);
-  }
-
-  sendMessage(dto: SendMessageDto): Observable<ApiResult<MessageDto>> {
     const formData = new FormData();
     formData.append('receiverId', dto.receiverId.toString());
-    formData.append('content', dto.content || '');
+    if (dto.content) formData.append('content', dto.content);
+    if (dto.file) formData.append('file', dto.file, dto.file.name);
     formData.append('type', dto.type);
-    if (dto.file) formData.append('file', dto.file);
 
-    // Ù‡ÛŒÚ† Ù‡Ø¯Ø± Content-Type Ø¯Ø³ØªÛŒ Ø§Ø¶Ø§ÙÙ‡ Ù†Ù…ÛŒâ€ŒÚ©Ù†ÛŒÙ…ØŒ Ù…Ø±ÙˆØ±Ú¯Ø± Ø®ÙˆØ¯Ø´ Ø³Øª Ù…ÛŒâ€ŒÚ©Ù†Ù‡
-    return this.http.post<ApiResult<MessageDto>>(`${this.baseUrl}/api/chat/send`, formData);
+    return this.http.post('/api/Chat/send', formData);
   }
 
-  markAsRead(userId: number): Observable<any> {
-    return this.http.post(`${this.baseUrl}/api/chat/mark-as-read/${userId}`, {});
+  // 4. Ø®ÙˆØ§Ù†Ø¯Ù‡ Ø´Ø¯Ù‡
+  public markAsRead(userId: number): void {
+    this.http.post(`/api/Chat/mark-as-read/${userId}`, {}).subscribe();
+    // Ø¢Ù¾Ø¯ÛŒØª Ù…Ø­Ù„ÛŒ unread
+    const list = this.chatList$.value;
+    const user = list.find(u => u.userId === userId);
+    if (user) user.unreadCount = 0;
+    this.chatList$.next([...list]);
   }
+
+  public scrollToBottom = new BehaviorSubject<boolean>(false);
 }
-
 
 ===== FILE: src\app\services\shop\countType\count-type.service.spec.ts =====
 import { TestBed } from '@angular/core/testing';

@@ -939,116 +939,110 @@ export const routes: Routes = [
 
 
 ===== FILE: src\app\views\chat\chat\chat.component.html =====
-<!-- src/app/views/chat/chat/chat.component.html -->
 <c-row>
-    <c-col md="4">
-      <c-card class="h-100">
-        <c-card-header class="d-flex justify-content-between align-items-center">
-          <span>Ú†Øªâ€ŒÙ‡Ø§</span>
-          <div>
-            <c-badge color="danger" *ngIf="totalUnread > 0">{{ totalUnread }}</c-badge>
-            <button cButton color="primary" size="sm" class="ms-2" (click)="showUserList = !showUserList">
-              Ú†Øª Ø¬Ø¯ÛŒØ¯
-            </button>
-          </div>
-        </c-card-header>
-  
-        <!-- Ù„ÛŒØ³Øª Ú©Ø§Ø±Ø¨Ø±Ø§Ù† Ø¨Ø±Ø§ÛŒ Ú†Øª Ø¬Ø¯ÛŒØ¯ -->
-        <div *ngIf="showUserList" class="p-3 border-bottom bg-light">
-          <input 
-            type="text" 
-            class="form-control form-control-sm mb-2" 
-            placeholder="Ø¬Ø³ØªØ¬Ùˆ..." 
-            [(ngModel)]="searchTerm"
-          >
-          <div class="list-group list-group-flush" style="max-height: 200px; overflow-y: auto;">
-            <a 
-              *ngFor="let user of allUsers | filter:searchTerm:'name'" 
-              (click)="startNewChat(user)" 
-              class="list-group-item list-group-item-action py-2"
-              style="cursor: pointer;"
-            >
-              <strong>{{ user.name || user.username }}</strong>
-              <small class="text-muted d-block">{{ user.email }}</small>
-            </a>
-          </div>
-        </div>
-  
-        <!-- Ù„ÛŒØ³Øª Ú†Øªâ€ŒÙ‡Ø§ÛŒ Ù‚Ø¨Ù„ÛŒ -->
-        <ul class="list-group list-group-flush">
-          <li
-            *ngFor="let user of chatList"
+  <c-col md="4">
+    <c-card class="h-100">
+      <c-card-header>
+        <strong>Ú†Øªâ€ŒÙ‡Ø§</strong>
+        <input type="text" class="form-control form-control-sm mt-2" placeholder="Ø¬Ø³ØªØ¬Ùˆ..." [(ngModel)]="searchText">
+      </c-card-header>
+
+      <c-card-body class="p-0">
+        <ul class="list-group list-group-flush" style="max-height: 80vh; overflow-y: auto;">
+          <li 
+            *ngFor="let user of chatList | filter:searchText:'fullName'" 
+            class="list-group-item list-group-item-action px-3 py-3 d-flex align-items-center"
             (click)="selectUser(user)"
             [class.active]="selectedUser?.userId === user.userId"
-            class="list-group-item d-flex justify-content-between align-items-center cursor-pointer"
+            style="cursor: pointer;"
           >
-            <div class="d-flex align-items-center">
-              <c-icon 
-                [name]="user.isOnline ? 'cil-user-follow' : 'cil-user-unfollow'"
-                [class.text-success]="user.isOnline"
-                [class.text-secondary]="!user.isOnline"
-              ></c-icon>
-              <span class="mx-2">{{ user.userName }}</span>
+            <!-- ÙÙ‚Ø· ÛŒÙ‡ Ø¯Ø§ÛŒØ±Ù‡ Ø³Ø§Ø¯Ù‡ Ø¨Ù‡ Ø¬Ø§ÛŒ Ø¢ÙˆØ§ØªØ§Ø± -->
+            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" 
+                 style="width: 45px; height: 45px; font-size: 18px;">
+                 {{ (user.fullName?.substring(0, 2) || '??') | uppercase }}
             </div>
-            <c-badge color="danger" *ngIf="user.unreadCount > 0">{{ user.unreadCount }}</c-badge>
+
+            <div class="flex-grow-1">
+              <div class="fw-bold">{{ user.fullName }}</div>
+              <div class="small text-muted text-truncate">
+                {{ user.lastMessage || 'Ø¨Ø¯ÙˆÙ† Ù¾ÛŒØ§Ù…' }}
+              </div>
+            </div>
+
+            <div class="text-end">
+              <small class="text-muted d-block">
+                {{ user.lastMessageTime | date:'shortTime' }}
+              </small>
+              <c-badge *ngIf="user.unreadCount > 0" color="danger" shape="rounded-pill">
+                {{ user.unreadCount }}
+              </c-badge>
+            </div>
+          </li>
+
+          <li *ngIf="chatList.length === 0" class="list-group-item text-center text-muted py-5">
+            Ù‡ÛŒÚ† Ú†ØªÛŒ ÛŒØ§ÙØª Ù†Ø´Ø¯
           </li>
         </ul>
-      </c-card>
-    </c-col>
-  
-    <c-col md="8">
-      <c-card class="h-100 d-flex flex-column" *ngIf="selectedUser; else noChat">
-        <c-card-header>
-          <strong>{{ selectedUser.userName }}</strong>
-          <small class="text-muted d-block">
-            {{ selectedUser.isOnline ? 'Ø¢Ù†Ù„Ø§ÛŒÙ†' : 'Ø¢Ø®Ø±ÛŒÙ† Ø¨Ø§Ø²Ø¯ÛŒØ¯: ' + (selectedUser.lastSeen | date:'short') }}
-          </small>
-        </c-card-header>
-  
-        <c-card-body #chatBody class="flex-grow-1 overflow-auto p-3">
-          <div *ngFor="let msg of messages" class="mb-3" [class.text-end]="msg.isMine">
-            <div [class]="msg.isMine ? 'd-inline-block bg-primary text-white p-2 rounded' : 'd-inline-block bg-light p-2 rounded'">
-              <p class="mb-1">{{ msg.content }}</p>
-              <img *ngIf="msg.type === 'Image'" [src]="msg.fileUrl" class="img-fluid rounded" style="max-width: 200px;">
-              <a *ngIf="msg.type === 'File'" [href]="msg.fileUrl" download class="text-decoration-underline">
-                Ø¯Ø§Ù†Ù„ÙˆØ¯ ÙØ§ÛŒÙ„
-              </a>
-              <small class="d-block opacity-75">
-                {{ msg.sentAt | date:'short' }}
-                <span *ngIf="msg.seenAt"> (Ø®ÙˆØ§Ù†Ø¯Ù‡â€ŒØ´Ø¯Ù‡)</span>
-              </small>
-            </div>
+      </c-card-body>
+    </c-card>
+  </c-col>
+
+  <c-col md="8">
+    <c-card class="h-100 d-flex flex-column" *ngIf="selectedUser; else noChat">
+      <c-card-header class="border-bottom">
+        <strong>{{ selectedUser.fullName }}</strong>
+        <small class="text-muted d-block">
+          {{ selectedUser.isOnline ? 'Ø¢Ù†Ù„Ø§ÛŒÙ†' : 'Ø¢ÙÙ„Ø§ÛŒÙ†' }}
+        </small>
+      </c-card-header>
+
+      <c-card-body #chatBody class="flex-grow-1 overflow-auto p-4" style="background: #f5f5f5;">
+        <div *ngFor="let msg of messages" class="mb-3 d-flex" [class.flex-row-reverse]="msg.isMine">
+          <div 
+            class="p-3 rounded-3 max-w-75"
+            [class.bg-primary]="msg.isMine"
+            [class.text-white]="msg.isMine"
+            [class.bg-light]="!msg.isMine"
+          >
+            <div [innerHTML]="msg.content"></div>
+            
+            <img *ngIf="msg.type === 'Image'" [src]="msg.fileUrl" class="img-fluid rounded mt-2" style="max-width: 250px;">
+            <a *ngIf="msg.type === 'File'" [href]="msg.fileUrl" target="_blank" class="text-decoration-underline small d-block mt-2">
+              Ø¯Ø§Ù†Ù„ÙˆØ¯ ÙØ§ÛŒÙ„
+            </a>
+
+            <small class="opacity-75 d-block text-end mt-1">
+              {{ msg.sentAt | date:'shortTime' }}
+            </small>
           </div>
-        </c-card-body>
-  
-        <c-card-footer>
-          <div class="d-flex align-items-center gap-2">
-            <input 
-              type="text" 
-              [(ngModel)]="newMessage" 
-              placeholder="Ù¾ÛŒØ§Ù…..." 
-              class="form-control" 
-              (keydown.enter)="sendMessage()"
-            >
-            <input 
-              type="file" 
-              (change)="onFileSelected($event)" 
-              class="form-control" 
-              style="width: auto;"
-            >
-            <button cButton color="primary" (click)="sendMessage()">Ø§Ø±Ø³Ø§Ù„</button>
-          </div>
-        </c-card-footer>
-      </c-card>
-  
-      <ng-template #noChat>
-        <div class="text-center text-muted mt-5 p-5">
-          <h5>Ú©Ø§Ø±Ø¨Ø±ÛŒ Ø§Ù†ØªØ®Ø§Ø¨ Ú©Ù†ÛŒØ¯</h5>
-          <p class="text-muted">Ø¨Ø±Ø§ÛŒ Ø´Ø±ÙˆØ¹ Ú†ØªØŒ Ø±ÙˆÛŒ "Ú†Øª Ø¬Ø¯ÛŒØ¯" Ú©Ù„ÛŒÚ© Ú©Ù†ÛŒØ¯</p>
         </div>
-      </ng-template>
-    </c-col>
-  </c-row>
+      </c-card-body>
+
+      <c-card-footer>
+        <div class="d-flex gap-2">
+          <input 
+            type="text" 
+            class="form-control" 
+            placeholder="Ù¾ÛŒØ§Ù… Ø®ÙˆØ¯ Ø±Ø§ Ø¨Ù†ÙˆÛŒØ³ÛŒØ¯..." 
+            [(ngModel)]="newMessage"
+            (keydown)="onKeydown($event)"
+            autocomplete="off"
+          >
+          <input type="file" class="form-control" style="width: auto;" (change)="onFileSelected($event)">
+          <button cButton color="primary" (click)="sendMessage()" [disabled]="!newMessage.trim() && !selectedFile">
+            Ø§Ø±Ø³Ø§Ù„
+          </button>
+        </div>
+      </c-card-footer>
+    </c-card>
+
+    <ng-template #noChat>
+      <div class="h-100 d-flex align-items-center justify-content-center text-muted">
+        <h5>ÛŒÚ© Ú©Ø§Ø±Ø¨Ø± Ø§Ù†ØªØ®Ø§Ø¨ Ú©Ù†ÛŒØ¯</h5>
+      </div>
+    </ng-template>
+  </c-col>
+</c-row>
 
 ===== FILE: src\app\views\chat\chat\chat.component.scss =====
 

@@ -333,13 +333,13 @@ describe('FilterPipe', () => {
 // src/app/pipes/filter.pipe.ts
 import { Pipe, PipeTransform } from '@angular/core';
 
-@Pipe({ name: 'filter', standalone: true })
+@Pipe({ name: 'filter' })
 export class FilterPipe implements PipeTransform {
-  transform(items: any[], term: string, field: string): any[] {
-    if (!items || !term) return items;
-    const lower = term.toLowerCase();
+  transform(items: any[], searchText: string, property: string = 'fullName'): any[] {
+    if (!items || !searchText) return items;
+    searchText = searchText.toLowerCase();
     return items.filter(item => 
-      (item[field] || '').toString().toLowerCase().includes(lower)
+      item[property]?.toString().toLowerCase().includes(searchText)
     );
   }
 }
@@ -447,14 +447,20 @@ login(username: string, password: string): Observable<any> {
 }
 
 getUserId(): number {
-  const user = localStorage.getItem('user');
-  if (!user) return 0;
+  const userStr = localStorage.getItem('user');
+  if (!userStr) {
+    console.warn('No user in localStorage');
+    return 0;
+  }
 
   try {
-    const parsed = JSON.parse(user);
-    // Ù¾Ø´ØªÛŒØ¨Ø§Ù†ÛŒ Ø§Ø² Ø³Ø§Ø®ØªØ§Ø±Ù‡Ø§ÛŒ Ù…Ø®ØªÙ„Ù
-    return parsed.data?.userId || parsed.userId || parsed.id || 0;
-  } catch {
+    const user = JSON.parse(userStr);
+    console.log('Parsed user:', user); // Ø¨Ø±Ø§ÛŒ Ø¯ÛŒØ¨Ø§Ú¯
+
+    // ØªØ±ØªÛŒØ¨ Ù…Ù‡Ù… Ø§Ø³Øª: Ø§ÙˆÙ„ user.userIdØŒ Ø¨Ø¹Ø¯ data
+    return user.userId || user.data?.userId || user.id || 0;
+  } catch (e) {
+    console.error('Failed to parse user:', e);
     return 0;
   }
 }

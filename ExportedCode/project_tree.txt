@@ -118,6 +118,9 @@ src
 |   +-- app.component.ts
 |   +-- app.config.ts
 |   +-- app.routes.ts
++-- environments
+|   +-- environment.prod.ts
+|   +-- environment.ts
 +-- scss
 |   +-- styles.scss
 |   +-- _charts.scss

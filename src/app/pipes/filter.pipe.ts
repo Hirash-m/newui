@@ -1,13 +1,13 @@
 // src/app/pipes/filter.pipe.ts
 import { Pipe, PipeTransform } from '@angular/core';
 
-@Pipe({ name: 'filter', standalone: true })
+@Pipe({ name: 'filter' })
 export class FilterPipe implements PipeTransform {
-  transform(items: any[], term: string, field: string): any[] {
-    if (!items || !term) return items;
-    const lower = term.toLowerCase();
+  transform(items: any[], searchText: string, property: string = 'fullName'): any[] {
+    if (!items || !searchText) return items;
+    searchText = searchText.toLowerCase();
     return items.filter(item => 
-      (item[field] || '').toString().toLowerCase().includes(lower)
+      item[property]?.toString().toLowerCase().includes(searchText)
     );
   }
 }

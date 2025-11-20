@@ -1,110 +1,119 @@
-<!-- src/app/views/chat/chat/chat.component.html -->
 <c-row>
-    <c-col md="4">
-      <c-card class="h-100">
-        <c-card-header class="d-flex justify-content-between align-items-center">
-          <span>چت‌ها</span>
-          <div>
-            <c-badge color="danger" *ngIf="totalUnread > 0">{{ totalUnread }}</c-badge>
-            <button cButton color="primary" size="sm" class="ms-2" (click)="showUserList = !showUserList">
-              چت جدید
-            </button>
-          </div>
-        </c-card-header>
-  
-        <!-- لیست کاربران برای چت جدید -->
-        <div *ngIf="showUserList" class="p-3 border-bottom bg-light">
-          <input 
-            type="text" 
-            class="form-control form-control-sm mb-2" 
-            placeholder="جستجو..." 
-            [(ngModel)]="searchTerm"
+  <c-col md="4">
+    <c-card class="h-100">
+      <c-card-header class="d-flex justify-content-between align-items-center">
+        <strong>چت‌ها</strong>
+      </c-card-header>
+
+      <!-- جستجو -->
+      <div class="p-3 border-bottom">
+        <input 
+          type="text" 
+          class="form-control" 
+          placeholder="جستجوی کاربر..." 
+          [(ngModel)]="searchText"
+        >
+      </div>
+
+      <c-card-body class="p-0">
+        <ul class="list-group list-group-flush" style="max-height: 75vh; overflow-y: auto;">
+          <li 
+            *ngFor="let user of filteredChatList" 
+            class="list-group-item list-group-item-action d-flex align-items-center cursor-pointer px-3 py-3"
+            [class.bg-light]="selectedUser?.userId === user.userId"
+            (click)="selectChat(user)"
           >
-          <div class="list-group list-group-flush" style="max-height: 200px; overflow-y: auto;">
-            <a 
-              *ngFor="let user of allUsers | filter:searchTerm:'name'" 
-              (click)="startNewChat(user)" 
-              class="list-group-item list-group-item-action py-2"
-              style="cursor: pointer;"
-            >
-              <strong>{{ user.name || user.username }}</strong>
-              <small class="text-muted d-block">{{ user.email }}</small>
-            </a>
-          </div>
-        </div>
-  
-        <!-- لیست چت‌های قبلی -->
-        <ul class="list-group list-group-flush">
-          <li
-            *ngFor="let user of chatList"
-            (click)="selectUser(user)"
-            [class.active]="selectedUser?.userId === user.userId"
-            class="list-group-item d-flex justify-content-between align-items-center cursor-pointer"
-          >
-            <div class="d-flex align-items-center">
-              <c-icon 
-                [name]="user.isOnline ? 'cil-user-follow' : 'cil-user-unfollow'"
-                [class.text-success]="user.isOnline"
-                [class.text-secondary]="!user.isOnline"
-              ></c-icon>
-              <span class="mx-2">{{ user.userName }}</span>
+            <!-- آواتار دایره‌ای -->
+            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" 
+                 style="width: 50px; height: 50px; font-size: 20px;">
+              {{ (user.fullName?.substring(0, 2) || '??') | uppercase }}
             </div>
-            <c-badge color="danger" *ngIf="user.unreadCount > 0">{{ user.unreadCount }}</c-badge>
+
+            <div class="flex-grow-1">
+              <div class="fw-bold">{{ user.fullName }}</div>
+              <div class="small text-muted text-truncate" style="max-width: 180px;">
+                {{ user.lastMessage || 'بدون پیام' }}
+              </div>
+            </div>
+
+            <div class="text-end">
+              <small class="text-muted d-block">
+                {{ user.lastMessageTime | date:'shortTime' }}
+              </small>
+              <c-badge *ngIf="user.unreadCount > 0" color="danger" shape="rounded-pill">
+                {{ user.unreadCount }}
+              </c-badge>
+            </div>
+          </li>
+
+          <li *ngIf="chatList.length === 0" class="list-group-item text-center text-muted py-5">
+            چتی یافت نشد
           </li>
         </ul>
-      </c-card>
-    </c-col>
-  
-    <c-col md="8">
-      <c-card class="h-100 d-flex flex-column" *ngIf="selectedUser; else noChat">
-        <c-card-header>
-          <strong>{{ selectedUser.userName }}</strong>
-          <small class="text-muted d-block">
-            {{ selectedUser.isOnline ? 'آنلاین' : 'آخرین بازدید: ' + (selectedUser.lastSeen | date:'short') }}
-          </small>
-        </c-card-header>
-  
-        <c-card-body #chatBody class="flex-grow-1 overflow-auto p-3">
-          <div *ngFor="let msg of messages" class="mb-3" [class.text-end]="msg.isMine">
-            <div [class]="msg.isMine ? 'd-inline-block bg-primary text-white p-2 rounded' : 'd-inline-block bg-light p-2 rounded'">
-              <p class="mb-1">{{ msg.content }}</p>
-              <img *ngIf="msg.type === 'Image'" [src]="msg.fileUrl" class="img-fluid rounded" style="max-width: 200px;">
-              <a *ngIf="msg.type === 'File'" [href]="msg.fileUrl" download class="text-decoration-underline">
-                دانلود فایل
-              </a>
-              <small class="d-block opacity-75">
-                {{ msg.sentAt | date:'short' }}
-                <span *ngIf="msg.seenAt"> (خوانده‌شده)</span>
-              </small>
-            </div>
-          </div>
-        </c-card-body>
-  
-        <c-card-footer>
-          <div class="d-flex align-items-center gap-2">
-            <input 
-              type="text" 
-              [(ngModel)]="newMessage" 
-              placeholder="پیام..." 
-              class="form-control" 
-              (keydown.enter)="sendMessage()"
-            >
-            <input 
-              type="file" 
-              (change)="onFileSelected($event)" 
-              class="form-control" 
-              style="width: auto;"
-            >
-            <button cButton color="primary" (click)="sendMessage()">ارسال</button>
-          </div>
-        </c-card-footer>
-      </c-card>
-  
-      <ng-template #noChat>
-        <div class="text-center text-muted mt-5 p-5">
-          <h5>کاربری انتخاب کنید</h5>
-          <p class="text-muted">برای شروع چت، روی "چت جدید" کلیک کنید</p>
+      </c-card-body>
+    </c-card>
+  </c-col>
+
+  <c-col md="8">
+    <c-card class="h-100 d-flex flex-column" *ngIf="selectedUser; else noChat">
+      <c-card-header class="border-bottom d-flex align-items-center">
+        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" 
+             style="width: 45px; height: 45px; font-size: 18px;">
+          {{ (selectedUser.fullName?.substring(0, 2)) | uppercase }}
         </div>
-      </ng-template>
-    </c-col>
-  </c-row>
+        <div>
+          <strong>{{ selectedUser.fullName }}</strong>
+          <small class="text-muted d-block">
+            {{ selectedUser.isOnline ? 'آنلاین' : 'آفلاین' }}
+          </small>
+        </div>
+      </c-card-header>
+
+      <c-card-body #chatBody class="flex-grow-1 overflow-auto p-4" style="background: #f8f9fa;">
+        <div *ngFor="let msg of messages" class="mb-4 d-flex" [class.flex-row-reverse]="msg.isMine">
+          <div 
+            class="p-3 rounded-3 max-w-75 shadow-sm"
+            [class.bg-primary]="msg.isMine"
+            [class.text-white]="msg.isMine"
+            [class.bg-white]="!msg.isMine"
+            [class.border]="!msg.isMine"
+          >
+            <div [innerHTML]="msg.content"></div>
+            
+            <img *ngIf="msg.type === 'Image'" [src]="msg.fileUrl" class="img-fluid rounded mt-2" style="max-width: 280px;">
+            <a *ngIf="msg.type === 'File'" [href]="msg.fileUrl" target="_blank" class="text-decoration-underline small d-block mt-2">
+              دانلود فایل
+            </a>
+
+            <small class="opacity-75 d-block text-end mt-1">
+              {{ msg.sentAt | date:'shortTime' }}
+            </small>
+          </div>
+        </div>
+      </c-card-body>
+
+      <c-card-footer class="bg-white">
+        <div class="d-flex gap-2 align-items-center">
+          <input 
+            type="text" 
+            class="form-control" 
+            placeholder="پیام خود را بنویسید..." 
+            [(ngModel)]="newMessage"
+            (keydown.enter)="onKeydown($event)"
+            autocomplete="off"
+          >
+          <input type="file" class="form-control" style="width: auto;" (change)="onFileSelected($event)">
+          <button cButton color="primary" (click)="sendMessage()" [disabled]="!newMessage.trim() && !selectedFile">
+            ارسال
+          </button>
+        </div>
+      </c-card-footer>
+    </c-card>
+
+    <ng-template #noChat>
+      <div class="h-100 d-flex align-items-center justify-content-center text-muted bg-light rounded">
+        <h5>یک کاربر را انتخاب کنید تا چت شروع شود</h5>
+      </div>
+    </ng-template>
+  </c-col>
+</c-row>
