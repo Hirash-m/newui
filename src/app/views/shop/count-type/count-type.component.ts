@@ -14,8 +14,8 @@ import {
 } from '@coreui/angular';
 
 // DTOs & Services
-import { ApiResult, createApiResult } from 'src/app/dto/api-result'; // تغییر از baseResponse
 import { ListRequest } from 'src/app/dto/ListRequestDto';
+import { ListDataResult, SingleDataResult, StatusResult } from 'src/app/dto/result';
 import { CountTypeDto } from 'src/app/dto/shop/CountTypeDto';
 import { CountTypeService } from 'src/app/services/shop/countType/count-type.service';
 import { ToastService } from 'src/app/services/utilities/toast.service';
@@ -40,7 +40,7 @@ export class CountTypeComponent implements OnInit {
   // درخواست لیست
   _request = new ListRequest();
   _objectsView: CountTypeDto[] = [];
-  _baseResponse: ApiResult<CountTypeDto[]> = createApiResult<CountTypeDto[]>();
+  _baseResponse: ListDataResult<CountTypeDto> = OkList<CountTypeDto>();
 
   // فرم
   ObjectForm!: FormGroup;
@@ -81,12 +81,12 @@ export class CountTypeComponent implements OnInit {
   loadDataTable(): void {
     this._request.pageSize = 5;
     this.countTypeService.getRecords(this._request).subscribe({
-      next: (res: ApiResult<CountTypeDto[]>) => {
-        if (res.isSucceeded) {
+      next: (res: ListDataResult<CountTypeDto>) => {
+        if (res.status < 300) {
           this._baseResponse = res;
-          this._objectsView = res.data ?? [];
+          this._objectsView = res.listData ?? [];
         } else {
-          this.toastService.error(res.message || 'خطا در بارگذاری انواع شمارش');
+          this.toastService.error(res.messages?.join() || 'خطا در بارگذاری انواع شمارش');
         }
       },
       error: (err) => {
@@ -108,14 +108,14 @@ export class CountTypeComponent implements OnInit {
         : this.countTypeService.insertRecord(data);
 
       request$.subscribe({
-        next: (res: ApiResult<any>) => {
-          if (res.isSucceeded) {
+        next: (res: StatusResult) => {
+          if (res.status < 300) {
             this.afterSubmit();
             this.toastService.success(
               this.editMode ? 'نوع شمارش با موفقیت ویرایش شد' : 'نوع شمارش با موفقیت ایجاد شد'
             );
           } else {
-            this.toastService.error(res.message || 'خطا در عملیات');
+            this.toastService.error(res.messages?.join() || 'خطا در عملیات');
           }
         },
         error: (err) => {
@@ -142,8 +142,8 @@ export class CountTypeComponent implements OnInit {
     this.editingId = id;
 
     this.countTypeService.getRecordById(id).subscribe({
-      next: (res: ApiResult<CountTypeDto>) => {
-        if (res.isSucceeded && res.data) {
+      next: (res: SingleDataResult<CountTypeDto>) => {
+        if (res.status < 300 && res.data) {
           this.ObjectForm.patchValue(res.data);
           this.showModal = true;
         } else {
@@ -182,13 +182,13 @@ export class CountTypeComponent implements OnInit {
 
   deleteSelectedRecords(): void {
     this.countTypeService.deleteRecords(this.selectedIds).subscribe({
-      next: (res: ApiResult<any>) => {
-        if (res.isSucceeded) {
+      next: (res: StatusResult) => {
+        if (res.status < 300) {
           this.afterSubmit();
           this.selectedIds = [];
           this.toastService.success('انواع انتخاب‌شده حذف شدند');
         } else {
-          this.toastService.error(res.message || 'خطا در حذف');
+          this.toastService.error(res.messages?.join() || 'خطا در حذف');
         }
         this.showDeleteConfirm = false;
       },
@@ -197,4 +197,8 @@ export class CountTypeComponent implements OnInit {
       }
     });
   }
+}
+
+function OkList<T>(): ListDataResult<CountTypeDto> {
+  throw new Error('Function not implemented.');
 }

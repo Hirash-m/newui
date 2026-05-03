@@ -15,8 +15,8 @@ import {
 } from '@coreui/angular';
 
 // DTOs & Services
-import { ApiResult, createApiResult } from 'src/app/dto/api-result'; // تغییر از baseResponse
 import { ListRequest } from 'src/app/dto/ListRequestDto';
+import { ListDataResult, SingleDataResult, StatusResult } from 'src/app/dto/result';
 import { ProductCreateDto, ProductViewDto } from 'src/app/dto/shop/ProductDto';
 import { ProductService } from 'src/app/services/shop/product/product.service';
 import { ToastService } from 'src/app/services/utilities/toast.service';
@@ -38,7 +38,7 @@ export class ProductComponent implements OnInit {
   // درخواست لیست
   _request = new ListRequest();
   _productsView: ProductViewDto[] = [];
-  _baseResponse: ApiResult<ProductViewDto[]> = createApiResult<ProductViewDto[]>();
+  _baseResponse: ListDataResult<ProductViewDto> = OkList<ProductViewDto>();
 
   // فرم
   showModal = false;
@@ -91,12 +91,12 @@ export class ProductComponent implements OnInit {
 loadProducts(): void {
   this._request.pageSize = 5;
   this.productService.getRecords(this._request).subscribe({
-    next: (res: ApiResult<ProductViewDto[]>) => {
-      if (res.isSucceeded) {
+    next: (res: ListDataResult<ProductViewDto>) => {
+      if (res.status < 300) {
         this._baseResponse = res;
-        this._productsView = res.data || [];
+        this._productsView = res.listData || [];
       } else {
-        this.toastService.error(res.message || 'خطا در بارگذاری محصولات');
+        this.toastService.error(res.messages?.join() || 'خطا در بارگذاری محصولات');
       }
     },
     error: (error) => {
@@ -114,21 +114,21 @@ loadProducts(): void {
       const productData: ProductCreateDto = this.productForm.value;
 
       if (this.editMode && this.editingProductId != null) {
-        this.productService.updateRecord(productData).subscribe((res: ApiResult<any>) => {
-          if (res.isSucceeded) {
+        this.productService.updateRecord(productData).subscribe((res: StatusResult) => {
+          if (res.status<300) {
             this.afterSubmit();
             this.toastService.success('محصول با موفقیت ویرایش شد');
           } else {
-            this.toastService.error(res.message || 'خطا در ویرایش');
+            this.toastService.error(res.messages?.join() || 'خطا در ویرایش');
           }
         });
       } else {
-        this.productService.insertRecord(productData).subscribe((res: ApiResult<any>) => {
-          if (res.isSucceeded) {
+        this.productService.insertRecord(productData).subscribe((res: StatusResult) => {
+          if (res.status < 300) {
             this.afterSubmit();
             this.toastService.success('محصول با موفقیت ایجاد شد');
           } else {
-            this.toastService.error(res.message || 'خطا در ایجاد');
+            this.toastService.error(res.messages?.join() || 'خطا در ایجاد');
           }
         });
       }
@@ -150,8 +150,8 @@ loadProducts(): void {
     this.editMode = true;
     this.editingProductId = productId;
 
-    this.productService.getRecordById(productId).subscribe((res: ApiResult<ProductCreateDto>) => {
-      if (res.isSucceeded && res.data) {
+    this.productService.getRecordById(productId).subscribe((res: SingleDataResult<ProductCreateDto>) => {
+      if (res.status < 300 && res.data) {
         const product = res.data;
         this.productForm.patchValue({
           id: product.id,
@@ -192,13 +192,13 @@ loadProducts(): void {
   }
 
   deleteSelectedProducts(): void {
-    this.productService.deleteRecords(this.selectedProductIds).subscribe((res: ApiResult<any>) => {
-      if (res.isSucceeded) {
+    this.productService.deleteRecords(this.selectedProductIds).subscribe((res: StatusResult) => {
+      if (res.status < 300) {
         this.afterSubmit();
         this.selectedProductIds = [];
         this.toastService.success('محصولات انتخاب‌شده حذف شدند');
       } else {
-        this.toastService.error(res.message || 'خطا در حذف گروهی');
+        this.toastService.error(res.messages?.join() || 'خطا در حذف گروهی');
       }
       this.showDeleteConfirm = false;
     });
@@ -209,13 +209,13 @@ loadProducts(): void {
   // ---------------------------
   onSearch() {
     this.productService.searchProducts(this.searchData).subscribe(
-      (result: ApiResult<ProductViewDto[]>) => {
-        if (result.isSucceeded) {
+      (result: ListDataResult<ProductViewDto>) => {
+        if (result.status<2) {
           this._baseResponse = result;
-          this._productsView = result.data || [];
+          this._productsView = result.listData || [];
           console.log('نتایج جستجو:', this._productsView);
         } else {
-          this.toastService.error(result.message || 'خطا در جستجو');
+          this.toastService.error(result.messages?.join() || 'خطا در جستجو');
         }
       },
       (error) => {
@@ -224,4 +224,8 @@ loadProducts(): void {
       }
     );
   }
+}
+
+function OkList<T>(): ListDataResult<ProductViewDto> {
+  throw new Error('Function not implemented.');
 }

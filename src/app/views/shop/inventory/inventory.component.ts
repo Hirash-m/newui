@@ -14,8 +14,8 @@ import {
 } from '@coreui/angular';
 
 // DTOs & Services
-import { ApiResult, createApiResult } from 'src/app/dto/api-result'; // تغییر از baseResponse
 import { ListRequest } from 'src/app/dto/ListRequestDto';
+import { ListDataResult, SingleDataResult, StatusResult } from 'src/app/dto/result';
 import { InventoryDto } from 'src/app/dto/shop/InventoryDto';
 import { InventoryService } from 'src/app/services/shop/inventory/inventory.service';
 import { ToastService } from 'src/app/services/utilities/toast.service';
@@ -37,7 +37,7 @@ export class InventoryComponent implements OnInit {
   // درخواست لیست
   _request = new ListRequest();
   _objectsView: InventoryDto[] = [];
-  _baseResponse: ApiResult<InventoryDto[]> = createApiResult<InventoryDto[]>();
+  _baseResponse: ListDataResult<InventoryDto> = OkList<InventoryDto>();
 
   // فرم
   ObjectForm!: FormGroup;
@@ -78,12 +78,12 @@ export class InventoryComponent implements OnInit {
   // ---------------------------
   loadDataTable(): void {
     this._request.pageSize = 5;
-    this.ObjectService.getRecords(this._request).subscribe((res: ApiResult<InventoryDto[]>) => {
-      if (res.isSucceeded) {
+    this.ObjectService.getRecords(this._request).subscribe((res: ListDataResult<InventoryDto>) => {
+      if (res.status < 300) {
         this._baseResponse = res;
-        this._objectsView = res.data || [];
+        this._objectsView = res.listData || [];
       } else {
-        this.toastService.error(res.message || 'خطا در بارگذاری انبارها');
+        this.toastService.error(res.messages?.join() || 'خطا در بارگذاری انبارها');
       }
     });
   }
@@ -96,21 +96,21 @@ export class InventoryComponent implements OnInit {
       const ObjectData: InventoryDto = this.ObjectForm.value;
 
       if (this.editMode && this.editingId != null) {
-        this.ObjectService.updateRecord(ObjectData).subscribe((res: ApiResult<any>) => {
-          if (res.isSucceeded) {
+        this.ObjectService.updateRecord(ObjectData).subscribe((res: StatusResult) => {
+          if (res.status < 300) {
             this.afterSubmit();
             this.toastService.success('انبار با موفقیت ویرایش شد');
           } else {
-            this.toastService.error(res.message || 'خطا در ویرایش');
+            this.toastService.error(res.messages?.join() || 'خطا در ویرایش');
           }
         });
       } else {
-        this.ObjectService.insertRecord(ObjectData).subscribe((res: ApiResult<any>) => {
-          if (res.isSucceeded) {
+        this.ObjectService.insertRecord(ObjectData).subscribe((res: StatusResult) => {
+          if (res.status < 300) {
             this.afterSubmit();
             this.toastService.success('انبار با موفقیت ایجاد شد');
           } else {
-            this.toastService.error(res.message || 'خطا در ایجاد');
+            this.toastService.error(res.messages?.join() || 'خطا در ایجاد');
           }
         });
       }
@@ -132,8 +132,8 @@ export class InventoryComponent implements OnInit {
     this.editMode = true;
     this.editingId = ObjectId;
 
-    this.ObjectService.getRecordById(ObjectId).subscribe((res: ApiResult<InventoryDto>) => {
-      if (res.isSucceeded && res.data) {
+    this.ObjectService.getRecordById(ObjectId).subscribe((res: SingleDataResult<InventoryDto>) => {
+      if (res.status < 300 && res.data) {
         const obj = res.data;
         this.ObjectForm.patchValue({
           id: obj.id,
@@ -172,15 +172,23 @@ export class InventoryComponent implements OnInit {
   }
 
   deleteSelectedRecords(): void {
-    this.ObjectService.deleteRecords(this.selectedIds).subscribe((res: ApiResult<any>) => {
-      if (res.isSucceeded) {
+    this.ObjectService.deleteRecords(this.selectedIds).subscribe((res: StatusResult) => {
+      if (res.status < 300) {
         this.afterSubmit();
         this.selectedIds = [];
         this.toastService.success('انبارهای انتخاب‌شده حذف شدند');
       } else {
-        this.toastService.error(res.message || 'خطا در حذف گروهی');
+        this.toastService.error(res.messages?.join() || 'خطا در حذف گروهی');
       }
       this.showDeleteConfirm = false;
     });
   }
 }
+
+function OkResult<T>(): ListDataResult<InventoryDto> {
+  throw new Error('Function not implemented.');
+}
+function OkList<T>(): any {
+  throw new Error('Function not implemented.');
+}
+

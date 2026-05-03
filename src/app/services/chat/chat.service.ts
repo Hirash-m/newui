@@ -5,9 +5,9 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, Subject } from 'rxjs';
 import { HubConnection, HubConnectionBuilder } from '@microsoft/signalr';
 import { environment } from 'src/environments/environment';
-import { ApiResult } from 'src/app/dto/api-result';
 import { ChatListItem, MessageDto, SendMessageDto } from 'src/app/dto/chat/MessageDto';
 import { AuthService } from '../auth/login/auth.service';
+import { ListDataResult } from 'src/app/dto/result';
 
 @Injectable({
   providedIn: 'root'
@@ -48,13 +48,13 @@ export class ChatService {
   }
 
   // لیست چت‌ها
-  getChatList(): Observable<ApiResult<ChatListItem[]>> {
-    return this.http.get<ApiResult<ChatListItem[]>>(`${this.apiUrl}/list`);
+  getChatList(): Observable<ListDataResult<ChatListItem>> {
+    return this.http.get<ListDataResult<ChatListItem>>(`${this.apiUrl}/list`);
   }
 
   // تاریخچه پیام با کاربر خاص
-  getChatHistory(otherUserId: number, page: number = 1, pageSize: number = 50): Observable<ApiResult<MessageDto[]>> {
-    return this.http.get<ApiResult<MessageDto[]>>(`${this.apiUrl}/history`, {
+  getChatHistory(otherUserId: number, page: number = 1, pageSize: number = 50): Observable<ListDataResult<MessageDto>> {
+    return this.http.get<ListDataResult<MessageDto>>(`${this.apiUrl}/history`, {
       params: { otherUserId, pageNumber: page, pageSize }
     });
   }

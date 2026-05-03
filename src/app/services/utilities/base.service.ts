@@ -5,9 +5,9 @@ import { Injectable } from '@angular/core';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { ToastService } from './toast.service';
-import { ApiResult } from '../../dto/api-result';
 import { ListRequest } from '../../dto/ListRequestDto';
 import { Domain } from '../../../utilities/path';
+import { ListDataResult, SingleDataResult, StatusResult } from 'src/app/dto/result';
 
 @Injectable({ providedIn: 'root' })
 export abstract class BaseService<TViewDto, TCreateDto = TViewDto> {
@@ -27,9 +27,9 @@ export abstract class BaseService<TViewDto, TCreateDto = TViewDto> {
   }
 
   // لیست: همیشه TViewDto[]
-  getRecords(request: ListRequest): Observable<ApiResult<TViewDto[]>> {
+  getRecords(request: ListRequest): Observable<ListDataResult<TViewDto>> {
     return this.http
-      .post<ApiResult<TViewDto[]>>(
+      .post<ListDataResult<TViewDto>>(
         `${this.apiUrl}${this.endpoint}/GetAll`,
         request,
         { headers: this.getJsonHeaders() }
@@ -40,9 +40,9 @@ export abstract class BaseService<TViewDto, TCreateDto = TViewDto> {
 
 
     // لیست: همیشه TViewDto[]
-    getRecordList(): Observable<ApiResult<TViewDto[]>> {
+    getRecordList(): Observable<ListDataResult<TViewDto>> {
       return this.http
-        .get<ApiResult<TViewDto[]>>(
+        .get<ListDataResult<TViewDto>>(
           `${this.apiUrl}${this.endpoint}/GetList`,
           
           { headers: this.getJsonHeaders() }
@@ -51,9 +51,9 @@ export abstract class BaseService<TViewDto, TCreateDto = TViewDto> {
     }
   
   // ایجاد
-  insertRecord(data: TCreateDto): Observable<ApiResult<TCreateDto>> {
+  insertRecord(data: TCreateDto): Observable<SingleDataResult<TCreateDto>> {
     return this.http
-      .post<ApiResult<TCreateDto>>(
+      .post<SingleDataResult<TCreateDto>>(
         `${this.apiUrl}${this.endpoint}/create`,
         data,
         { headers: this.getJsonHeaders() }
@@ -62,9 +62,9 @@ export abstract class BaseService<TViewDto, TCreateDto = TViewDto> {
   }
 
   // ویرایش
-  updateRecord(data: TCreateDto): Observable<ApiResult<TCreateDto>> {
+  updateRecord(data: TCreateDto): Observable<SingleDataResult<TCreateDto>> {
     return this.http
-      .post<ApiResult<TCreateDto>>(
+      .post<SingleDataResult<TCreateDto>>(
         `${this.apiUrl}${this.endpoint}/update`,
         data,
         { headers: this.getJsonHeaders() }
@@ -73,9 +73,9 @@ export abstract class BaseService<TViewDto, TCreateDto = TViewDto> {
   }
 
   // حذف چندتایی
-  deleteRecords(ids: number[]): Observable<ApiResult<any>> {
+  deleteRecords(ids: number[]): Observable<StatusResult> {
     return this.http
-      .post<ApiResult<any>>(
+      .post<StatusResult>(
         `${this.apiUrl}${this.endpoint}/delete`,
         ids,
         { headers: this.getJsonHeaders() }
@@ -84,9 +84,9 @@ export abstract class BaseService<TViewDto, TCreateDto = TViewDto> {
   }
 
   // دریافت یک رکورد
-  getRecordById(id: number): Observable<ApiResult<TCreateDto>> {
+  getRecordById(id: number): Observable<SingleDataResult<TCreateDto>> {
     return this.http
-      .get<ApiResult<TCreateDto>>(
+      .get<SingleDataResult<TCreateDto>>(
         `${this.apiUrl}${this.endpoint}/getById/?id=${id}`,
         { headers: this.getJsonHeaders() }
       )
@@ -94,9 +94,9 @@ export abstract class BaseService<TViewDto, TCreateDto = TViewDto> {
   }
 
   // فرم ایجاد (مثل roles, permissions)
-  getCreateForm<U = any>(): Observable<ApiResult<U>> {
+  getCreateForm<U = any>(): Observable<SingleDataResult<U>> {
     return this.http
-      .get<ApiResult<U>>(
+      .get<SingleDataResult<U>>(
         `${this.apiUrl}${this.endpoint}/getcreateform`,
         { headers: this.getJsonHeaders() }
       )
@@ -111,15 +111,15 @@ export abstract class BaseService<TViewDto, TCreateDto = TViewDto> {
   }
 
   // --- نمایش پیام ---
-  protected showApiResultToast(result: ApiResult<any>): void {
+  protected showApiResultToast(result: SingleDataResult<any>): void {
     if (!result) return;
 
-    if (result.isSucceeded) {
-      if (result.message) {
-        this.toast.success(result.message);
+    if (result.status < 300) {
+      if (result.messages) {
+        this.toast.success(result.messages.join());
       }
     } else {
-      const errorMsg = result.errors?.[0] ?? result.message ?? 'خطایی رخ داد';
+      const errorMsg = result.messages?.join()?.[0] ?? result.messages?.join() ?? 'خطایی رخ داد';
       this.toast.error(errorMsg);
     }
   }

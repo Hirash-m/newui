@@ -3,8 +3,8 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonDirective, ColComponent, FormDirective, FormFeedbackComponent, FormLabelDirective, ModalModule, PageItemDirective, PageLinkDirective, PaginationComponent, RowDirective, TableDirective } from '@coreui/angular';
 import { PermissionDto, RoleDto, UserCreateFormData, UserDto } from 'src/app/dto/base/UserDto';
-import { ApiResult, createApiResult } from 'src/app/dto/api-result'; // تغییر از baseResponse
 import { ListRequest } from 'src/app/dto/ListRequestDto';
+import { ListDataResult, SingleDataResult, StatusResult } from 'src/app/dto/result';
 import { UserManageService } from 'src/app/services/base/userManage/user-manage.service';
 import { ToastService } from 'src/app/services/utilities/toast.service';
 
@@ -29,7 +29,7 @@ export class UserComponent implements OnInit {
   // لیست کاربران
   _request = new ListRequest();
   _objectsView: UserDto[] = [];
-  _baseResponse: ApiResult<UserDto[]> = createApiResult<UserDto[]>();
+  _baseResponse: ListDataResult<UserDto> = OkList<UserDto>();
 
   // فرم
   ObjectForm!: FormGroup;
@@ -87,12 +87,12 @@ onFileSelected(event: Event): void {
   loadDataTable(): void {
     this._request.pageSize = 5;
     this.ObjectService.getRecords(this._request).subscribe({
-      next: (res: ApiResult<UserDto[]>) => {
-        if (res.isSucceeded) {
+      next: (res: ListDataResult<UserDto>) => {
+        if (res.status < 300) {
           this._baseResponse = res;
-          this._objectsView = res.data || [];
+          this._objectsView = res.listData || [];
         } else {
-          this.toastService.error(res.message || 'خطا در بارگذاری کاربران');
+          this.toastService.error(res.messages?.join() || 'خطا در بارگذاری کاربران');
         }
       },
       error: (err) => {
@@ -107,8 +107,8 @@ onFileSelected(event: Event): void {
   // ---------------------------
   loadCreateFormData(): void {
     this.ObjectService.getCreateForm().subscribe({
-      next: (res: ApiResult<UserCreateFormData>) => {
-        if (res.isSucceeded && res.data) {
+      next: (res: SingleDataResult<UserCreateFormData>) => {
+        if (res.status < 300 && res.data) {
           // حالا res.data یک شیء تک است: { roles: [...] }
           const formData = res.data as UserCreateFormData;
   
@@ -117,7 +117,7 @@ onFileSelected(event: Event): void {
   
           console.log('فرم ایجاد بارگذاری شد:', formData);
         } else {
-          this.toastService.error(res.message || 'خطا در دریافت فرم ایجاد');
+          this.toastService.error(res.messages?.join() || 'خطا در دریافت فرم ایجاد');
         }
       },
       error: (err) => {
@@ -160,14 +160,14 @@ onFileSelected(event: Event): void {
         : this.ObjectService.insertRecord(data);
   
       request$.subscribe({
-        next: (res: ApiResult<any>) => {
-          if (res.isSucceeded) {
+        next: (res: StatusResult) => {
+          if (res.status < 300) {
             this.afterSubmit();
             this.toastService.success(
               this.editMode ? 'کاربر با موفقیت ویرایش شد' : 'کاربر با موفقیت ایجاد شد'
             );
           } else {
-            this.toastService.error(res.message || 'خطا در عملیات');
+            this.toastService.error(res.messages?.join() || 'خطا در عملیات');
           }
         },
         error: (err) => {
@@ -211,8 +211,8 @@ onFileSelected(event: Event): void {
     passwordControl?.updateValueAndValidity();
   
     this.ObjectService.getRecordById(id).subscribe({
-      next: (res: ApiResult<UserDto>) => {
-        if (res.isSucceeded && res.data) {
+      next: (res: SingleDataResult<UserDto>) => {
+        if (res.status < 300 && res.data) {
           const user = res.data;
           this.ObjectForm.patchValue({
             id: user.id,
@@ -259,13 +259,13 @@ onFileSelected(event: Event): void {
 
   deleteSelectedRecords(): void {
     this.ObjectService.deleteRecords(this.selectedIds).subscribe({
-      next: (res: ApiResult<any>) => {
-        if (res.isSucceeded) {
+      next: (res: StatusResult) => {
+        if (res.status < 300) {
           this.afterSubmit();
           this.selectedIds = [];
           this.toastService.success('کاربران انتخاب‌شده حذف شدند');
         } else {
-          this.toastService.error(res.message || 'خطا در حذف');
+          this.toastService.error(res.messages?.join() || 'خطا در حذف');
         }
         this.showDeleteConfirm = false;
       },
@@ -274,4 +274,8 @@ onFileSelected(event: Event): void {
       }
     });
   }
+}
+
+function OkList<T>(): any {
+  throw new Error('Function not implemented.');
 }

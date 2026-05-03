@@ -6,10 +6,11 @@ import { Observable } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { Domain } from 'src/utilities/path';
 import { ToastService } from '../../utilities/toast.service';
-import { ListRequest } from 'src/app/dto/ListRequestDto';
+
 import { UserCreateFormData, UserDto } from 'src/app/dto/base/UserDto';
 import { BaseService } from '../../utilities/base.service';
-import { ApiResult } from 'src/app/dto/api-result';
+import { SingleDataResult, StatusResult } from 'src/app/dto/result';
+
 
 @Injectable({
   providedIn: 'root'
@@ -26,9 +27,9 @@ export class UserManageService extends BaseService<UserDto, UserDto> {
 
 
   // === Override insertRecord با FormData ===
-  override insertRecord(data: UserDto): Observable<ApiResult<any>> {
+  override insertRecord(data: UserDto): Observable<SingleDataResult<any>> {
     const formData = this.buildFormData(data);
-    return this.http.post<ApiResult<any>>(`${Domain}${this.endpoint}/create`, formData).pipe(
+    return this.http.post<SingleDataResult<any>>(`${Domain}${this.endpoint}/create`, formData).pipe(
       catchError(err => {
         this.toastService.error('خطا در ایجاد کاربر');
         throw err;
@@ -40,9 +41,9 @@ export class UserManageService extends BaseService<UserDto, UserDto> {
 
  
   // === Override updateRecord با FormData ===
-  override updateRecord(data: UserDto): Observable<ApiResult<any>> {
+  override updateRecord(data: UserDto): Observable<SingleDataResult<any>> {
     const formData = this.buildFormData(data);
-    return this.http.post<ApiResult<any>>(`${Domain}${this.endpoint}/update`, formData).pipe(
+    return this.http.post<SingleDataResult<any>>(`${Domain}${this.endpoint}/update`, formData).pipe(
       catchError(err => {
         this.toastService.error('خطا در به‌روزرسانی کاربر');
         throw err;

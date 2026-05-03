@@ -5,7 +5,7 @@ import { Observable, BehaviorSubject, throwError, of } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
 import { ToastService } from '../../utilities/toast.service';
 import { Domain } from '../../../../utilities/path';
-import { ApiResult } from 'src/app/dto/api-result';
+import {ListDataResult, SingleDataResult} from 'src/app/dto/result';
 
 @Injectable({
   providedIn: 'root'
@@ -33,9 +33,9 @@ export class AuthService {
 login(username: string, password: string): Observable<any> {
   const body = { username, password };
 
-  return this.http.post<ApiResult<any>>(`${this.apiUrl}/login`, body).pipe(
+  return this.http.post<SingleDataResult<any>>(`${this.apiUrl}/login`, body).pipe(
     map(response => {
-      if (response.isSucceeded && response.data?.token) {
+      if ( response.status < 300 && response.data?.token) {
         const token = response.data.token;
         const user = response.data;
 
@@ -80,15 +80,15 @@ getUserId(): number {
 }
 
   private fetchPermissions(): void {
-    this.http.get<ApiResult<string[]>>(`/api/user/permissions`).pipe(
+    this.http.get<ListDataResult<string>>(`/api/user/permissions`).pipe(
       catchError(() => {
         this.toast.error('خطا در دریافت دسترسی‌ها');
         return of(null);
       })
     ).subscribe(res => {
-      if (res?.isSucceeded && res.data) {
-        this.permissions.next(res.data);
-        localStorage.setItem('permissions', JSON.stringify(res.data));
+      if (res?.listData) {
+        this.permissions.next(res.listData);
+        localStorage.setItem('permissions', JSON.stringify(res.listData));
       }
     });
   }

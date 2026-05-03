@@ -19,7 +19,7 @@ import {
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../../../services/auth/login/auth.service';
 import { ToastService } from '../../../../../services/utilities/toast.service';
-import { ApiResult } from 'src/app/dto/api-result';
+import { SingleDataResult } from 'src/app/dto/result';
 
 @Component({
   selector: 'app-login',
@@ -63,16 +63,16 @@ export class LoginComponent {
     this.loading = true;
   
     this.authService.login(this.username, this.password).subscribe({
-      next: (res: ApiResult<any>) => {
+      next: (res: SingleDataResult<any>) => {
         this.loading = false;
   
-        if (res.isSucceeded && res.data?.token) {
+        if ( res.status < 300 && res.data?.token) {
           this.toast.success('ورود با موفقیت انجام شد');
           this.router.navigate(['/dashboard']);
           
         } else {
           // این قسمت حیاتی است!
-          const errorMsg = res. message || res.errors?.join(', ') || 'ورود ناموفق';
+          const errorMsg = res. messages?.join()  || 'ورود ناموفق';
           this.toast.error(errorMsg);
         }
       },

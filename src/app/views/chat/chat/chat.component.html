@@ -99,7 +99,7 @@
             class="form-control" 
             placeholder="پیام خود را بنویسید..." 
             [(ngModel)]="newMessage"
-            (keydown.enter)="onKeydown($event)"
+            (keydown.enter)="onKeydown($any($event))"
             autocomplete="off"
           >
           <input type="file" class="form-control" style="width: auto;" (change)="onFileSelected($event)">

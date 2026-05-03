@@ -1,8 +1,13 @@
 // src/app/services/utilities/toast.service.ts
 
-import { Injectable, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
-import { ApiResult } from 'src/app/dto/api-result';
+import { Injectable, signal } from '@angular/core';
+import { 
+  StatusResult, 
+    SingleDataResult, 
+    ListDataResult, 
+    FileResult 
+} from 'src/app/dto/result';
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info';
 
@@ -64,41 +69,90 @@ export class ToastService {
   remove(id: number): void {
     this.toasts.update(list => list.filter(t => t.id !== id));
   }
+
   removeToast(id: number): void {
     this.toasts.update(list => list.filter(t => t.id !== id));
   }
-  // --- فقط پیام از ApiResult — بدون fallback محلی ---
-  handleApiResponse<T>(result: ApiResult<T>): void {
-    if (result.isSucceeded) {
-      if (result.message) {
-        this.success(result.message);
+
+  // --- هندل کردن SingleDataResult ---
+  handleSingleResult<T>(result: SingleDataResult<T>): void {
+    if (result.status < 300) {
+      if (result.messages && result.messages.length > 0) {
+        // اگر چند پیام داریم، اولین پیام را نشان بده
+        this.success(result.messages[0]);
       }
-      // اگر message نبود → هیچ توستی نمایش داده نمی‌شود
+      // اگر messages خالی بود → هیچ توستی نمایش داده نمی‌شود
     } else {
-      this.handleApiError(result);
+      this.handleErrorResult(result);
     }
   }
-  
 
-  // --- هندل کردن خطاهای ApiResult با چک statusCode ایمن ---
-  private handleApiError(result: ApiResult): void {
-    const errors = result.errors ?? [];
-    const message = errors.length > 0 ? errors[0] : result.message ?? 'خطایی رخ داد.';
+  // --- هندل کردن ListDataResult ---
+  handleListResult<T>(result: ListDataResult<T>): void {
+    if (result.status < 300) {
+      if (result.messages && result.messages.length > 0) {
+        this.success(result.messages[0]);
+      }
+    } else {
+      this.handleErrorResult(result);
+    }
+  }
 
-    const status = result.statusCode;
+  // --- هندل کردن FileResult ---
+  handleFileResult(result: FileResult): void {
+    if (result.status < 300) {
+      if (result.messages && result.messages.length > 0) {
+        this.success(result.messages[0]);
+      }
+    } else {
+      this.handleErrorResult(result);
+    }
+  }
+
+  // --- هندل کردن通用的 StatusResult ---
+  handleResult(result: StatusResult): void {
+    if (result.status < 300) {
+      if (result.messages && result.messages.length > 0) {
+        this.success(result.messages[0]);
+      }
+    } else {
+      this.handleErrorResult(result);
+    }
+  }
+
+  // --- هندل کردن خطاهای Result ---
+  private handleErrorResult(result: StatusResult): void {
+    const messages = result.messages ?? [];
+    const message = messages.length > 0 ? messages[0] : 'خطایی رخ داد.';
+    const status = result.status;
 
     if (status === 401) {
       this.warning(message, 'احراز هویت');
     } else if (status === 403) {
       this.warning(message, 'دسترسی ممنوع');
-    } else if (status != null && status >= 400 && status < 500) {
+    } else if (status >= 400 && status < 500) {
       this.error(message, 'خطای اعتبارسنجی');
+    } else if (status >= 500) {
+      this.error(message, 'خطای سرور');
     } else {
-      this.error(message); // 500 یا بدون statusCode
+      this.error(message);
     }
   }
 
-  // --- فقط خطاهای خام HTTP (بدون ApiResult) ---
+  // --- نمایش تمام پیام‌های یک نتیجه (برای مواردی که چند پیام مهم دارند) ---
+  handleAllMessages(result: StatusResult): void {
+    if (result.messages && result.messages.length > 0) {
+      if (result.status < 300) {
+        // برای موفقیت: همه پیام‌ها را نشان بده
+        result.messages.forEach(msg => this.success(msg));
+      } else {
+        // برای خطا: همه پیام‌ها را با نوع error نشان بده
+        result.messages.forEach(msg => this.error(msg));
+      }
+    }
+  }
+
+  // --- فقط خطاهای خام HTTP (بدون Result) ---
   handleHttpError(error: HttpErrorResponse): void {
     let message = 'خطای ارتباط با سرور';
 
@@ -112,10 +166,18 @@ export class ToastService {
 
       if (status === 0) {
         message = 'اتصال به سرور برقرار نیست.';
-      } else if (status === 500) {
-        message = 'خطای داخلی سرور.';
+      } else if (status === 401) {
+        message = 'لطفاً مجدداً وارد شوید.';
+        this.warning(message, 'احراز هویت');
+        return;
+      } else if (status === 403) {
+        message = 'شما دسترسی لازم را ندارید.';
+        this.warning(message, 'دسترسی ممنوع');
+        return;
       } else if (status === 404) {
         message = 'منبع مورد نظر یافت نشد.';
+      } else if (status === 500) {
+        message = 'خطای داخلی سرور.';
       } else if (body && typeof body === 'object' && 'message' in body) {
         message = (body as any).message;
       } else if (typeof body === 'string') {
@@ -124,9 +186,25 @@ export class ToastService {
     }
 
     this.error(message);
-  
-  
   }
 
-  
+  // --- متد کمکی برای هندل کردن Promise-based نتایج ---
+  async handleAsyncResult<T>(
+    promise: Promise<SingleDataResult<T>>, 
+    successMessage?: string
+  ): Promise<SingleDataResult<T> | null> {
+    try {
+      const result = await promise;
+      this.handleSingleResult(result);
+      return result;
+    } catch (error) {
+      if (error instanceof HttpErrorResponse) {
+        this.handleHttpError(error);
+      } else {
+        this.error('خطای غیرمنتظره رخ داد');
+      }
+      return null;
+    }
+  }
 }
+

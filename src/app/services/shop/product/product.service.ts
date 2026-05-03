@@ -6,7 +6,8 @@ import { Injectable } from '@angular/core';
 import { catchError, map, Observable, throwError } from 'rxjs';
 import { ProductCreateDto, ProductViewDto } from '../../../dto/shop/ProductDto';
 import { BaseService } from '../../utilities/base.service';
-import { ApiResult } from 'src/app/dto/api-result';
+import { ListDataResult } from 'src/app/dto/result';
+
 
 @Injectable({
   providedIn: 'root'
@@ -24,10 +25,10 @@ export class ProductService extends BaseService<ProductViewDto, ProductCreateDto
  
 
   /** جستجوی محصول با پارامترها */
-  searchProducts(request: ListRequest): Observable<ApiResult<ProductViewDto[]>> {
+  searchProducts(request: ListRequest): Observable<ListDataResult<ProductViewDto>> {
 
 
-    return this.http.post<ApiResult<ProductViewDto[]>>(`${this.apiurl}/api/product/search`, request, { headers: this.getJsonHeaders() }).pipe(
+    return this.http.post<ListDataResult<ProductViewDto>>(`${this.apiurl}/api/product/search`, request, { headers: this.getJsonHeaders() }).pipe(
       catchError(error => {
         //this.toast.showToast.error({ message: 'خطا در تراکنش ' });
         this.toast.error("need change");
