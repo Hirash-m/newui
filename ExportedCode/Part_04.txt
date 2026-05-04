@@ -1,4 +1,23 @@
-﻿===== FILE: src\app\services\base\navigation\navigation.service.ts =====
+﻿===== FILE: src\app\services\base\navigation\navigation.service.spec.ts =====
+import { TestBed } from '@angular/core/testing';
+
+import { NavigationService } from './navigation.service';
+
+describe('NavigationService', () => {
+  let service: NavigationService;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({});
+    service = TestBed.inject(NavigationService);
+  });
+
+  it('should be created', () => {
+    expect(service).toBeTruthy();
+  });
+});
+
+
+===== FILE: src\app\services\base\navigation\navigation.service.ts =====
 // src/app/services/navigation/navigation.service.ts
 import { Injectable, inject } from '@angular/core';
 import { INavData } from '@coreui/angular';
@@ -235,10 +254,11 @@ import { Observable } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { Domain } from 'src/utilities/path';
 import { ToastService } from '../../utilities/toast.service';
-import { ListRequest } from 'src/app/dto/ListRequestDto';
+
 import { UserCreateFormData, UserDto } from 'src/app/dto/base/UserDto';
 import { BaseService } from '../../utilities/base.service';
-import { ApiResult } from 'src/app/dto/api-result';
+import { SingleDataResult, StatusResult } from 'src/app/dto/result';
+
 
 @Injectable({
   providedIn: 'root'
@@ -255,9 +275,9 @@ export class UserManageService extends BaseService<UserDto, UserDto> {
 
 
   // === Override insertRecord Ø¨Ø§ FormData ===
-  override insertRecord(data: UserDto): Observable<ApiResult<any>> {
+  override insertRecord(data: UserDto): Observable<SingleDataResult<any>> {
     const formData = this.buildFormData(data);
-    return this.http.post<ApiResult<any>>(`${Domain}${this.endpoint}/create`, formData).pipe(
+    return this.http.post<SingleDataResult<any>>(`${Domain}${this.endpoint}/create`, formData).pipe(
       catchError(err => {
         this.toastService.error('Ø®Ø·Ø§ Ø¯Ø± Ø§ÛŒØ¬Ø§Ø¯ Ú©Ø§Ø±Ø¨Ø±');
         throw err;
@@ -269,9 +289,9 @@ export class UserManageService extends BaseService<UserDto, UserDto> {
 
  
   // === Override updateRecord Ø¨Ø§ FormData ===
-  override updateRecord(data: UserDto): Observable<ApiResult<any>> {
+  override updateRecord(data: UserDto): Observable<SingleDataResult<any>> {
     const formData = this.buildFormData(data);
-    return this.http.post<ApiResult<any>>(`${Domain}${this.endpoint}/update`, formData).pipe(
+    return this.http.post<SingleDataResult<any>>(`${Domain}${this.endpoint}/update`, formData).pipe(
       catchError(err => {
         this.toastService.error('Ø®Ø·Ø§ Ø¯Ø± Ø¨Ù‡â€ŒØ±ÙˆØ²Ø±Ø³Ø§Ù†ÛŒ Ú©Ø§Ø±Ø¨Ø±');
         throw err;
@@ -329,150 +349,75 @@ describe('ChatService', () => {
 
 ===== FILE: src\app\services\chat\chat.service.ts =====
 // src/app/services/chat/chat.service.ts
+
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { HubConnection, HubConnectionBuilder, HubConnectionState } from '@microsoft/signalr';
-import { BehaviorSubject, Observable, from } from 'rxjs';
-import { ApiResult } from '../../dto/api-result';
-import { MessageDto, ChatListItem, SendMessageDto } from '../../dto/chat/MessageDto';
+import { Observable, Subject } from 'rxjs';
+import { HubConnection, HubConnectionBuilder } from '@microsoft/signalr';
+import { environment } from 'src/environments/environment';
+import { ChatListItem, MessageDto, SendMessageDto } from 'src/app/dto/chat/MessageDto';
 import { AuthService } from '../auth/login/auth.service';
-import { ToastService } from '../utilities/toast.service';
+import { ListDataResult } from 'src/app/dto/result';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ChatService {
+  private apiUrl = environment.apiUrl + '/api/Chat';
   private hubConnection!: HubConnection;
-  public messages$ = new BehaviorSubject<MessageDto[]>([]);
-  public chatList$ = new BehaviorSubject<ChatListItem[]>([]);
 
-  private currentUserId = this.authService.getUserId();
+  // Ø¨Ø±Ø§ÛŒ Ù¾Ø®Ø´ Ù¾ÛŒØ§Ù… Ø¬Ø¯ÛŒØ¯ realtime
+  public messageReceived = new Subject<MessageDto>();
+  public chatListUpdated = new Subject<void>();
+  public unreadCountUpdated = new Subject<void>();
 
-  constructor(
-    private http: HttpClient,
-    private authService: AuthService,
-    private toast: ToastService
-  ) {
+  constructor(private http: HttpClient, private auth: AuthService) {
+    this.createConnection();
     this.startConnection();
+    this.registerOnServerEvents();
   }
 
-  private startConnection(): void {
-    const token = this.authService.getToken();
-
+  private createConnection() {
     this.hubConnection = new HubConnectionBuilder()
-      .withUrl('/chatHub', {  // Ø¨Ø§ proxy Ú©Ø§Ø± Ù…ÛŒâ€ŒÚ©Ù†Ù‡
-        accessTokenFactory: () => token || ''
+      .withUrl(environment.apiUrl + '/chatHub', {
+        accessTokenFactory: () => this.auth.getToken() || ''
       })
       .withAutomaticReconnect()
       .build();
+  }
 
-    this.hubConnection.start()
-      .then(() => console.log('SignalR Connected'))
-      .catch(err => console.error('SignalR Connection Error:', err));
+  private startConnection() {
+    this.hubConnection.start().catch(err => console.error('SignalR Connection Error: ', err));
+  }
 
-    // Ø¯Ø±ÛŒØ§ÙØª Ù¾ÛŒØ§Ù… Ø¬Ø¯ÛŒØ¯
+  private registerOnServerEvents() {
     this.hubConnection.on('ReceiveMessage', (message: MessageDto) => {
-      message.isMine = message.senderId === this.currentUserId;
-      this.messages$.next([...this.messages$.value, message]);
-      this.updateChatListOnNewMessage(message);
-      this.scrollToBottom.next(true);
-    });
-
-    this.hubConnection.on('UserStatusChanged', (userId: number, isOnline: boolean) => {
-      const list = this.chatList$.value;
-      const user = list.find(u => u.userId === userId);
-      if (user) {
-        user.isOnline = isOnline;
-        this.chatList$.next([...list]);
-      }
+      this.messageReceived.next(message);
+      this.chatListUpdated.next(); // Ø¨Ø±Ø§ÛŒ Ø¢Ù¾Ø¯ÛŒØª unread Ø¯Ø± Ù„ÛŒØ³Øª
     });
   }
 
-  // Ø¨Ø±ÙˆØ²Ø±Ø³Ø§Ù†ÛŒ unread
-  private updateChatListOnNewMessage(message: MessageDto): void {
-    if (message.receiverId !== this.currentUserId) return;
-
-    const list = this.chatList$.value;
-    const user = list.find(u => u.userId === message.senderId);
-    if (user) {
-      user.lastMessage = message.type === 'Text' ? message.content : (message.type === 'Image' ? 'ØªØµÙˆÛŒØ±' : 'ÙØ§ÛŒÙ„');
-      user.lastMessageTime = message.sentAt;
-      if (this.selectedUserId !== message.senderId) {
-        user.unreadCount++;
-      }
-      this.chatList$.next([...list]);
-    }
+  // Ù„ÛŒØ³Øª Ú†Øªâ€ŒÙ‡Ø§
+  getChatList(): Observable<ListDataResult<ChatListItem>> {
+    return this.http.get<ListDataResult<ChatListItem>>(`${this.apiUrl}/list`);
   }
 
-  private selectedUserId: number | null = null;
-
-  // 1. Ù„ÛŒØ³Øª Ú†Øª
-  public loadChatList(): void {
-    this.http.get<any>('/api/Chat/list').subscribe({
-      next: (res) => {
-        if (res.success && Array.isArray(res.data)) {
-          const list: ChatListItem[] = res.data.map((item: any) => ({
-            userId: item.userId,
-            fullName: item.userName || 'Ú©Ø§Ø±Ø¨Ø± Ù†Ø§Ø´Ù†Ø§Ø³',
-            lastMessage: item.lastMessage || 'Ø¨Ø¯ÙˆÙ† Ù¾ÛŒØ§Ù…',
-            lastMessageTime: item.lastMessageTime ? new Date(item.lastMessageTime) : undefined,
-            unreadCount: item.unreadCount || 0,
-            isOnline: item.isOnline || false,
-            lastSeen: item.lastSeen ? new Date(item.lastSeen) : null
-          }));
-          this.chatList$.next(list);
-          console.log('Chat list loaded:', list); // Ø¨Ø±Ø§ÛŒ Ø¯ÛŒØ¨Ø§Ú¯
-        }
-      },
-      error: (err) => {
-        console.error('Failed to load chat list:', err);
-        this.toast.error('Ø®Ø·Ø§ Ø¯Ø± Ø¨Ø§Ø±Ú¯Ø°Ø§Ø±ÛŒ Ù„ÛŒØ³Øª Ú†Øª');
-      }
+  // ØªØ§Ø±ÛŒØ®Ú†Ù‡ Ù¾ÛŒØ§Ù… Ø¨Ø§ Ú©Ø§Ø±Ø¨Ø± Ø®Ø§Øµ
+  getChatHistory(otherUserId: number, page: number = 1, pageSize: number = 50): Observable<ListDataResult<MessageDto>> {
+    return this.http.get<ListDataResult<MessageDto>>(`${this.apiUrl}/history`, {
+      params: { otherUserId, pageNumber: page, pageSize }
     });
   }
 
-  // 2. ØªØ§Ø±ÛŒØ®Ú†Ù‡ Ú†Øª
-  public loadChatHistory(userId: number): void {
-    this.selectedUserId = userId;
-    this.http.get<ApiResult<MessageDto[]>>(`/api/Chat/history/${userId}`).subscribe(res => {
-      if (res.isSucceeded && res.data) {
-        const messages = res.data.map(m => ({
-          ...m,
-          isMine: m.senderId === this.currentUserId
-        }));
-        this.messages$.next(messages.reverse());
-        this.markAsRead(userId);
-        this.scrollToBottom.next(true);
-      }
-    });
+  // Ø§Ø±Ø³Ø§Ù„ Ù¾ÛŒØ§Ù… (HTTP)
+  sendMessage(formData: FormData): Observable<any> {
+    return this.http.post(`${this.apiUrl}/send`, formData);
   }
 
-  // 3. Ø§Ø±Ø³Ø§Ù„ Ù¾ÛŒØ§Ù…
-  public sendMessage(dto: SendMessageDto): Observable<any> {
-    if (this.hubConnection.state === HubConnectionState.Connected) {
-      return from(this.hubConnection.invoke('SendMessage', dto));
-    }
-
-    const formData = new FormData();
-    formData.append('receiverId', dto.receiverId.toString());
-    if (dto.content) formData.append('content', dto.content);
-    if (dto.file) formData.append('file', dto.file, dto.file.name);
-    formData.append('type', dto.type);
-
-    return this.http.post('/api/Chat/send', formData);
+  // Ù…Ø§Ø±Ú© Ú©Ø±Ø¯Ù† Ø¨Ù‡ Ø¹Ù†ÙˆØ§Ù† Ø®ÙˆØ§Ù†Ø¯Ù‡ Ø´Ø¯Ù‡
+  markAsRead(receiverId: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/mark-as-read`, { senderId: this.auth.getUserId(), receiverId });
   }
-
-  // 4. Ø®ÙˆØ§Ù†Ø¯Ù‡ Ø´Ø¯Ù‡
-  public markAsRead(userId: number): void {
-    this.http.post(`/api/Chat/mark-as-read/${userId}`, {}).subscribe();
-    // Ø¢Ù¾Ø¯ÛŒØª Ù…Ø­Ù„ÛŒ unread
-    const list = this.chatList$.value;
-    const user = list.find(u => u.userId === userId);
-    if (user) user.unreadCount = 0;
-    this.chatList$.next([...list]);
-  }
-
-  public scrollToBottom = new BehaviorSubject<boolean>(false);
 }
 
 ===== FILE: src\app\services\shop\countType\count-type.service.spec.ts =====
@@ -587,7 +532,8 @@ import { Injectable } from '@angular/core';
 import { catchError, map, Observable, throwError } from 'rxjs';
 import { ProductCreateDto, ProductViewDto } from '../../../dto/shop/ProductDto';
 import { BaseService } from '../../utilities/base.service';
-import { ApiResult } from 'src/app/dto/api-result';
+import { ListDataResult } from 'src/app/dto/result';
+
 
 @Injectable({
   providedIn: 'root'
@@ -605,10 +551,10 @@ export class ProductService extends BaseService<ProductViewDto, ProductCreateDto
  
 
   /** Ø¬Ø³ØªØ¬ÙˆÛŒ Ù…Ø­ØµÙˆÙ„ Ø¨Ø§ Ù¾Ø§Ø±Ø§Ù…ØªØ±Ù‡Ø§ */
-  searchProducts(request: ListRequest): Observable<ApiResult<ProductViewDto[]>> {
+  searchProducts(request: ListRequest): Observable<ListDataResult<ProductViewDto>> {
 
 
-    return this.http.post<ApiResult<ProductViewDto[]>>(`${this.apiurl}/api/product/search`, request, { headers: this.getJsonHeaders() }).pipe(
+    return this.http.post<ListDataResult<ProductViewDto>>(`${this.apiurl}/api/product/search`, request, { headers: this.getJsonHeaders() }).pipe(
       catchError(error => {
         //this.toast.showToast.error({ message: 'Ø®Ø·Ø§ Ø¯Ø± ØªØ±Ø§Ú©Ù†Ø´ ' });
         this.toast.error("need change");
@@ -631,134 +577,6 @@ export class MockBaseService extends BaseService<any, any> {
 
   constructor() {
     super(null!, null!); // HttpClient Ùˆ ToastService Ø±Ùˆ null Ù…ÛŒâ€ŒØ°Ø§Ø±ÛŒÙ… Ú†ÙˆÙ† ØªØ³Øª ÙˆØ§Ø­Ø¯ Ù‡Ø³Øª
-  }
-}
-
-===== FILE: src\app\services\utilities\base.service.ts =====
-// src/app/services/utilities/base.service.ts
-
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Injectable } from '@angular/core';
-import { Observable, throwError } from 'rxjs';
-import { catchError } from 'rxjs/operators';
-import { ToastService } from './toast.service';
-import { ApiResult } from '../../dto/api-result';
-import { ListRequest } from '../../dto/ListRequestDto';
-import { Domain } from '../../../utilities/path';
-
-@Injectable({ providedIn: 'root' })
-export abstract class BaseService<TViewDto, TCreateDto = TViewDto> {
-  protected apiUrl = Domain;
-  protected abstract endpoint: string;
-
-  constructor(
-    protected http: HttpClient,
-    protected toast: ToastService
-  ) {}
-
-  protected getJsonHeaders(): HttpHeaders {
-    return new HttpHeaders({
-      accept: 'application/json',
-      'Content-Type': 'application/json',
-    });
-  }
-
-  // Ù„ÛŒØ³Øª: Ù‡Ù…ÛŒØ´Ù‡ TViewDto[]
-  getRecords(request: ListRequest): Observable<ApiResult<TViewDto[]>> {
-    return this.http
-      .post<ApiResult<TViewDto[]>>(
-        `${this.apiUrl}${this.endpoint}/GetAll`,
-        request,
-        { headers: this.getJsonHeaders() }
-      )
-      .pipe(catchError(err => this.handleError(err)));
-  }
-
-
-
-    // Ù„ÛŒØ³Øª: Ù‡Ù…ÛŒØ´Ù‡ TViewDto[]
-    getRecordList(): Observable<ApiResult<TViewDto[]>> {
-      return this.http
-        .get<ApiResult<TViewDto[]>>(
-          `${this.apiUrl}${this.endpoint}/GetList`,
-          
-          { headers: this.getJsonHeaders() }
-        )
-        .pipe(catchError(err => this.handleError(err)));
-    }
-  
-  // Ø§ÛŒØ¬Ø§Ø¯
-  insertRecord(data: TCreateDto): Observable<ApiResult<TCreateDto>> {
-    return this.http
-      .post<ApiResult<TCreateDto>>(
-        `${this.apiUrl}${this.endpoint}/create`,
-        data,
-        { headers: this.getJsonHeaders() }
-      )
-      .pipe(catchError(err => this.handleError(err)));
-  }
-
-  // ÙˆÛŒØ±Ø§ÛŒØ´
-  updateRecord(data: TCreateDto): Observable<ApiResult<TCreateDto>> {
-    return this.http
-      .post<ApiResult<TCreateDto>>(
-        `${this.apiUrl}${this.endpoint}/update`,
-        data,
-        { headers: this.getJsonHeaders() }
-      )
-      .pipe(catchError(err => this.handleError(err)));
-  }
-
-  // Ø­Ø°Ù Ú†Ù†Ø¯ØªØ§ÛŒÛŒ
-  deleteRecords(ids: number[]): Observable<ApiResult<any>> {
-    return this.http
-      .post<ApiResult<any>>(
-        `${this.apiUrl}${this.endpoint}/delete`,
-        ids,
-        { headers: this.getJsonHeaders() }
-      )
-      .pipe(catchError(err => this.handleError(err)));
-  }
-
-  // Ø¯Ø±ÛŒØ§ÙØª ÛŒÚ© Ø±Ú©ÙˆØ±Ø¯
-  getRecordById(id: number): Observable<ApiResult<TCreateDto>> {
-    return this.http
-      .get<ApiResult<TCreateDto>>(
-        `${this.apiUrl}${this.endpoint}/getById/?id=${id}`,
-        { headers: this.getJsonHeaders() }
-      )
-      .pipe(catchError(err => this.handleError(err)));
-  }
-
-  // ÙØ±Ù… Ø§ÛŒØ¬Ø§Ø¯ (Ù…Ø«Ù„ roles, permissions)
-  getCreateForm<U = any>(): Observable<ApiResult<U>> {
-    return this.http
-      .get<ApiResult<U>>(
-        `${this.apiUrl}${this.endpoint}/getcreateform`,
-        { headers: this.getJsonHeaders() }
-      )
-      .pipe(catchError(err => this.handleError(err)));
-  }
-
-  // --- Ø®Ø·Ø§ ---
-  protected handleError(error: any): Observable<never> {
-    // Ù…ÛŒâ€ŒØªÙˆÙ†ÛŒ Ø§ÛŒÙ†Ø¬Ø§ Ù„Ø§Ú¯ Ø¨Ø²Ù†ÛŒ
-    console.error('API Error:', error);
-    return throwError(() => error);
-  }
-
-  // --- Ù†Ù…Ø§ÛŒØ´ Ù¾ÛŒØ§Ù… ---
-  protected showApiResultToast(result: ApiResult<any>): void {
-    if (!result) return;
-
-    if (result.isSucceeded) {
-      if (result.message) {
-        this.toast.success(result.message);
-      }
-    } else {
-      const errorMsg = result.errors?.[0] ?? result.message ?? 'Ø®Ø·Ø§ÛŒÛŒ Ø±Ø® Ø¯Ø§Ø¯';
-      this.toast.error(errorMsg);
-    }
   }
 }
 

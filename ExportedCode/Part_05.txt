@@ -1,4 +1,132 @@
-﻿===== FILE: src\app\services\utilities\toast.service.spec.ts =====
+﻿===== FILE: src\app\services\utilities\base.service.ts =====
+// src/app/services/utilities/base.service.ts
+
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { Observable, throwError } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+import { ToastService } from './toast.service';
+import { ListRequest } from '../../dto/ListRequestDto';
+import { Domain } from '../../../utilities/path';
+import { ListDataResult, SingleDataResult, StatusResult } from 'src/app/dto/result';
+
+@Injectable({ providedIn: 'root' })
+export abstract class BaseService<TViewDto, TCreateDto = TViewDto> {
+  protected apiUrl = Domain;
+  protected abstract endpoint: string;
+
+  constructor(
+    protected http: HttpClient,
+    protected toast: ToastService
+  ) {}
+
+  protected getJsonHeaders(): HttpHeaders {
+    return new HttpHeaders({
+      accept: 'application/json',
+      'Content-Type': 'application/json',
+    });
+  }
+
+  // Ù„ÛŒØ³Øª: Ù‡Ù…ÛŒØ´Ù‡ TViewDto[]
+  getRecords(request: ListRequest): Observable<ListDataResult<TViewDto>> {
+    return this.http
+      .post<ListDataResult<TViewDto>>(
+        `${this.apiUrl}${this.endpoint}/GetAll`,
+        request,
+        { headers: this.getJsonHeaders() }
+      )
+      .pipe(catchError(err => this.handleError(err)));
+  }
+
+
+
+    // Ù„ÛŒØ³Øª: Ù‡Ù…ÛŒØ´Ù‡ TViewDto[]
+    getRecordList(): Observable<ListDataResult<TViewDto>> {
+      return this.http
+        .get<ListDataResult<TViewDto>>(
+          `${this.apiUrl}${this.endpoint}/GetList`,
+          
+          { headers: this.getJsonHeaders() }
+        )
+        .pipe(catchError(err => this.handleError(err)));
+    }
+  
+  // Ø§ÛŒØ¬Ø§Ø¯
+  insertRecord(data: TCreateDto): Observable<SingleDataResult<TCreateDto>> {
+    return this.http
+      .post<SingleDataResult<TCreateDto>>(
+        `${this.apiUrl}${this.endpoint}/create`,
+        data,
+        { headers: this.getJsonHeaders() }
+      )
+      .pipe(catchError(err => this.handleError(err)));
+  }
+
+  // ÙˆÛŒØ±Ø§ÛŒØ´
+  updateRecord(data: TCreateDto): Observable<SingleDataResult<TCreateDto>> {
+    return this.http
+      .post<SingleDataResult<TCreateDto>>(
+        `${this.apiUrl}${this.endpoint}/update`,
+        data,
+        { headers: this.getJsonHeaders() }
+      )
+      .pipe(catchError(err => this.handleError(err)));
+  }
+
+  // Ø­Ø°Ù Ú†Ù†Ø¯ØªØ§ÛŒÛŒ
+  deleteRecords(ids: number[]): Observable<StatusResult> {
+    return this.http
+      .post<StatusResult>(
+        `${this.apiUrl}${this.endpoint}/delete`,
+        ids,
+        { headers: this.getJsonHeaders() }
+      )
+      .pipe(catchError(err => this.handleError(err)));
+  }
+
+  // Ø¯Ø±ÛŒØ§ÙØª ÛŒÚ© Ø±Ú©ÙˆØ±Ø¯
+  getRecordById(id: number): Observable<SingleDataResult<TCreateDto>> {
+    return this.http
+      .get<SingleDataResult<TCreateDto>>(
+        `${this.apiUrl}${this.endpoint}/getById/?id=${id}`,
+        { headers: this.getJsonHeaders() }
+      )
+      .pipe(catchError(err => this.handleError(err)));
+  }
+
+  // ÙØ±Ù… Ø§ÛŒØ¬Ø§Ø¯ (Ù…Ø«Ù„ roles, permissions)
+  getCreateForm<U = any>(): Observable<SingleDataResult<U>> {
+    return this.http
+      .get<SingleDataResult<U>>(
+        `${this.apiUrl}${this.endpoint}/getcreateform`,
+        { headers: this.getJsonHeaders() }
+      )
+      .pipe(catchError(err => this.handleError(err)));
+  }
+
+  // --- Ø®Ø·Ø§ ---
+  protected handleError(error: any): Observable<never> {
+    // Ù…ÛŒâ€ŒØªÙˆÙ†ÛŒ Ø§ÛŒÙ†Ø¬Ø§ Ù„Ø§Ú¯ Ø¨Ø²Ù†ÛŒ
+    console.error('API Error:', error);
+    return throwError(() => error);
+  }
+
+  // --- Ù†Ù…Ø§ÛŒØ´ Ù¾ÛŒØ§Ù… ---
+  protected showApiResultToast(result: SingleDataResult<any>): void {
+    if (!result) return;
+
+    if (result.status < 300) {
+      if (result.messages) {
+        this.toast.success(result.messages.join());
+      }
+    } else {
+      const errorMsg = result.messages?.join()?.[0] ?? result.messages?.join() ?? 'Ø®Ø·Ø§ÛŒÛŒ Ø±Ø® Ø¯Ø§Ø¯';
+      this.toast.error(errorMsg);
+    }
+  }
+}
+
+===== FILE: src\app\services\utilities\toast.service.spec.ts =====
 import { TestBed } from '@angular/core/testing';
 
 import { ToastService } from './toast.service';
@@ -20,9 +148,14 @@ describe('ToastService', () => {
 ===== FILE: src\app\services\utilities\toast.service.ts =====
 // src/app/services/utilities/toast.service.ts
 
-import { Injectable, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
-import { ApiResult } from 'src/app/dto/api-result';
+import { Injectable, signal } from '@angular/core';
+import { ResultStatusEnum,
+  StatusResult, 
+    SingleDataResult, 
+    ListDataResult, 
+    FileResult 
+} from 'src/app/dto/result';
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info';
 
@@ -84,41 +217,133 @@ export class ToastService {
   remove(id: number): void {
     this.toasts.update(list => list.filter(t => t.id !== id));
   }
+
   removeToast(id: number): void {
     this.toasts.update(list => list.filter(t => t.id !== id));
   }
-  // --- ÙÙ‚Ø· Ù¾ÛŒØ§Ù… Ø§Ø² ApiResult â€” Ø¨Ø¯ÙˆÙ† fallback Ù…Ø­Ù„ÛŒ ---
-  handleApiResponse<T>(result: ApiResult<T>): void {
-    if (result.isSucceeded) {
-      if (result.message) {
-        this.success(result.message);
+
+  // --- Ù‡Ù†Ø¯Ù„ Ú©Ø±Ø¯Ù† SingleDataResult ---
+  handleSingleResult<T>(result: SingleDataResult<T>): void {
+    if (result.isSuccess) {
+      if (result.messages && result.messages.length > 0) {
+        // Ø§Ú¯Ø± Ú†Ù†Ø¯ Ù¾ÛŒØ§Ù… Ø¯Ø§Ø±ÛŒÙ…ØŒ Ø§ÙˆÙ„ÛŒÙ† Ù¾ÛŒØ§Ù… Ø±Ø§ Ù†Ø´Ø§Ù† Ø¨Ø¯Ù‡
+        this.success(result.messages[0]);
       }
-      // Ø§Ú¯Ø± message Ù†Ø¨ÙˆØ¯ â†’ Ù‡ÛŒÚ† ØªÙˆØ³ØªÛŒ Ù†Ù…Ø§ÛŒØ´ Ø¯Ø§Ø¯Ù‡ Ù†Ù…ÛŒâ€ŒØ´ÙˆØ¯
+      // Ø§Ú¯Ø± messages Ø®Ø§Ù„ÛŒ Ø¨ÙˆØ¯ â†’ Ù‡ÛŒÚ† ØªÙˆØ³ØªÛŒ Ù†Ù…Ø§ÛŒØ´ Ø¯Ø§Ø¯Ù‡ Ù†Ù…ÛŒâ€ŒØ´ÙˆØ¯
     } else {
-      this.handleApiError(result);
+      this.handleErrorResult(result);
     }
   }
+
+  // --- Ù‡Ù†Ø¯Ù„ Ú©Ø±Ø¯Ù† ListDataResult ---
+  handleListResult<T>(result: ListDataResult<T>): void {
+    if (result.isSuccess) {
+      if (result.messages && result.messages.length > 0) {
+        this.success(result.messages[0]);
+      }
+    } else {
+      this.handleErrorResult(result);
+    }
+  }
+
+  // --- Ù‡Ù†Ø¯Ù„ Ú©Ø±Ø¯Ù† FileResult ---
+  handleFileResult(result: FileResult): void {
+    if (result.isSuccess) {
+      if (result.messages && result.messages.length > 0) {
+        this.success(result.messages[0]);
+      }
+    } else {
+      this.handleErrorResult(result);
+    }
+  }
+
+  // --- Ù‡Ù†Ø¯Ù„ Ú©Ø±Ø¯Ù†é€šç”¨çš„ StatusResult ---
+  handleResult(result: StatusResult): void {
+    if (result.isSuccess) {
+      if (result.messages && result.messages.length > 0) {
+        this.success(result.messages[0]);
+      }
+    } else {
+      this.handleErrorResult(result);
+    }
+  }
+
+  // --- Ù‡Ù†Ø¯Ù„ Ú©Ø±Ø¯Ù† Ø®Ø·Ø§Ù‡Ø§ÛŒ Result ---
+  private handleErrorResult(result: StatusResult): void {
+    // Ú¯Ø±ÙØªÙ† Ù¾ÛŒØ§Ù…â€ŒÙ‡Ø§ Ø§Ø² Ø¨Ú©â€ŒØ§Ù†Ø¯
+    const messages = result.messages ?? [];
+    
+    // Ø§Ú¯Ø± Ú†Ù†Ø¯ØªØ§ Ù¾ÛŒØ§Ù… Ø®Ø·Ø§ Ø¯Ø§Ø±ÛŒÙ…ØŒ Ù‡Ù…Ù‡ Ø±Ùˆ Ø¨Ø§ join Ú©Ù†Ø§Ø± Ù‡Ù… Ù…ÛŒØ°Ø§Ø±ÛŒÙ…
+    const message = messages.length > 0 
+      ? messages.join(' - ')  // ÛŒØ§ Ù…ÛŒØªÙˆÙ†ÛŒ Ø§Ø² '<br>' Ø§Ø³ØªÙØ§Ø¯Ù‡ Ú©Ù†ÛŒ Ø¨Ø±Ø§ÛŒ HTML
+      : 'Ø®Ø·Ø§ÛŒÛŒ Ø±Ø® Ø¯Ø§Ø¯.';
+    
+    const status = result.status;
   
-
-  // --- Ù‡Ù†Ø¯Ù„ Ú©Ø±Ø¯Ù† Ø®Ø·Ø§Ù‡Ø§ÛŒ ApiResult Ø¨Ø§ Ú†Ú© statusCode Ø§ÛŒÙ…Ù† ---
-  private handleApiError(result: ApiResult): void {
-    const errors = result.errors ?? [];
-    const message = errors.length > 0 ? errors[0] : result.message ?? 'Ø®Ø·Ø§ÛŒÛŒ Ø±Ø® Ø¯Ø§Ø¯.';
-
-    const status = result.statusCode;
-
-    if (status === 401) {
-      this.warning(message, 'Ø§Ø­Ø±Ø§Ø² Ù‡ÙˆÛŒØª');
-    } else if (status === 403) {
-      this.warning(message, 'Ø¯Ø³ØªØ±Ø³ÛŒ Ù…Ù…Ù†ÙˆØ¹');
-    } else if (status != null && status >= 400 && status < 500) {
-      this.error(message, 'Ø®Ø·Ø§ÛŒ Ø§Ø¹ØªØ¨Ø§Ø±Ø³Ù†Ø¬ÛŒ');
-    } else {
-      this.error(message); // 500 ÛŒØ§ Ø¨Ø¯ÙˆÙ† statusCode
+    // Ù‡Ù†Ø¯Ù„ Ú©Ø±Ø¯Ù† Ø§Ù†ÙˆØ§Ø¹ Ø®Ø·Ø§Ù‡Ø§ Ø¨Ø± Ø§Ø³Ø§Ø³ status Ø§Ø² Ø¨Ú©â€ŒØ§Ù†Ø¯
+    switch (status) {
+      // ========== Client Errors (Û´xx Ù…Ø¹Ø§Ø¯Ù„â€ŒÙ‡Ø§) ==========
+      case ResultStatusEnum.BadRequest:
+        this.error(message, 'Ø¯Ø±Ø®ÙˆØ§Ø³Øª Ù†Ø§Ù…Ø¹ØªØ¨Ø±');
+        break;
+        
+      case ResultStatusEnum.ValidationFailed:
+        this.error(message, 'Ø®Ø·Ø§ÛŒ Ø§Ø¹ØªØ¨Ø§Ø±Ø³Ù†Ø¬ÛŒ');
+        break;
+        
+      case ResultStatusEnum.NotFound:
+        this.error(message, 'Ø§Ø·Ù„Ø§Ø¹Ø§Øª Ù…ÙˆØ±Ø¯ Ù†Ø¸Ø± ÛŒØ§ÙØª Ù†Ø´Ø¯');
+        break;
+        
+      case ResultStatusEnum.Unauthorized:
+        this.warning(message, 'Ù„Ø·ÙØ§Ù‹ Ù…Ø¬Ø¯Ø¯Ø§Ù‹ ÙˆØ§Ø±Ø¯ Ø´ÙˆÛŒØ¯');
+        break;
+        
+      case ResultStatusEnum.Forbidden:
+        this.warning(message, 'Ø´Ù…Ø§ Ø¯Ø³ØªØ±Ø³ÛŒ Ù„Ø§Ø²Ù… Ø±Ø§ Ù†Ø¯Ø§Ø±ÛŒØ¯');
+        break;
+        
+      case ResultStatusEnum.Conflict:
+        this.warning(message, 'ØªØ¯Ø§Ø®Ù„ Ø¯Ø± Ø§Ø·Ù„Ø§Ø¹Ø§Øª');
+        break;
+      
+      // ========== Server Errors (Ûµxx Ù…Ø¹Ø§Ø¯Ù„â€ŒÙ‡Ø§) ==========
+      case ResultStatusEnum.InternalError:
+        this.error(message, 'Ø®Ø·Ø§ÛŒ Ø¯Ø§Ø®Ù„ÛŒ Ø³Ø±ÙˆØ±');
+        break;
+        
+      case ResultStatusEnum.ServiceUnavailable:
+        this.error(message, 'Ø³Ø±ÙˆÛŒØ³ Ø¯Ø± Ø¯Ø³ØªØ±Ø³ Ù†ÛŒØ³Øª');
+        break;
+        
+      case ResultStatusEnum.DatabaseError:
+        this.error(message, 'Ø®Ø·Ø§ÛŒ Ù¾Ø§ÛŒÚ¯Ø§Ù‡ Ø¯Ø§Ø¯Ù‡');
+        break;
+        
+      case ResultStatusEnum.ThirdPartyError:
+        this.error(message, 'Ø®Ø·Ø§ Ø¯Ø± Ø§Ø±ØªØ¨Ø§Ø· Ø¨Ø§ Ø³Ø±ÙˆÛŒØ³â€ŒÙ‡Ø§ÛŒ Ø¬Ø§Ù†Ø¨ÛŒ');
+        break;
+      
+      // ========== Default ==========
+      default:
+        this.error(message);
+        break;
+    }
+  }
+  // --- Ù†Ù…Ø§ÛŒØ´ ØªÙ…Ø§Ù… Ù¾ÛŒØ§Ù…â€ŒÙ‡Ø§ÛŒ ÛŒÚ© Ù†ØªÛŒØ¬Ù‡ (Ø¨Ø±Ø§ÛŒ Ù…ÙˆØ§Ø±Ø¯ÛŒ Ú©Ù‡ Ú†Ù†Ø¯ Ù¾ÛŒØ§Ù… Ù…Ù‡Ù… Ø¯Ø§Ø±Ù†Ø¯) ---
+  handleAllMessages(result: StatusResult): void {
+    if (result.messages && result.messages.length > 0) {
+      if (result.isSuccess) {
+        // Ø¨Ø±Ø§ÛŒ Ù…ÙˆÙÙ‚ÛŒØª: Ù‡Ù…Ù‡ Ù¾ÛŒØ§Ù…â€ŒÙ‡Ø§ Ø±Ø§ Ù†Ø´Ø§Ù† Ø¨Ø¯Ù‡
+        result.messages.forEach(msg => this.success(msg));
+      } else {
+        // Ø¨Ø±Ø§ÛŒ Ø®Ø·Ø§: Ù‡Ù…Ù‡ Ù¾ÛŒØ§Ù…â€ŒÙ‡Ø§ Ø±Ø§ Ø¨Ø§ Ù†ÙˆØ¹ error Ù†Ø´Ø§Ù† Ø¨Ø¯Ù‡
+        result.messages.forEach(msg => this.error(msg));
+      }
     }
   }
 
-  // --- ÙÙ‚Ø· Ø®Ø·Ø§Ù‡Ø§ÛŒ Ø®Ø§Ù… HTTP (Ø¨Ø¯ÙˆÙ† ApiResult) ---
+  // --- ÙÙ‚Ø· Ø®Ø·Ø§Ù‡Ø§ÛŒ Ø®Ø§Ù… HTTP (Ø¨Ø¯ÙˆÙ† Result) ---
   handleHttpError(error: HttpErrorResponse): void {
     let message = 'Ø®Ø·Ø§ÛŒ Ø§Ø±ØªØ¨Ø§Ø· Ø¨Ø§ Ø³Ø±ÙˆØ±';
 
@@ -132,10 +357,18 @@ export class ToastService {
 
       if (status === 0) {
         message = 'Ø§ØªØµØ§Ù„ Ø¨Ù‡ Ø³Ø±ÙˆØ± Ø¨Ø±Ù‚Ø±Ø§Ø± Ù†ÛŒØ³Øª.';
-      } else if (status === 500) {
-        message = 'Ø®Ø·Ø§ÛŒ Ø¯Ø§Ø®Ù„ÛŒ Ø³Ø±ÙˆØ±.';
+      } else if (status === 401) {
+        message = 'Ù„Ø·ÙØ§Ù‹ Ù…Ø¬Ø¯Ø¯Ø§Ù‹ ÙˆØ§Ø±Ø¯ Ø´ÙˆÛŒØ¯.';
+        this.warning(message, 'Ø§Ø­Ø±Ø§Ø² Ù‡ÙˆÛŒØª');
+        return;
+      } else if (status === 403) {
+        message = 'Ø´Ù…Ø§ Ø¯Ø³ØªØ±Ø³ÛŒ Ù„Ø§Ø²Ù… Ø±Ø§ Ù†Ø¯Ø§Ø±ÛŒØ¯.';
+        this.warning(message, 'Ø¯Ø³ØªØ±Ø³ÛŒ Ù…Ù…Ù†ÙˆØ¹');
+        return;
       } else if (status === 404) {
         message = 'Ù…Ù†Ø¨Ø¹ Ù…ÙˆØ±Ø¯ Ù†Ø¸Ø± ÛŒØ§ÙØª Ù†Ø´Ø¯.';
+      } else if (status === 500) {
+        message = 'Ø®Ø·Ø§ÛŒ Ø¯Ø§Ø®Ù„ÛŒ Ø³Ø±ÙˆØ±.';
       } else if (body && typeof body === 'object' && 'message' in body) {
         message = (body as any).message;
       } else if (typeof body === 'string') {
@@ -144,12 +377,29 @@ export class ToastService {
     }
 
     this.error(message);
-  
-  
   }
 
-  
+  // --- Ù…ØªØ¯ Ú©Ù…Ú©ÛŒ Ø¨Ø±Ø§ÛŒ Ù‡Ù†Ø¯Ù„ Ú©Ø±Ø¯Ù† Promise-based Ù†ØªØ§ÛŒØ¬ ---
+  async handleAsyncResult<T>(
+    promise: Promise<SingleDataResult<T>>, 
+    successMessage?: string
+  ): Promise<SingleDataResult<T> | null> {
+    try {
+      const result = await promise;
+      this.handleSingleResult(result);
+      return result;
+    } catch (error) {
+      if (error instanceof HttpErrorResponse) {
+        this.handleHttpError(error);
+      } else {
+        this.error('Ø®Ø·Ø§ÛŒ ØºÛŒØ±Ù…Ù†ØªØ¸Ø±Ù‡ Ø±Ø® Ø¯Ø§Ø¯');
+      }
+      return null;
+    }
+  }
 }
+
+
 
 ===== FILE: src\app\views\base\login\loginForm\login\login.component.html =====
 <div class="bg-light dark:bg-transparent min-vh-100 d-flex flex-row align-items-center">
@@ -311,7 +561,7 @@ import {
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../../../services/auth/login/auth.service';
 import { ToastService } from '../../../../../services/utilities/toast.service';
-import { ApiResult } from 'src/app/dto/api-result';
+import { SingleDataResult } from 'src/app/dto/result';
 
 @Component({
   selector: 'app-login',
@@ -355,16 +605,16 @@ export class LoginComponent {
     this.loading = true;
   
     this.authService.login(this.username, this.password).subscribe({
-      next: (res: ApiResult<any>) => {
+      next: (res: SingleDataResult<any>) => {
         this.loading = false;
   
-        if (res.isSucceeded && res.data?.token) {
+        if ( res.isSuccess && res.singleData?.token) {
           this.toast.success('ÙˆØ±ÙˆØ¯ Ø¨Ø§ Ù…ÙˆÙÙ‚ÛŒØª Ø§Ù†Ø¬Ø§Ù… Ø´Ø¯');
           this.router.navigate(['/dashboard']);
           
         } else {
           // Ø§ÛŒÙ† Ù‚Ø³Ù…Øª Ø­ÛŒØ§ØªÛŒ Ø§Ø³Øª!
-          const errorMsg = res. message || res.errors?.join(', ') || 'ÙˆØ±ÙˆØ¯ Ù†Ø§Ù…ÙˆÙÙ‚';
+          const errorMsg = res. messages?.join()  || 'ÙˆØ±ÙˆØ¯ Ù†Ø§Ù…ÙˆÙÙ‚';
           this.toast.error(errorMsg);
         }
       },
@@ -637,8 +887,8 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonDirective, ColComponent, FormDirective, FormFeedbackComponent, FormLabelDirective, ModalModule, PageItemDirective, PageLinkDirective, PaginationComponent, RowDirective, TableDirective } from '@coreui/angular';
 import { PermissionDto, RoleDto, UserCreateFormData, UserDto } from 'src/app/dto/base/UserDto';
-import { ApiResult, createApiResult } from 'src/app/dto/api-result'; // ØªØºÛŒÛŒØ± Ø§Ø² baseResponse
 import { ListRequest } from 'src/app/dto/ListRequestDto';
+import { ListDataResult, SingleDataResult, StatusResult } from 'src/app/dto/result';
 import { UserManageService } from 'src/app/services/base/userManage/user-manage.service';
 import { ToastService } from 'src/app/services/utilities/toast.service';
 
@@ -663,7 +913,7 @@ export class UserComponent implements OnInit {
   // Ù„ÛŒØ³Øª Ú©Ø§Ø±Ø¨Ø±Ø§Ù†
   _request = new ListRequest();
   _objectsView: UserDto[] = [];
-  _baseResponse: ApiResult<UserDto[]> = createApiResult<UserDto[]>();
+  _baseResponse: ListDataResult<UserDto> = OkList<UserDto>();
 
   // ÙØ±Ù…
   ObjectForm!: FormGroup;
@@ -721,12 +971,12 @@ onFileSelected(event: Event): void {
   loadDataTable(): void {
     this._request.pageSize = 5;
     this.ObjectService.getRecords(this._request).subscribe({
-      next: (res: ApiResult<UserDto[]>) => {
-        if (res.isSucceeded) {
+      next: (res: ListDataResult<UserDto>) => {
+        if (res.status < 300) {
           this._baseResponse = res;
-          this._objectsView = res.data || [];
+          this._objectsView = res.listData || [];
         } else {
-          this.toastService.error(res.message || 'Ø®Ø·Ø§ Ø¯Ø± Ø¨Ø§Ø±Ú¯Ø°Ø§Ø±ÛŒ Ú©Ø§Ø±Ø¨Ø±Ø§Ù†');
+          this.toastService.error(res.messages?.join() || 'Ø®Ø·Ø§ Ø¯Ø± Ø¨Ø§Ø±Ú¯Ø°Ø§Ø±ÛŒ Ú©Ø§Ø±Ø¨Ø±Ø§Ù†');
         }
       },
       error: (err) => {
@@ -741,17 +991,17 @@ onFileSelected(event: Event): void {
   // ---------------------------
   loadCreateFormData(): void {
     this.ObjectService.getCreateForm().subscribe({
-      next: (res: ApiResult<UserCreateFormData>) => {
-        if (res.isSucceeded && res.data) {
+      next: (res: SingleDataResult<UserCreateFormData>) => {
+        if (res.isSuccess && res.singleData) {
           // Ø­Ø§Ù„Ø§ res.data ÛŒÚ© Ø´ÛŒØ¡ ØªÚ© Ø§Ø³Øª: { roles: [...] }
-          const formData = res.data as UserCreateFormData;
+          const formData = res.singleData as UserCreateFormData;
   
           this.roles = formData.roles ?? [];
           this.permissions = [];
   
           console.log('ÙØ±Ù… Ø§ÛŒØ¬Ø§Ø¯ Ø¨Ø§Ø±Ú¯Ø°Ø§Ø±ÛŒ Ø´Ø¯:', formData);
         } else {
-          this.toastService.error(res.message || 'Ø®Ø·Ø§ Ø¯Ø± Ø¯Ø±ÛŒØ§ÙØª ÙØ±Ù… Ø§ÛŒØ¬Ø§Ø¯');
+          this.toastService.error(res.messages?.join() || 'Ø®Ø·Ø§ Ø¯Ø± Ø¯Ø±ÛŒØ§ÙØª ÙØ±Ù… Ø§ÛŒØ¬Ø§Ø¯');
         }
       },
       error: (err) => {
@@ -794,14 +1044,14 @@ onFileSelected(event: Event): void {
         : this.ObjectService.insertRecord(data);
   
       request$.subscribe({
-        next: (res: ApiResult<any>) => {
-          if (res.isSucceeded) {
+        next: (res: StatusResult) => {
+          if (res.status < 300) {
             this.afterSubmit();
             this.toastService.success(
               this.editMode ? 'Ú©Ø§Ø±Ø¨Ø± Ø¨Ø§ Ù…ÙˆÙÙ‚ÛŒØª ÙˆÛŒØ±Ø§ÛŒØ´ Ø´Ø¯' : 'Ú©Ø§Ø±Ø¨Ø± Ø¨Ø§ Ù…ÙˆÙÙ‚ÛŒØª Ø§ÛŒØ¬Ø§Ø¯ Ø´Ø¯'
             );
           } else {
-            this.toastService.error(res.message || 'Ø®Ø·Ø§ Ø¯Ø± Ø¹Ù…Ù„ÛŒØ§Øª');
+            this.toastService.error(res.messages?.join() || 'Ø®Ø·Ø§ Ø¯Ø± Ø¹Ù…Ù„ÛŒØ§Øª');
           }
         },
         error: (err) => {
@@ -845,9 +1095,9 @@ onFileSelected(event: Event): void {
     passwordControl?.updateValueAndValidity();
   
     this.ObjectService.getRecordById(id).subscribe({
-      next: (res: ApiResult<UserDto>) => {
-        if (res.isSucceeded && res.data) {
-          const user = res.data;
+      next: (res: SingleDataResult<UserDto>) => {
+        if (res.isSuccess && res.singleData) {
+          const user = res.singleData;
           this.ObjectForm.patchValue({
             id: user.id,
             username: user.username,
@@ -893,13 +1143,13 @@ onFileSelected(event: Event): void {
 
   deleteSelectedRecords(): void {
     this.ObjectService.deleteRecords(this.selectedIds).subscribe({
-      next: (res: ApiResult<any>) => {
-        if (res.isSucceeded) {
+      next: (res: StatusResult) => {
+        if (res.status < 300) {
           this.afterSubmit();
           this.selectedIds = [];
           this.toastService.success('Ú©Ø§Ø±Ø¨Ø±Ø§Ù† Ø§Ù†ØªØ®Ø§Ø¨â€ŒØ´Ø¯Ù‡ Ø­Ø°Ù Ø´Ø¯Ù†Ø¯');
         } else {
-          this.toastService.error(res.message || 'Ø®Ø·Ø§ Ø¯Ø± Ø­Ø°Ù');
+          this.toastService.error(res.messages?.join() || 'Ø®Ø·Ø§ Ø¯Ø± Ø­Ø°Ù');
         }
         this.showDeleteConfirm = false;
       },
@@ -909,6 +1159,11 @@ onFileSelected(event: Event): void {
     });
   }
 }
+
+function OkList<T>(): any {
+  throw new Error('Function not implemented.');
+}
+
 
 ===== FILE: src\app\views\base\routes.ts =====
 import { Routes } from '@angular/router';
@@ -942,29 +1197,37 @@ export const routes: Routes = [
 <c-row>
   <c-col md="4">
     <c-card class="h-100">
-      <c-card-header>
+      <c-card-header class="d-flex justify-content-between align-items-center">
         <strong>Ú†Øªâ€ŒÙ‡Ø§</strong>
-        <input type="text" class="form-control form-control-sm mt-2" placeholder="Ø¬Ø³ØªØ¬Ùˆ..." [(ngModel)]="searchText">
       </c-card-header>
 
+      <!-- Ø¬Ø³ØªØ¬Ùˆ -->
+      <div class="p-3 border-bottom">
+        <input 
+          type="text" 
+          class="form-control" 
+          placeholder="Ø¬Ø³ØªØ¬ÙˆÛŒ Ú©Ø§Ø±Ø¨Ø±..." 
+          [(ngModel)]="searchText"
+        >
+      </div>
+
       <c-card-body class="p-0">
-        <ul class="list-group list-group-flush" style="max-height: 80vh; overflow-y: auto;">
+        <ul class="list-group list-group-flush" style="max-height: 75vh; overflow-y: auto;">
           <li 
-            *ngFor="let user of chatList | filter:searchText:'fullName'" 
-            class="list-group-item list-group-item-action px-3 py-3 d-flex align-items-center"
-            (click)="selectUser(user)"
-            [class.active]="selectedUser?.userId === user.userId"
-            style="cursor: pointer;"
+            *ngFor="let user of filteredChatList" 
+            class="list-group-item list-group-item-action d-flex align-items-center cursor-pointer px-3 py-3"
+            [class.bg-light]="selectedUser?.userId === user.userId"
+            (click)="selectChat(user)"
           >
-            <!-- ÙÙ‚Ø· ÛŒÙ‡ Ø¯Ø§ÛŒØ±Ù‡ Ø³Ø§Ø¯Ù‡ Ø¨Ù‡ Ø¬Ø§ÛŒ Ø¢ÙˆØ§ØªØ§Ø± -->
+            <!-- Ø¢ÙˆØ§ØªØ§Ø± Ø¯Ø§ÛŒØ±Ù‡â€ŒØ§ÛŒ -->
             <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" 
-                 style="width: 45px; height: 45px; font-size: 18px;">
-                 {{ (user.fullName?.substring(0, 2) || '??') | uppercase }}
+                 style="width: 50px; height: 50px; font-size: 20px;">
+              {{ (user.fullName?.substring(0, 2) || '??') | uppercase }}
             </div>
 
             <div class="flex-grow-1">
               <div class="fw-bold">{{ user.fullName }}</div>
-              <div class="small text-muted text-truncate">
+              <div class="small text-muted text-truncate" style="max-width: 180px;">
                 {{ user.lastMessage || 'Ø¨Ø¯ÙˆÙ† Ù¾ÛŒØ§Ù…' }}
               </div>
             </div>
@@ -980,7 +1243,7 @@ export const routes: Routes = [
           </li>
 
           <li *ngIf="chatList.length === 0" class="list-group-item text-center text-muted py-5">
-            Ù‡ÛŒÚ† Ú†ØªÛŒ ÛŒØ§ÙØª Ù†Ø´Ø¯
+            Ú†ØªÛŒ ÛŒØ§ÙØª Ù†Ø´Ø¯
           </li>
         </ul>
       </c-card-body>
@@ -989,24 +1252,31 @@ export const routes: Routes = [
 
   <c-col md="8">
     <c-card class="h-100 d-flex flex-column" *ngIf="selectedUser; else noChat">
-      <c-card-header class="border-bottom">
-        <strong>{{ selectedUser.fullName }}</strong>
-        <small class="text-muted d-block">
-          {{ selectedUser.isOnline ? 'Ø¢Ù†Ù„Ø§ÛŒÙ†' : 'Ø¢ÙÙ„Ø§ÛŒÙ†' }}
-        </small>
+      <c-card-header class="border-bottom d-flex align-items-center">
+        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" 
+             style="width: 45px; height: 45px; font-size: 18px;">
+          {{ (selectedUser.fullName?.substring(0, 2)) | uppercase }}
+        </div>
+        <div>
+          <strong>{{ selectedUser.fullName }}</strong>
+          <small class="text-muted d-block">
+            {{ selectedUser.isOnline ? 'Ø¢Ù†Ù„Ø§ÛŒÙ†' : 'Ø¢ÙÙ„Ø§ÛŒÙ†' }}
+          </small>
+        </div>
       </c-card-header>
 
-      <c-card-body #chatBody class="flex-grow-1 overflow-auto p-4" style="background: #f5f5f5;">
-        <div *ngFor="let msg of messages" class="mb-3 d-flex" [class.flex-row-reverse]="msg.isMine">
+      <c-card-body #chatBody class="flex-grow-1 overflow-auto p-4" style="background: #f8f9fa;">
+        <div *ngFor="let msg of messages" class="mb-4 d-flex" [class.flex-row-reverse]="msg.isMine">
           <div 
-            class="p-3 rounded-3 max-w-75"
+            class="p-3 rounded-3 max-w-75 shadow-sm"
             [class.bg-primary]="msg.isMine"
             [class.text-white]="msg.isMine"
-            [class.bg-light]="!msg.isMine"
+            [class.bg-white]="!msg.isMine"
+            [class.border]="!msg.isMine"
           >
             <div [innerHTML]="msg.content"></div>
             
-            <img *ngIf="msg.type === 'Image'" [src]="msg.fileUrl" class="img-fluid rounded mt-2" style="max-width: 250px;">
+            <img *ngIf="msg.type === 'Image'" [src]="msg.fileUrl" class="img-fluid rounded mt-2" style="max-width: 280px;">
             <a *ngIf="msg.type === 'File'" [href]="msg.fileUrl" target="_blank" class="text-decoration-underline small d-block mt-2">
               Ø¯Ø§Ù†Ù„ÙˆØ¯ ÙØ§ÛŒÙ„
             </a>
@@ -1018,14 +1288,14 @@ export const routes: Routes = [
         </div>
       </c-card-body>
 
-      <c-card-footer>
-        <div class="d-flex gap-2">
+      <c-card-footer class="bg-white">
+        <div class="d-flex gap-2 align-items-center">
           <input 
             type="text" 
             class="form-control" 
             placeholder="Ù¾ÛŒØ§Ù… Ø®ÙˆØ¯ Ø±Ø§ Ø¨Ù†ÙˆÛŒØ³ÛŒØ¯..." 
             [(ngModel)]="newMessage"
-            (keydown)="onKeydown($event)"
+            (keydown.enter)="onKeydown($any($event))"
             autocomplete="off"
           >
           <input type="file" class="form-control" style="width: auto;" (change)="onFileSelected($event)">
@@ -1037,13 +1307,10 @@ export const routes: Routes = [
     </c-card>
 
     <ng-template #noChat>
-      <div class="h-100 d-flex align-items-center justify-content-center text-muted">
-        <h5>ÛŒÚ© Ú©Ø§Ø±Ø¨Ø± Ø§Ù†ØªØ®Ø§Ø¨ Ú©Ù†ÛŒØ¯</h5>
+      <div class="h-100 d-flex align-items-center justify-content-center text-muted bg-light rounded">
+        <h5>ÛŒÚ© Ú©Ø§Ø±Ø¨Ø± Ø±Ø§ Ø§Ù†ØªØ®Ø§Ø¨ Ú©Ù†ÛŒØ¯ ØªØ§ Ú†Øª Ø´Ø±ÙˆØ¹ Ø´ÙˆØ¯</h5>
       </div>
     </ng-template>
   </c-col>
 </c-row>
-
-===== FILE: src\app\views\chat\chat\chat.component.scss =====
-
 

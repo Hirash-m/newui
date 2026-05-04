@@ -375,7 +375,7 @@ import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { ToastService } from '../../services/utilities/toast.service';
-import { ApiResult } from 'src/app/dto/api-result';
+import { ResultStatusEnum, SingleDataResult} from 'src/app/dto/result';
 
 export function authInterceptor(
   req: HttpRequest<unknown>,
@@ -396,16 +396,16 @@ export function authInterceptor(
     catchError((error: HttpErrorResponse) => {
       // 1. Ø§Ú¯Ø± Ù¾Ø§Ø³Ø® JSON Ø¨Ø§ Ø³Ø§Ø®ØªØ§Ø± ApiResult Ø¨ÙˆØ¯
       if (error.error && typeof error.error === 'object') {
-        const apiResult = error.error as ApiResult;
+        const apiResult = error.error as SingleDataResult<any>;
 
         // ÙÙ‚Ø· Ø§Ú¯Ø± Ø³Ø§Ø®ØªØ§Ø± ApiResult Ø¯Ø§Ø´Øª
-        if ('isSucceeded' in apiResult) {
-          if (!apiResult.isSucceeded) {
-            toast.handleApiResponse(apiResult);
+        if (apiResult ) {
+          if (apiResult.isSuccess) {
+            toast.handleResult(apiResult);
           }
 
           // 401: Ù„Ø§Ú¯â€ŒØ§ÙˆØª Ø®ÙˆØ¯Ú©Ø§Ø±
-          if (apiResult.statusCode === 401 || error.status === 401) {
+          if (apiResult.status === ResultStatusEnum.Unauthorized ) {
             localStorage.removeItem('token');
             localStorage.removeItem('user');
             router.navigate(['/login']);
@@ -550,35 +550,39 @@ export class ProductCreateDto {
 
 ===== FILE: src\app\dto\api-result.ts =====
 // src/app/dto/api-result.ts
-export interface ApiResult<T = any> {
-  isSucceeded: boolean;
-  message?: string;
-  statusCode?: number;
-  errors?: string[];
-  data?: T;
-  totalRecords?: number;
-  totalPages?: number;
-  pageNumber?: number;
-  pageSize?: number;
-}
+//export interface ApiResult<T = any> {
+//  isSucceeded: boolean;
+//  message?: string;
+//  statusCode?: number;
+//  errors?: string[];
+//  data?: T;
+//  totalRecords?: number;
+//  totalPages?: number;
+//  pageNumber?: number;
+//  pageSize?: number;
+//}
+//
+//export const createApiResult = <T>(): ApiResult<T> => ({
+//  isSucceeded: false,
+//  data: undefined,
+//});
+//
+//export const ApiResult = {
+//  Success: <T>(data: T, message?: string): ApiResult<T> => ({
+//    isSucceeded: true,
+//    data,
+//    message,
+//    statusCode: 200
+//  }),
+//  Failed: (message: string = 'Ø®Ø·Ø§', errors?: string[]): ApiResult<any> => ({
+//    isSucceeded: false,
+//    message,
+//    errors,
+//    statusCode: 400
+//  })
+//};
 
-export const createApiResult = <T>(): ApiResult<T> => ({
-  isSucceeded: false,
-  data: undefined,
-});
 
-export const ApiResult = {
-  Success: <T>(data: T, message?: string): ApiResult<T> => ({
-    isSucceeded: true,
-    data,
-    message,
-    statusCode: 200
-  }),
-  Failed: (message: string = 'Ø®Ø·Ø§', errors?: string[]): ApiResult<any> => ({
-    isSucceeded: false,
-    message,
-    errors,
-    statusCode: 400
-  })
-};
+
+export interface nothing{}
 

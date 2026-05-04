@@ -1,8 +1,7 @@
-// src/app/services/utilities/toast.service.ts
 
 import { HttpErrorResponse } from '@angular/common/http';
 import { Injectable, signal } from '@angular/core';
-import { 
+import { ResultStatusEnum,
   StatusResult, 
     SingleDataResult, 
     ListDataResult, 
@@ -76,7 +75,7 @@ export class ToastService {
 
   // --- هندل کردن SingleDataResult ---
   handleSingleResult<T>(result: SingleDataResult<T>): void {
-    if (result.status < 300) {
+    if (result.isSuccess) {
       if (result.messages && result.messages.length > 0) {
         // اگر چند پیام داریم، اولین پیام را نشان بده
         this.success(result.messages[0]);
@@ -89,7 +88,7 @@ export class ToastService {
 
   // --- هندل کردن ListDataResult ---
   handleListResult<T>(result: ListDataResult<T>): void {
-    if (result.status < 300) {
+    if (result.isSuccess) {
       if (result.messages && result.messages.length > 0) {
         this.success(result.messages[0]);
       }
@@ -100,7 +99,7 @@ export class ToastService {
 
   // --- هندل کردن FileResult ---
   handleFileResult(result: FileResult): void {
-    if (result.status < 300) {
+    if (result.isSuccess) {
       if (result.messages && result.messages.length > 0) {
         this.success(result.messages[0]);
       }
@@ -111,7 +110,7 @@ export class ToastService {
 
   // --- هندل کردن通用的 StatusResult ---
   handleResult(result: StatusResult): void {
-    if (result.status < 300) {
+    if (result.isSuccess) {
       if (result.messages && result.messages.length > 0) {
         this.success(result.messages[0]);
       }
@@ -122,27 +121,70 @@ export class ToastService {
 
   // --- هندل کردن خطاهای Result ---
   private handleErrorResult(result: StatusResult): void {
+    // گرفتن پیام‌ها از بک‌اند
     const messages = result.messages ?? [];
-    const message = messages.length > 0 ? messages[0] : 'خطایی رخ داد.';
+    
+    // اگر چندتا پیام خطا داریم، همه رو با join کنار هم میذاریم
+    const message = messages.length > 0 
+      ? messages.join(' - ')  // یا میتونی از '<br>' استفاده کنی برای HTML
+      : 'خطایی رخ داد.';
+    
     const status = result.status;
-
-    if (status === 401) {
-      this.warning(message, 'احراز هویت');
-    } else if (status === 403) {
-      this.warning(message, 'دسترسی ممنوع');
-    } else if (status >= 400 && status < 500) {
-      this.error(message, 'خطای اعتبارسنجی');
-    } else if (status >= 500) {
-      this.error(message, 'خطای سرور');
-    } else {
-      this.error(message);
+  
+    // هندل کردن انواع خطاها بر اساس status از بک‌اند
+    switch (status) {
+      // ========== Client Errors (۴xx معادل‌ها) ==========
+      case ResultStatusEnum.BadRequest:
+        this.error(message, 'درخواست نامعتبر');
+        break;
+        
+      case ResultStatusEnum.ValidationFailed:
+        this.error(message, 'خطای اعتبارسنجی');
+        break;
+        
+      case ResultStatusEnum.NotFound:
+        this.error(message, 'اطلاعات مورد نظر یافت نشد');
+        break;
+        
+      case ResultStatusEnum.Unauthorized:
+        this.warning(message, 'لطفاً مجدداً وارد شوید');
+        break;
+        
+      case ResultStatusEnum.Forbidden:
+        this.warning(message, 'شما دسترسی لازم را ندارید');
+        break;
+        
+      case ResultStatusEnum.Conflict:
+        this.warning(message, 'تداخل در اطلاعات');
+        break;
+      
+      // ========== Server Errors (۵xx معادل‌ها) ==========
+      case ResultStatusEnum.InternalError:
+        this.error(message, 'خطای داخلی سرور');
+        break;
+        
+      case ResultStatusEnum.ServiceUnavailable:
+        this.error(message, 'سرویس در دسترس نیست');
+        break;
+        
+      case ResultStatusEnum.DatabaseError:
+        this.error(message, 'خطای پایگاه داده');
+        break;
+        
+      case ResultStatusEnum.ThirdPartyError:
+        this.error(message, 'خطا در ارتباط با سرویس‌های جانبی');
+        break;
+      
+      // ========== Default ==========
+      default:
+        this.error(message);
+        break;
     }
   }
-
   // --- نمایش تمام پیام‌های یک نتیجه (برای مواردی که چند پیام مهم دارند) ---
   handleAllMessages(result: StatusResult): void {
     if (result.messages && result.messages.length > 0) {
-      if (result.status < 300) {
+      if (result.isSuccess) {
         // برای موفقیت: همه پیام‌ها را نشان بده
         result.messages.forEach(msg => this.success(msg));
       } else {

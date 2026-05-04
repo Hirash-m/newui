@@ -81,7 +81,7 @@ export class InventoryComponent implements OnInit {
     this.ObjectService.getRecords(this._request).subscribe((res: ListDataResult<InventoryDto>) => {
       if (res.status < 300) {
         this._baseResponse = res;
-        this._objectsView = res.listData || [];
+        this._objectsView = res.data || [];
       } else {
         this.toastService.error(res.messages?.join() || 'خطا در بارگذاری انبارها');
       }
@@ -133,8 +133,8 @@ export class InventoryComponent implements OnInit {
     this.editingId = ObjectId;
 
     this.ObjectService.getRecordById(ObjectId).subscribe((res: SingleDataResult<InventoryDto>) => {
-      if (res.status < 300 && res.data) {
-        const obj = res.data;
+      if (res.isSuccess && res.singleData) {
+        const obj = res.singleData;
         this.ObjectForm.patchValue({
           id: obj.id,
           name: obj.name,

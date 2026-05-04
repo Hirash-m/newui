@@ -4,7 +4,8 @@ import {
     StatusResult, 
     SingleDataResult, 
     ListDataResult, 
-    FileResult 
+    FileResult, 
+    ResultStatusEnum
 } from '../dto/result';
 
 export class ResultHelper {
@@ -12,20 +13,20 @@ export class ResultHelper {
     // ساخت نتیجه موفق با داده
     static ok<T>(data: T, messages: string[] | null = null): SingleDataResult<T> {
         return {
-            status: 200,
+            status: ResultStatusEnum.Accepted,
             messages: messages || [],
-            isSucceeded: true,
-            data: data
+            isSuccess: true,
+            singleData: data
         };
     }
 
     // ساخت نتیجه موفق بدون داده
     static okWithoutData(messages: string[] | null = null): SingleDataResult<null> {
         return {
-            status: 200,
+            status: ResultStatusEnum.Accepted,
             messages: messages || [],
-            isSucceeded: true,
-            data: null
+            isSuccess: true,
+            singleData: null
         };
     }
 
@@ -34,8 +35,8 @@ export class ResultHelper {
         return {
             status: status,
             messages: [message],
-            isSucceeded: false,
-            data: null
+            isSuccess: false,
+            singleData: null
         };
     }
 
@@ -44,8 +45,8 @@ export class ResultHelper {
         return {
             status: status,
             messages: messages,
-            isSucceeded: false,
-            data: null
+            isSuccess: false,
+            singleData: null
         };
     }
 
@@ -60,10 +61,10 @@ export class ResultHelper {
         const totalPages = Math.ceil(totalRecords / pageSize);
         
         return {
-            status: 200,
+            status: ResultStatusEnum.Success,
             messages: messages || [],
-            isSucceeded: true,
-            listData: listData,
+            isSuccess: true,
+            Data: listData,
             totalRecords: totalRecords,
             totalPages: totalPages,
             pageNumber: pageNumber,
@@ -78,11 +79,11 @@ export class ResultHelper {
         messages: string[] | null = null
     ): ListDataResult<T> {
         return {
-            status: 200,
+            status: ResultStatusEnum.Success,
             messages: messages || [],
-            isSucceeded: true,
+            isSuccess: true,
              
-            listData: [],
+            Data: [],
             totalRecords: 0,
             totalPages: 0,
             pageNumber: pageNumber,
@@ -95,9 +96,9 @@ export class ResultHelper {
         const fileName = filePath.split('/').pop() || filePath.split('\\').pop() || 'unknown';
         
         return {
-            status: 200,
+            status: ResultStatusEnum.Success,
             messages: messages || [],
-            isSucceeded: true,
+            isSuccess: true,
              
             filePath: filePath,
             fileName: fileName
@@ -111,7 +112,7 @@ export class ResultHelper {
         return {
             status: status,
             messages: [message],
-            isSucceeded: false,
+            isSuccess: false,
             filePath: filePath,
             fileName: fileName
         };
@@ -126,9 +127,9 @@ export class ResultHelper {
         return {
             status: status,
             messages: messages || [],
-            isSucceeded: status >= 200 && status < 300,
+            isSuccess: status >= 200 && status < 300,
 
-            data: data
+            singleData: data
         };
     }
 
@@ -146,8 +147,8 @@ export class ResultHelper {
         return {
             status: status,
             messages: messages || [],
-            isSucceeded: status >= 200 && status < 300,
-            listData: listData,
+            isSuccess: status >= 200 && status < 300,
+            Data: listData,
             totalRecords: totalRecords,
             totalPages: totalPages,
             pageNumber: pageNumber,
@@ -165,7 +166,7 @@ export class ResultHelper {
 
     // متد کمکی برای لاگ کردن نتیجه
     static log(result: StatusResult): void {
-        if (result.isSucceeded) {
+        if (result.isSuccess) {
             console.log('✅ Success:', result.messages);
         } else {
             console.error('❌ Error:', result.messages);

@@ -90,7 +90,7 @@ onFileSelected(event: Event): void {
       next: (res: ListDataResult<UserDto>) => {
         if (res.status < 300) {
           this._baseResponse = res;
-          this._objectsView = res.listData || [];
+          this._objectsView = res.data || [];
         } else {
           this.toastService.error(res.messages?.join() || 'خطا در بارگذاری کاربران');
         }
@@ -108,9 +108,9 @@ onFileSelected(event: Event): void {
   loadCreateFormData(): void {
     this.ObjectService.getCreateForm().subscribe({
       next: (res: SingleDataResult<UserCreateFormData>) => {
-        if (res.status < 300 && res.data) {
+        if (res.isSuccess && res.singleData) {
           // حالا res.data یک شیء تک است: { roles: [...] }
-          const formData = res.data as UserCreateFormData;
+          const formData = res.singleData as UserCreateFormData;
   
           this.roles = formData.roles ?? [];
           this.permissions = [];
@@ -212,8 +212,8 @@ onFileSelected(event: Event): void {
   
     this.ObjectService.getRecordById(id).subscribe({
       next: (res: SingleDataResult<UserDto>) => {
-        if (res.status < 300 && res.data) {
-          const user = res.data;
+        if (res.isSuccess && res.singleData) {
+          const user = res.singleData;
           this.ObjectForm.patchValue({
             id: user.id,
             username: user.username,

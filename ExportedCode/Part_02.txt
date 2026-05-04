@@ -1,18 +1,4 @@
-﻿===== FILE: src\app\dto\baseResponse.ts =====
-// // src/app/dto/baseResponse.ts
-// export class baseResponse<T> {
-//     isSucceeded!: boolean;
-//     message?: string;
-//     data!: T[];
-//     singleData!:T;
-//     totalRecords!: number;
-//     totalPages!: number;
-//     pageNumber!: number;
-//     pageSize!: number;
-// }
-
-
-===== FILE: src\app\dto\ListRequestDto.ts =====
+﻿===== FILE: src\app\dto\ListRequestDto.ts =====
 
 export class ListRequest {
   pageNumber: number = 1;
@@ -44,6 +30,244 @@ export interface MetadataField {
   // Ù‡Ø± Ú†ÛŒØ² Ø¯ÛŒÚ¯Ù‡â€ŒØ§ÛŒ Ú©Ù‡ Ù„Ø§Ø²Ù…Ù‡...
 }
 
+
+===== FILE: src\app\dto\result.ts =====
+ export enum ResultStatusEnum
+{
+    // Success
+    Success = 1,
+    Created = 2,
+    Accepted = 3,
+    
+    // Client Errors (Ø¨ÛŒØ²ÛŒÙ†Ø³)
+    BadRequest = 100,
+    ValidationFailed = 101,
+    NotFound = 102,
+    Unauthorized = 103,
+    Forbidden = 104,
+    Conflict = 105,
+    
+    // Server Errors (ÙÙ†ÛŒ)
+    InternalError = 500,
+    ServiceUnavailable = 501,
+    DatabaseError = 502,
+    ThirdPartyError = 503
+}
+
+
+export interface StatusResult{
+    status : ResultStatusEnum ;
+    messages : string[] |null;
+     isSuccess: boolean;
+    
+
+
+}
+
+
+
+export interface SingleDataResult<T> extends  StatusResult{
+    singleData:T | null;
+
+
+}
+
+
+export interface ListDataResult<t> extends StatusResult{
+    listData : t[] | null ;
+    totalRecords: number;
+    totalPages: number;
+    pageNumber: number;
+    pageSize: number;
+}
+
+export interface FileResult extends StatusResult {
+    filePath: string;
+    fileName: string;
+
+}
+
+
+
+
+
+
+
+===== FILE: src\app\helper\result.helper.ts =====
+// result.helper.ts
+
+import { 
+    StatusResult, 
+    SingleDataResult, 
+    ListDataResult, 
+    FileResult 
+} from '../dto/result';
+
+export class ResultHelper {
+    
+    // Ø³Ø§Ø®Øª Ù†ØªÛŒØ¬Ù‡ Ù…ÙˆÙÙ‚ Ø¨Ø§ Ø¯Ø§Ø¯Ù‡
+    static ok<T>(data: T, messages: string[] | null = null): SingleDataResult<T> {
+        return {
+            status: 200,
+            messages: messages || [],
+            isSucceeded: true,
+            data: data
+        };
+    }
+
+    // Ø³Ø§Ø®Øª Ù†ØªÛŒØ¬Ù‡ Ù…ÙˆÙÙ‚ Ø¨Ø¯ÙˆÙ† Ø¯Ø§Ø¯Ù‡
+    static okWithoutData(messages: string[] | null = null): SingleDataResult<null> {
+        return {
+            status: 200,
+            messages: messages || [],
+            isSucceeded: true,
+            data: null
+        };
+    }
+
+    // Ø³Ø§Ø®Øª Ù†ØªÛŒØ¬Ù‡ Ø®Ø·Ø§
+    static error<T = null>(message: string, status: number = 400): SingleDataResult<T> {
+        return {
+            status: status,
+            messages: [message],
+            isSucceeded: false,
+            data: null
+        };
+    }
+
+    // Ø³Ø§Ø®Øª Ù†ØªÛŒØ¬Ù‡ Ø®Ø·Ø§ Ø¨Ø§ Ú†Ù†Ø¯ Ù¾ÛŒØ§Ù…
+    static errorWithMessages<T = null>(messages: string[], status: number = 400): SingleDataResult<T> {
+        return {
+            status: status,
+            messages: messages,
+            isSucceeded: false,
+            data: null
+        };
+    }
+
+    // Ø³Ø§Ø®Øª Ù†ØªÛŒØ¬Ù‡ Ù„ÛŒØ³ØªÛŒ
+    static okList<T>(
+        listData: T[], 
+        totalRecords: number, 
+        pageNumber: number, 
+        pageSize: number,
+        messages: string[] | null = null
+    ): ListDataResult<T> {
+        const totalPages = Math.ceil(totalRecords / pageSize);
+        
+        return {
+            status: 200,
+            messages: messages || [],
+            isSucceeded: true,
+            listData: listData,
+            totalRecords: totalRecords,
+            totalPages: totalPages,
+            pageNumber: pageNumber,
+            pageSize: pageSize
+        };
+    }
+
+    // Ø³Ø§Ø®Øª Ù†ØªÛŒØ¬Ù‡ Ù„ÛŒØ³ØªÛŒ Ø®Ø§Ù„ÛŒ
+    static emptyList<T>(
+        pageNumber: number = 1, 
+        pageSize: number = 10,
+        messages: string[] | null = null
+    ): ListDataResult<T> {
+        return {
+            status: 200,
+            messages: messages || [],
+            isSucceeded: true,
+             
+            listData: [],
+            totalRecords: 0,
+            totalPages: 0,
+            pageNumber: pageNumber,
+            pageSize: pageSize
+        };
+    }
+
+    // Ø³Ø§Ø®Øª Ù†ØªÛŒØ¬Ù‡ ÙØ§ÛŒÙ„
+    static fileOk(filePath: string, messages: string[] | null = null): FileResult {
+        const fileName = filePath.split('/').pop() || filePath.split('\\').pop() || 'unknown';
+        
+        return {
+            status: 200,
+            messages: messages || [],
+            isSucceeded: true,
+             
+            filePath: filePath,
+            fileName: fileName
+        };
+    }
+
+    // Ø³Ø§Ø®Øª Ù†ØªÛŒØ¬Ù‡ ÙØ§ÛŒÙ„ Ø®Ø·Ø§
+    static fileError(filePath: string, message: string, status: number = 400): FileResult {
+        const fileName = filePath.split('/').pop() || filePath.split('\\').pop() || 'unknown';
+        
+        return {
+            status: status,
+            messages: [message],
+            isSucceeded: false,
+            filePath: filePath,
+            fileName: fileName
+        };
+    }
+
+    // Ø³Ø§Ø®Øª Ù†ØªÛŒØ¬Ù‡ Ø³ÙØ§Ø±Ø´ÛŒ
+    static custom<T>(
+        status: number, 
+        messages: string[] | null, 
+        data: T | null = null
+    ): SingleDataResult<T> {
+        return {
+            status: status,
+            messages: messages || [],
+            isSucceeded: status >= 200 && status < 300,
+
+            data: data
+        };
+    }
+
+    // Ø³Ø§Ø®Øª Ù†ØªÛŒØ¬Ù‡ Ø³ÙØ§Ø±Ø´ÛŒ Ø¨Ø±Ø§ÛŒ Ù„ÛŒØ³Øª
+    static customList<T>(
+        status: number,
+        messages: string[] | null,
+        listData: T[] | null,
+        totalRecords: number,
+        pageNumber: number,
+        pageSize: number
+    ): ListDataResult<T> {
+        const totalPages = Math.ceil(totalRecords / pageSize);
+        
+        return {
+            status: status,
+            messages: messages || [],
+            isSucceeded: status >= 200 && status < 300,
+            listData: listData,
+            totalRecords: totalRecords,
+            totalPages: totalPages,
+            pageNumber: pageNumber,
+            pageSize: pageSize
+        };
+    }
+
+    // Ù…ØªØ¯ Ú©Ù…Ú©ÛŒ Ø¨Ø±Ø§ÛŒ ØªØ¨Ø¯ÛŒÙ„ Ø§Ø±ÙˆØ± Ø¨Ù‡ Ù†ØªÛŒØ¬Ù‡
+    static fromError<T = null>(error: any): SingleDataResult<T> {
+        const message = error?.error?.message || error?.message || 'Ø®Ø·Ø§ÛŒ Ù†Ø§Ø´Ù†Ø§Ø®ØªÙ‡ Ø±Ø® Ø¯Ø§Ø¯Ù‡ Ø§Ø³Øª';
+        const status = error?.status || 500;
+        
+        return this.error(message, status);
+    }
+
+    // Ù…ØªØ¯ Ú©Ù…Ú©ÛŒ Ø¨Ø±Ø§ÛŒ Ù„Ø§Ú¯ Ú©Ø±Ø¯Ù† Ù†ØªÛŒØ¬Ù‡
+    static log(result: StatusResult): void {
+        if (result.isSucceeded) {
+            console.log('âœ… Success:', result.messages);
+        } else {
+            console.error('âŒ Error:', result.messages);
+        }
+    }
+}
 
 ===== FILE: src\app\icons\icon-subset.ts =====
 import {
@@ -639,53 +863,5 @@ export class DefaultFooterComponent extends FooterComponent {
 
 
 ===== FILE: src\app\layout\default-layout\default-header\default-header.component.scss =====
-
-
-===== FILE: src\app\layout\default-layout\default-header\default-header.component.spec.ts =====
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ReactiveFormsModule } from '@angular/forms';
-import { RouterTestingModule } from '@angular/router/testing';
-import {
-  AvatarModule,
-  BadgeModule,
-  BreadcrumbModule,
-  ButtonGroupModule,
-  DropdownModule,
-  GridModule,
-  HeaderModule,
-  NavModule,
-  ProgressModule,
-  SidebarModule
-} from '@coreui/angular';
-import { IconModule, IconSetService } from '@coreui/icons-angular';
-import { iconSubset } from '../../../icons/icon-subset';
-import { DefaultHeaderComponent } from './default-header.component';
-
-describe('DefaultHeaderComponent', () => {
-  let component: DefaultHeaderComponent;
-  let fixture: ComponentFixture<DefaultHeaderComponent>;
-  let iconSetService: IconSetService;
-
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-    imports: [GridModule, HeaderModule, IconModule, NavModule, BadgeModule, AvatarModule, DropdownModule, BreadcrumbModule, RouterTestingModule, SidebarModule, ProgressModule, ButtonGroupModule, ReactiveFormsModule, DefaultHeaderComponent],
-    providers: [IconSetService]
-})
-      .compileComponents();
-  });
-
-  beforeEach(() => {
-    iconSetService = TestBed.inject(IconSetService);
-    iconSetService.icons = { ...iconSubset };
-
-    fixture = TestBed.createComponent(DefaultHeaderComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
-
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
-});
 
 

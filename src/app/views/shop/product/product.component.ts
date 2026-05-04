@@ -94,7 +94,7 @@ loadProducts(): void {
     next: (res: ListDataResult<ProductViewDto>) => {
       if (res.status < 300) {
         this._baseResponse = res;
-        this._productsView = res.listData || [];
+        this._productsView = res.data || [];
       } else {
         this.toastService.error(res.messages?.join() || 'خطا در بارگذاری محصولات');
       }
@@ -151,8 +151,8 @@ loadProducts(): void {
     this.editingProductId = productId;
 
     this.productService.getRecordById(productId).subscribe((res: SingleDataResult<ProductCreateDto>) => {
-      if (res.status < 300 && res.data) {
-        const product = res.data;
+      if (res.status < 300 && res.singleData) {
+        const product = res.singleData;
         this.productForm.patchValue({
           id: product.id,
           name: product.name,
@@ -212,7 +212,7 @@ loadProducts(): void {
       (result: ListDataResult<ProductViewDto>) => {
         if (result.status<2) {
           this._baseResponse = result;
-          this._productsView = result.listData || [];
+          this._productsView = result.data || [];
           console.log('نتایج جستجو:', this._productsView);
         } else {
           this.toastService.error(result.messages?.join() || 'خطا در جستجو');

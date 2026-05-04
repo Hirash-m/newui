@@ -4,7 +4,7 @@ import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { ToastService } from '../../services/utilities/toast.service';
-import { StatusResult } from 'src/app/dto/result';
+import { ResultStatusEnum, SingleDataResult} from 'src/app/dto/result';
 
 export function authInterceptor(
   req: HttpRequest<unknown>,
@@ -25,16 +25,16 @@ export function authInterceptor(
     catchError((error: HttpErrorResponse) => {
       // 1. اگر پاسخ JSON با ساختار ApiResult بود
       if (error.error && typeof error.error === 'object') {
-        const apiResult = error.error as StatusResult;
+        const apiResult = error.error as SingleDataResult<any>;
 
         // فقط اگر ساختار ApiResult داشت
-        if (apiResult && typeof apiResult.status === 'number') {
-          if (apiResult.status >= 200 && apiResult.status < 300 ) {
+        if (apiResult ) {
+          if (apiResult.isSuccess) {
             toast.handleResult(apiResult);
           }
 
           // 401: لاگ‌اوت خودکار
-          if (apiResult.status === 401 ) {
+          if (apiResult.status === ResultStatusEnum.Unauthorized ) {
             localStorage.removeItem('token');
             localStorage.removeItem('user');
             router.navigate(['/login']);

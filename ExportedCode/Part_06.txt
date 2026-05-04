@@ -1,4 +1,7 @@
-﻿===== FILE: src\app\views\chat\chat\chat.component.spec.ts =====
+﻿===== FILE: src\app\views\chat\chat\chat.component.scss =====
+
+
+===== FILE: src\app\views\chat\chat\chat.component.spec.ts =====
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { ChatComponent } from './chat.component';
@@ -25,29 +28,21 @@ describe('ChatComponent', () => {
 
 
 ===== FILE: src\app\views\chat\chat\chat.component.ts =====
+// src/app/views/chat/chat/chat.component.ts
+
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ChatService } from 'src/app/services/chat/chat.service';
 import { AuthService } from 'src/app/services/auth/login/auth.service';
 import { ToastService } from 'src/app/services/utilities/toast.service';
-import { ChatListItem, MessageDto, SendMessageDto } from 'src/app/dto/chat/MessageDto';
+import { ChatListItem, MessageDto } from 'src/app/dto/chat/MessageDto';
 import { Subscription } from 'rxjs';
 
-// Ø¯Ø±Ø³Øª: Ø§ÛŒÙ† Ø§Ø² Ù¾Ø±ÙˆÚ˜Ù‡ Ø®ÙˆØ¯ØªÙ‡
-import { FilterPipe } from 'src/app/pipes/filter.pipe';
-
-// CoreUI Components
 import {
-  CardComponent,
-  CardHeaderComponent,
-  CardBodyComponent,
-  CardFooterComponent,
-  ColComponent,
-  RowComponent,
-  BadgeComponent,
-  AvatarComponent,
-  ButtonDirective
+  CardComponent, CardHeaderComponent, CardBodyComponent,
+  CardFooterComponent, ColComponent, RowComponent,
+  BadgeComponent, ButtonDirective
 } from '@coreui/angular';
 
 @Component({
@@ -56,9 +51,8 @@ import {
   imports: [
     CommonModule,
     FormsModule,
+    DatePipe,
 
-    
-    FilterPipe,
     RowComponent,
     ColComponent,
     CardComponent,
@@ -66,7 +60,6 @@ import {
     CardBodyComponent,
     CardFooterComponent,
     BadgeComponent,
-    AvatarComponent,
     ButtonDirective
   ],
   templateUrl: './chat.component.html',
@@ -83,8 +76,8 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   messageType: 'Text' | 'Image' | 'File' = 'Text';
   searchText: string = '';
   currentUserId = this.auth.getUserId();
+
   private subscriptions = new Subscription();
-  shouldScroll = false;
 
   constructor(
     private chatService: ChatService,
@@ -93,87 +86,106 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    // Ø¯Ø±ÛŒØ§ÙØª Ù¾ÛŒØ§Ù…â€ŒÙ‡Ø§ÛŒ Ø¬Ø¯ÛŒØ¯
+    this.loadChatList();
+
+    // Ø¯Ø±ÛŒØ§ÙØª Ù¾ÛŒØ§Ù… Ø¬Ø¯ÛŒØ¯ Ø§Ø² SignalR
     this.subscriptions.add(
-      this.chatService.messages$.subscribe(msgs => {
-        this.messages = msgs;
-        this.shouldScroll = true;
+      this.chatService.messageReceived.subscribe((msg: MessageDto) => {
+        const isCurrentChat = this.selectedUser &&
+          (msg.senderId === this.selectedUser.userId || msg.receiverId === this.selectedUser.userId);
+
+        if (isCurrentChat) {
+          this.messages.push({ ...msg, isMine: msg.senderId === this.currentUserId });
+          this.scrollToBottom();
+        }
+
+        // Ø¢Ù¾Ø¯ÛŒØª unread Ùˆ lastMessage Ø¯Ø± Ù„ÛŒØ³Øª
+        this.updateChatListOnNewMessage(msg);
       })
     );
-
-    // Ø¨Ø±ÙˆØ²Ø±Ø³Ø§Ù†ÛŒ Ù„ÛŒØ³Øª Ú†Øª
-    this.subscriptions.add(
-      this.chatService.chatList$.subscribe(list => {
-        this.chatList = list;
-      })
-    );
-
-    // Ø§Ø³Ú©Ø±ÙˆÙ„ Ø®ÙˆØ¯Ú©Ø§Ø±
-    this.subscriptions.add(
-      this.chatService.scrollToBottom.subscribe(() => {
-        this.shouldScroll = true;
-      })
-    );
-
-    // Ù„ÙˆØ¯ Ø§ÙˆÙ„ÛŒÙ‡ Ù„ÛŒØ³Øª Ú†Øª
-    this.chatService.loadChatList();
   }
 
   ngAfterViewChecked(): void {
-    if (this.shouldScroll && this.chatBody) {
-      this.scrollToBottom();
-      this.shouldScroll = false;
-    }
+    this.scrollToBottom();
   }
 
-  scrollToBottom(): void {
-    try {
-      this.chatBody.nativeElement.scrollTop = this.chatBody.nativeElement.scrollHeight;
-    } catch (err) {
-      console.warn('Scroll to bottom failed', err);
-    }
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
   }
 
-  selectUser(user: ChatListItem): void {
+  loadChatList() {
+    this.chatService.getChatList().subscribe(res => {
+      if (res.status < 300 && res.listData) {
+        this.chatList = res.listData.map(item => ({
+          ...item,
+          lastMessage: item.lastMessage || 'Ø¨Ø¯ÙˆÙ† Ù¾ÛŒØ§Ù…',
+          lastMessageTime: item.lastMessageTime ? new Date(item.lastMessageTime) : undefined
+        }));
+      }
+    });
+  }
+
+  selectChat(user: ChatListItem) {
     if (this.selectedUser?.userId === user.userId) return;
 
     this.selectedUser = user;
-    this.messages = []; // Ù¾Ø§Ú© Ú©Ø±Ø¯Ù† Ù¾ÛŒØ§Ù…â€ŒÙ‡Ø§ÛŒ Ù‚Ø¨Ù„ÛŒ
-    this.chatService.loadChatHistory(user.userId);
-  }
+    this.messages = [];
+    this.loadMessages(user.userId);
 
-  onFileSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files[0]) {
-      this.selectedFile = input.files[0];
-      this.messageType = this.selectedFile.type.startsWith('image/') ? 'Image' : 'File';
+    // Ù…Ø§Ø±Ú© Ø¨Ù‡ Ø¹Ù†ÙˆØ§Ù† Ø®ÙˆØ§Ù†Ø¯Ù‡ Ø´Ø¯Ù‡
+    if (user.unreadCount > 0) {
+      this.chatService.markAsRead(user.userId).subscribe(() => {
+        user.unreadCount = 0;
+      });
     }
   }
 
+  private loadMessages(otherUserId: number) {
+    this.chatService.getChatHistory(otherUserId).subscribe(res => {
+      if (res.status < 300 && res.listData) {
+        this.messages = res.listData.map(m => ({
+          ...m,
+          isMine: m.senderId === this.currentUserId,
+          sentAt: new Date(m.sentAt)
+        })).reverse();
 
-  
-  sendMessage(): void {
+        this.scrollToBottom();
+      }
+    });
+  }
+
+  onFileSelected(event: any) {
+    const file: File = event.target.files[0];
+    if (!file) return;
+
+    this.selectedFile = file;
+    this.messageType = file.type.startsWith('image/') ? 'Image' : 'File';
+  }
+
+  sendMessage() {
     if (!this.selectedUser) {
-      this.toast.warning('Ù„Ø·ÙØ§Ù‹ Ú©Ø§Ø±Ø¨Ø±ÛŒ Ø±Ø§ Ø§Ù†ØªØ®Ø§Ø¨ Ú©Ù†ÛŒØ¯');
+      this.toast.error('Ú©Ø§Ø±Ø¨Ø± Ø§Ù†ØªØ®Ø§Ø¨ Ù†Ø´Ø¯Ù‡');
       return;
     }
-
+  
     if (!this.newMessage.trim() && !this.selectedFile) return;
-
-    const dto: SendMessageDto = {
-      receiverId: this.selectedUser.userId,
-      content: this.newMessage.trim(),
-      file: this.selectedFile || undefined,
-      type: this.messageType
-    };
-
-    this.chatService.sendMessage(dto).subscribe({
+  
+    // Ø³Ø§Ø®Øª FormData
+    const formData = new FormData();
+    formData.append('ReceiverId', this.selectedUser.userId.toString());
+    if (this.newMessage.trim()) formData.append('Content', this.newMessage);
+    if (this.selectedFile) formData.append('File', this.selectedFile, this.selectedFile.name);
+    formData.append('Type', this.messageType);
+  
+    // Ø§ÛŒÙ† Ø®Ø· Ø±Ùˆ ØªØºÛŒÛŒØ± Ø¨Ø¯Ù‡: Ø¨Ù‡ Ø¬Ø§ÛŒ SendMessageDtoØŒ Ù…Ø³ØªÙ‚ÛŒÙ… formData Ø¨ÙØ±Ø³Øª
+    this.chatService.sendMessage(formData).subscribe({
       next: () => {
         this.newMessage = '';
         this.selectedFile = null;
         this.messageType = 'Text';
         const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
         if (fileInput) fileInput.value = '';
+        // Ù¾ÛŒØ§Ù… Ø§Ø² Ø·Ø±ÛŒÙ‚ SignalR Ø®ÙˆØ¯Ø´ Ø§Ø¶Ø§ÙÙ‡ Ù…ÛŒâ€ŒØ´Ù‡
       },
       error: (err) => {
         console.error('Send message error:', err);
@@ -182,24 +194,48 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     });
   }
 
-  onEnterPress(event: KeyboardEvent): void {
-    if (!event.shiftKey) {
-      event.preventDefault();
-      this.sendMessage();
-    }
-  }
-
-  onKeydown(event: any): void {
+  onKeydown(event: KeyboardEvent) {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
       this.sendMessage();
     }
   }
-  ngOnDestroy(): void {
-    this.subscriptions.unsubscribe();
+
+  private scrollToBottom() {
+    if (this.chatBody) {
+      setTimeout(() => {
+        this.chatBody.nativeElement.scrollTop = this.chatBody.nativeElement.scrollHeight;
+      }, 100);
+    }
+  }
+
+  private updateChatListOnNewMessage(msg: MessageDto) {
+    if (msg.receiverId === this.currentUserId) {
+      const existing = this.chatList.find(c => c.userId === msg.senderId);
+      if (existing) {
+        existing.unreadCount++;
+        existing.lastMessage = msg.content || (msg.type === 'Image' ? 'ØªØµÙˆÛŒØ±' : 'ÙØ§ÛŒÙ„');
+        existing.lastMessageTime = new Date(msg.sentAt);
+
+        // Ø¨Ø¨Ø± Ø¨Ø§Ù„Ø§
+        this.chatList = this.chatList.filter(c => c.userId !== msg.senderId);
+        this.chatList.unshift(existing);
+      } else {
+        // Ú©Ø§Ø±Ø¨Ø± Ø¬Ø¯ÛŒØ¯ â†’ Ù„ÛŒØ³Øª Ø±Ùˆ Ø±ÙØ±Ø´ Ú©Ù†
+        this.loadChatList();
+      }
+    }
+  }
+
+  // Ø¬Ø³ØªØ¬Ùˆ Ø¯Ø± Ù„ÛŒØ³Øª Ú†Øª
+  get filteredChatList() {
+    if (!this.searchText.trim()) return this.chatList;
+
+    return this.chatList.filter(user =>
+      user.fullName.toLowerCase().includes(this.searchText.toLowerCase())
+    );
   }
 }
-
 
 ===== FILE: src\app\views\shop\count-type\count-type.component.html =====
 
@@ -419,8 +455,8 @@ import {
 } from '@coreui/angular';
 
 // DTOs & Services
-import { ApiResult, createApiResult } from 'src/app/dto/api-result'; // ØªØºÛŒÛŒØ± Ø§Ø² baseResponse
 import { ListRequest } from 'src/app/dto/ListRequestDto';
+import { ListDataResult, SingleDataResult, StatusResult } from 'src/app/dto/result';
 import { CountTypeDto } from 'src/app/dto/shop/CountTypeDto';
 import { CountTypeService } from 'src/app/services/shop/countType/count-type.service';
 import { ToastService } from 'src/app/services/utilities/toast.service';
@@ -445,7 +481,7 @@ export class CountTypeComponent implements OnInit {
   // Ø¯Ø±Ø®ÙˆØ§Ø³Øª Ù„ÛŒØ³Øª
   _request = new ListRequest();
   _objectsView: CountTypeDto[] = [];
-  _baseResponse: ApiResult<CountTypeDto[]> = createApiResult<CountTypeDto[]>();
+  _baseResponse: ListDataResult<CountTypeDto> = OkList<CountTypeDto>();
 
   // ÙØ±Ù…
   ObjectForm!: FormGroup;
@@ -486,12 +522,12 @@ export class CountTypeComponent implements OnInit {
   loadDataTable(): void {
     this._request.pageSize = 5;
     this.countTypeService.getRecords(this._request).subscribe({
-      next: (res: ApiResult<CountTypeDto[]>) => {
-        if (res.isSucceeded) {
+      next: (res: ListDataResult<CountTypeDto>) => {
+        if (res.status < 300) {
           this._baseResponse = res;
-          this._objectsView = res.data ?? [];
+          this._objectsView = res.listData ?? [];
         } else {
-          this.toastService.error(res.message || 'Ø®Ø·Ø§ Ø¯Ø± Ø¨Ø§Ø±Ú¯Ø°Ø§Ø±ÛŒ Ø§Ù†ÙˆØ§Ø¹ Ø´Ù…Ø§Ø±Ø´');
+          this.toastService.error(res.messages?.join() || 'Ø®Ø·Ø§ Ø¯Ø± Ø¨Ø§Ø±Ú¯Ø°Ø§Ø±ÛŒ Ø§Ù†ÙˆØ§Ø¹ Ø´Ù…Ø§Ø±Ø´');
         }
       },
       error: (err) => {
@@ -513,14 +549,14 @@ export class CountTypeComponent implements OnInit {
         : this.countTypeService.insertRecord(data);
 
       request$.subscribe({
-        next: (res: ApiResult<any>) => {
-          if (res.isSucceeded) {
+        next: (res: StatusResult) => {
+          if (res.status < 300) {
             this.afterSubmit();
             this.toastService.success(
               this.editMode ? 'Ù†ÙˆØ¹ Ø´Ù…Ø§Ø±Ø´ Ø¨Ø§ Ù…ÙˆÙÙ‚ÛŒØª ÙˆÛŒØ±Ø§ÛŒØ´ Ø´Ø¯' : 'Ù†ÙˆØ¹ Ø´Ù…Ø§Ø±Ø´ Ø¨Ø§ Ù…ÙˆÙÙ‚ÛŒØª Ø§ÛŒØ¬Ø§Ø¯ Ø´Ø¯'
             );
           } else {
-            this.toastService.error(res.message || 'Ø®Ø·Ø§ Ø¯Ø± Ø¹Ù…Ù„ÛŒØ§Øª');
+            this.toastService.error(res.messages?.join() || 'Ø®Ø·Ø§ Ø¯Ø± Ø¹Ù…Ù„ÛŒØ§Øª');
           }
         },
         error: (err) => {
@@ -547,9 +583,9 @@ export class CountTypeComponent implements OnInit {
     this.editingId = id;
 
     this.countTypeService.getRecordById(id).subscribe({
-      next: (res: ApiResult<CountTypeDto>) => {
-        if (res.isSucceeded && res.data) {
-          this.ObjectForm.patchValue(res.data);
+      next: (res: SingleDataResult<CountTypeDto>) => {
+        if (res.isSuccess && res.singleData) {
+          this.ObjectForm.patchValue(res.singleData);
           this.showModal = true;
         } else {
           this.toastService.error('Ù…ÙˆØ±Ø¯ Ù¾ÛŒØ¯Ø§ Ù†Ø´Ø¯');
@@ -587,13 +623,13 @@ export class CountTypeComponent implements OnInit {
 
   deleteSelectedRecords(): void {
     this.countTypeService.deleteRecords(this.selectedIds).subscribe({
-      next: (res: ApiResult<any>) => {
-        if (res.isSucceeded) {
+      next: (res: StatusResult) => {
+        if (res.status < 300) {
           this.afterSubmit();
           this.selectedIds = [];
           this.toastService.success('Ø§Ù†ÙˆØ§Ø¹ Ø§Ù†ØªØ®Ø§Ø¨â€ŒØ´Ø¯Ù‡ Ø­Ø°Ù Ø´Ø¯Ù†Ø¯');
         } else {
-          this.toastService.error(res.message || 'Ø®Ø·Ø§ Ø¯Ø± Ø­Ø°Ù');
+          this.toastService.error(res.messages?.join() || 'Ø®Ø·Ø§ Ø¯Ø± Ø­Ø°Ù');
         }
         this.showDeleteConfirm = false;
       },
@@ -603,6 +639,11 @@ export class CountTypeComponent implements OnInit {
     });
   }
 }
+
+function OkList<T>(): ListDataResult<CountTypeDto> {
+  throw new Error('Function not implemented.');
+}
+
 
 ===== FILE: src\app\views\shop\inventory\inventory.component.html =====
 
@@ -843,8 +884,8 @@ import {
 } from '@coreui/angular';
 
 // DTOs & Services
-import { ApiResult, createApiResult } from 'src/app/dto/api-result'; // ØªØºÛŒÛŒØ± Ø§Ø² baseResponse
 import { ListRequest } from 'src/app/dto/ListRequestDto';
+import { ListDataResult, SingleDataResult, StatusResult } from 'src/app/dto/result';
 import { InventoryDto } from 'src/app/dto/shop/InventoryDto';
 import { InventoryService } from 'src/app/services/shop/inventory/inventory.service';
 import { ToastService } from 'src/app/services/utilities/toast.service';
@@ -866,7 +907,7 @@ export class InventoryComponent implements OnInit {
   // Ø¯Ø±Ø®ÙˆØ§Ø³Øª Ù„ÛŒØ³Øª
   _request = new ListRequest();
   _objectsView: InventoryDto[] = [];
-  _baseResponse: ApiResult<InventoryDto[]> = createApiResult<InventoryDto[]>();
+  _baseResponse: ListDataResult<InventoryDto> = OkList<InventoryDto>();
 
   // ÙØ±Ù…
   ObjectForm!: FormGroup;
@@ -907,12 +948,12 @@ export class InventoryComponent implements OnInit {
   // ---------------------------
   loadDataTable(): void {
     this._request.pageSize = 5;
-    this.ObjectService.getRecords(this._request).subscribe((res: ApiResult<InventoryDto[]>) => {
-      if (res.isSucceeded) {
+    this.ObjectService.getRecords(this._request).subscribe((res: ListDataResult<InventoryDto>) => {
+      if (res.status < 300) {
         this._baseResponse = res;
-        this._objectsView = res.data || [];
+        this._objectsView = res.listData || [];
       } else {
-        this.toastService.error(res.message || 'Ø®Ø·Ø§ Ø¯Ø± Ø¨Ø§Ø±Ú¯Ø°Ø§Ø±ÛŒ Ø§Ù†Ø¨Ø§Ø±Ù‡Ø§');
+        this.toastService.error(res.messages?.join() || 'Ø®Ø·Ø§ Ø¯Ø± Ø¨Ø§Ø±Ú¯Ø°Ø§Ø±ÛŒ Ø§Ù†Ø¨Ø§Ø±Ù‡Ø§');
       }
     });
   }
@@ -925,21 +966,21 @@ export class InventoryComponent implements OnInit {
       const ObjectData: InventoryDto = this.ObjectForm.value;
 
       if (this.editMode && this.editingId != null) {
-        this.ObjectService.updateRecord(ObjectData).subscribe((res: ApiResult<any>) => {
-          if (res.isSucceeded) {
+        this.ObjectService.updateRecord(ObjectData).subscribe((res: StatusResult) => {
+          if (res.status < 300) {
             this.afterSubmit();
             this.toastService.success('Ø§Ù†Ø¨Ø§Ø± Ø¨Ø§ Ù…ÙˆÙÙ‚ÛŒØª ÙˆÛŒØ±Ø§ÛŒØ´ Ø´Ø¯');
           } else {
-            this.toastService.error(res.message || 'Ø®Ø·Ø§ Ø¯Ø± ÙˆÛŒØ±Ø§ÛŒØ´');
+            this.toastService.error(res.messages?.join() || 'Ø®Ø·Ø§ Ø¯Ø± ÙˆÛŒØ±Ø§ÛŒØ´');
           }
         });
       } else {
-        this.ObjectService.insertRecord(ObjectData).subscribe((res: ApiResult<any>) => {
-          if (res.isSucceeded) {
+        this.ObjectService.insertRecord(ObjectData).subscribe((res: StatusResult) => {
+          if (res.status < 300) {
             this.afterSubmit();
             this.toastService.success('Ø§Ù†Ø¨Ø§Ø± Ø¨Ø§ Ù…ÙˆÙÙ‚ÛŒØª Ø§ÛŒØ¬Ø§Ø¯ Ø´Ø¯');
           } else {
-            this.toastService.error(res.message || 'Ø®Ø·Ø§ Ø¯Ø± Ø§ÛŒØ¬Ø§Ø¯');
+            this.toastService.error(res.messages?.join() || 'Ø®Ø·Ø§ Ø¯Ø± Ø§ÛŒØ¬Ø§Ø¯');
           }
         });
       }
@@ -961,9 +1002,9 @@ export class InventoryComponent implements OnInit {
     this.editMode = true;
     this.editingId = ObjectId;
 
-    this.ObjectService.getRecordById(ObjectId).subscribe((res: ApiResult<InventoryDto>) => {
-      if (res.isSucceeded && res.data) {
-        const obj = res.data;
+    this.ObjectService.getRecordById(ObjectId).subscribe((res: SingleDataResult<InventoryDto>) => {
+      if (res.isSuccess && res.singleData) {
+        const obj = res.singleData;
         this.ObjectForm.patchValue({
           id: obj.id,
           name: obj.name,
@@ -1001,18 +1042,27 @@ export class InventoryComponent implements OnInit {
   }
 
   deleteSelectedRecords(): void {
-    this.ObjectService.deleteRecords(this.selectedIds).subscribe((res: ApiResult<any>) => {
-      if (res.isSucceeded) {
+    this.ObjectService.deleteRecords(this.selectedIds).subscribe((res: StatusResult) => {
+      if (res.status < 300) {
         this.afterSubmit();
         this.selectedIds = [];
         this.toastService.success('Ø§Ù†Ø¨Ø§Ø±Ù‡Ø§ÛŒ Ø§Ù†ØªØ®Ø§Ø¨â€ŒØ´Ø¯Ù‡ Ø­Ø°Ù Ø´Ø¯Ù†Ø¯');
       } else {
-        this.toastService.error(res.message || 'Ø®Ø·Ø§ Ø¯Ø± Ø­Ø°Ù Ú¯Ø±ÙˆÙ‡ÛŒ');
+        this.toastService.error(res.messages?.join() || 'Ø®Ø·Ø§ Ø¯Ø± Ø­Ø°Ù Ú¯Ø±ÙˆÙ‡ÛŒ');
       }
       this.showDeleteConfirm = false;
     });
   }
 }
+
+function OkResult<T>(): ListDataResult<InventoryDto> {
+  throw new Error('Function not implemented.');
+}
+function OkList<T>(): any {
+  throw new Error('Function not implemented.');
+}
+
+
 
 ===== FILE: src\app\views\shop\product\product.component.html =====
 <c-accordion>
@@ -1262,31 +1312,5 @@ export class InventoryComponent implements OnInit {
 
 
 ===== FILE: src\app\views\shop\product\product.component.scss =====
-
-
-===== FILE: src\app\views\shop\product\product.component.spec.ts =====
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-
-import { ProductComponent } from './product.component';
-
-describe('ProductComponent', () => {
-  let component: ProductComponent;
-  let fixture: ComponentFixture<ProductComponent>;
-
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [ProductComponent]
-    })
-    .compileComponents();
-
-    fixture = TestBed.createComponent(ProductComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
-
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
-});
 
 

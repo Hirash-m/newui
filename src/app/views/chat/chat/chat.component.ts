@@ -85,8 +85,8 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
 
   loadChatList() {
     this.chatService.getChatList().subscribe(res => {
-      if (res.status < 300 && res.listData) {
-        this.chatList = res.listData.map(item => ({
+      if (res.status < 300 && res.data) {
+        this.chatList = res.data.map(item => ({
           ...item,
           lastMessage: item.lastMessage || 'بدون پیام',
           lastMessageTime: item.lastMessageTime ? new Date(item.lastMessageTime) : undefined
@@ -112,8 +112,8 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
 
   private loadMessages(otherUserId: number) {
     this.chatService.getChatHistory(otherUserId).subscribe(res => {
-      if (res.status < 300 && res.listData) {
-        this.messages = res.listData.map(m => ({
+      if (res.status < 300 && res.data) {
+        this.messages = res.data.map(m => ({
           ...m,
           isMine: m.senderId === this.currentUserId,
           sentAt: new Date(m.sentAt)

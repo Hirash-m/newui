@@ -5,7 +5,7 @@ import { Observable, BehaviorSubject, throwError, of } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
 import { ToastService } from '../../utilities/toast.service';
 import { Domain } from '../../../../utilities/path';
-import {ListDataResult, SingleDataResult} from 'src/app/dto/result';
+import { ListDataResult, SingleDataResult} from 'src/app/dto/result';
 
 @Injectable({
   providedIn: 'root'
@@ -34,27 +34,19 @@ login(username: string, password: string): Observable<any> {
   const body = { username, password };
 
   return this.http.post<SingleDataResult<any>>(`${this.apiUrl}/login`, body).pipe(
+    tap(response => this.toast.handleSingleResult(response)),
     map(response => {
-      if ( response.status < 300 && response.data?.token) {
-        const token = response.data.token;
-        const user = response.data;
-
-        // زمان انقضا: ۲۴ ساعت از الان
-        const expiresAt = Date.now() + 24 * 60 * 60 * 1000; // 24 ساعت به میلی‌ثانیه
-
+      if (response.isSuccess && response.singleData?.token) {
         // ذخیره در localStorage
-        localStorage.setItem('token', token);
-        localStorage.setItem('user', JSON.stringify(user));
-        localStorage.setItem('token_expires_at', expiresAt.toString());
-
-        // بارگذاری permissions
+        localStorage.setItem('token', response.singleData.token);
+        localStorage.setItem('user', JSON.stringify(response.singleData));
+        localStorage.setItem('token_expires_at', (Date.now() + 24*60*60*1000).toString());
         this.fetchPermissions();
       }
       return response;
     }),
-    tap(() => this.fetchPermissions()),
     catchError(error => {
-      this.toast.error('خطا در ورود به سیستم');
+      this.toast.handleHttpError(error);
       return throwError(() => error);
     })
   );
@@ -86,9 +78,9 @@ getUserId(): number {
         return of(null);
       })
     ).subscribe(res => {
-      if (res?.listData) {
-        this.permissions.next(res.listData);
-        localStorage.setItem('permissions', JSON.stringify(res.listData));
+      if (res?.data) {
+        this.permissions.next(res.data);
+        localStorage.setItem('permissions', JSON.stringify(res.data));
       }
     });
   }

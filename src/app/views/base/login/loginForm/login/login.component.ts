@@ -66,7 +66,7 @@ export class LoginComponent {
       next: (res: SingleDataResult<any>) => {
         this.loading = false;
   
-        if ( res.status < 300 && res.data?.token) {
+        if ( res.isSuccess && res.singleData?.token) {
           this.toast.success('ورود با موفقیت انجام شد');
           this.router.navigate(['/dashboard']);
           

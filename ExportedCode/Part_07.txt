@@ -1,4 +1,30 @@
-﻿===== FILE: src\app\views\shop\product\product.component.ts =====
+﻿===== FILE: src\app\views\shop\product\product.component.spec.ts =====
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+
+import { ProductComponent } from './product.component';
+
+describe('ProductComponent', () => {
+  let component: ProductComponent;
+  let fixture: ComponentFixture<ProductComponent>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [ProductComponent]
+    })
+    .compileComponents();
+
+    fixture = TestBed.createComponent(ProductComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+});
+
+
+===== FILE: src\app\views\shop\product\product.component.ts =====
 // ---------------------------
 // Import Dependencies
 // ---------------------------
@@ -16,8 +42,8 @@ import {
 } from '@coreui/angular';
 
 // DTOs & Services
-import { ApiResult, createApiResult } from 'src/app/dto/api-result'; // ØªØºÛŒÛŒØ± Ø§Ø² baseResponse
 import { ListRequest } from 'src/app/dto/ListRequestDto';
+import { ListDataResult, SingleDataResult, StatusResult } from 'src/app/dto/result';
 import { ProductCreateDto, ProductViewDto } from 'src/app/dto/shop/ProductDto';
 import { ProductService } from 'src/app/services/shop/product/product.service';
 import { ToastService } from 'src/app/services/utilities/toast.service';
@@ -39,7 +65,7 @@ export class ProductComponent implements OnInit {
   // Ø¯Ø±Ø®ÙˆØ§Ø³Øª Ù„ÛŒØ³Øª
   _request = new ListRequest();
   _productsView: ProductViewDto[] = [];
-  _baseResponse: ApiResult<ProductViewDto[]> = createApiResult<ProductViewDto[]>();
+  _baseResponse: ListDataResult<ProductViewDto> = OkList<ProductViewDto>();
 
   // ÙØ±Ù…
   showModal = false;
@@ -92,12 +118,12 @@ export class ProductComponent implements OnInit {
 loadProducts(): void {
   this._request.pageSize = 5;
   this.productService.getRecords(this._request).subscribe({
-    next: (res: ApiResult<ProductViewDto[]>) => {
-      if (res.isSucceeded) {
+    next: (res: ListDataResult<ProductViewDto>) => {
+      if (res.status < 300) {
         this._baseResponse = res;
-        this._productsView = res.data || [];
+        this._productsView = res.listData || [];
       } else {
-        this.toastService.error(res.message || 'Ø®Ø·Ø§ Ø¯Ø± Ø¨Ø§Ø±Ú¯Ø°Ø§Ø±ÛŒ Ù…Ø­ØµÙˆÙ„Ø§Øª');
+        this.toastService.error(res.messages?.join() || 'Ø®Ø·Ø§ Ø¯Ø± Ø¨Ø§Ø±Ú¯Ø°Ø§Ø±ÛŒ Ù…Ø­ØµÙˆÙ„Ø§Øª');
       }
     },
     error: (error) => {
@@ -115,21 +141,21 @@ loadProducts(): void {
       const productData: ProductCreateDto = this.productForm.value;
 
       if (this.editMode && this.editingProductId != null) {
-        this.productService.updateRecord(productData).subscribe((res: ApiResult<any>) => {
-          if (res.isSucceeded) {
+        this.productService.updateRecord(productData).subscribe((res: StatusResult) => {
+          if (res.status<300) {
             this.afterSubmit();
             this.toastService.success('Ù…Ø­ØµÙˆÙ„ Ø¨Ø§ Ù…ÙˆÙÙ‚ÛŒØª ÙˆÛŒØ±Ø§ÛŒØ´ Ø´Ø¯');
           } else {
-            this.toastService.error(res.message || 'Ø®Ø·Ø§ Ø¯Ø± ÙˆÛŒØ±Ø§ÛŒØ´');
+            this.toastService.error(res.messages?.join() || 'Ø®Ø·Ø§ Ø¯Ø± ÙˆÛŒØ±Ø§ÛŒØ´');
           }
         });
       } else {
-        this.productService.insertRecord(productData).subscribe((res: ApiResult<any>) => {
-          if (res.isSucceeded) {
+        this.productService.insertRecord(productData).subscribe((res: StatusResult) => {
+          if (res.status < 300) {
             this.afterSubmit();
             this.toastService.success('Ù…Ø­ØµÙˆÙ„ Ø¨Ø§ Ù…ÙˆÙÙ‚ÛŒØª Ø§ÛŒØ¬Ø§Ø¯ Ø´Ø¯');
           } else {
-            this.toastService.error(res.message || 'Ø®Ø·Ø§ Ø¯Ø± Ø§ÛŒØ¬Ø§Ø¯');
+            this.toastService.error(res.messages?.join() || 'Ø®Ø·Ø§ Ø¯Ø± Ø§ÛŒØ¬Ø§Ø¯');
           }
         });
       }
@@ -151,9 +177,9 @@ loadProducts(): void {
     this.editMode = true;
     this.editingProductId = productId;
 
-    this.productService.getRecordById(productId).subscribe((res: ApiResult<ProductCreateDto>) => {
-      if (res.isSucceeded && res.data) {
-        const product = res.data;
+    this.productService.getRecordById(productId).subscribe((res: SingleDataResult<ProductCreateDto>) => {
+      if (res.status < 300 && res.singleData) {
+        const product = res.singleData;
         this.productForm.patchValue({
           id: product.id,
           name: product.name,
@@ -193,13 +219,13 @@ loadProducts(): void {
   }
 
   deleteSelectedProducts(): void {
-    this.productService.deleteRecords(this.selectedProductIds).subscribe((res: ApiResult<any>) => {
-      if (res.isSucceeded) {
+    this.productService.deleteRecords(this.selectedProductIds).subscribe((res: StatusResult) => {
+      if (res.status < 300) {
         this.afterSubmit();
         this.selectedProductIds = [];
         this.toastService.success('Ù…Ø­ØµÙˆÙ„Ø§Øª Ø§Ù†ØªØ®Ø§Ø¨â€ŒØ´Ø¯Ù‡ Ø­Ø°Ù Ø´Ø¯Ù†Ø¯');
       } else {
-        this.toastService.error(res.message || 'Ø®Ø·Ø§ Ø¯Ø± Ø­Ø°Ù Ú¯Ø±ÙˆÙ‡ÛŒ');
+        this.toastService.error(res.messages?.join() || 'Ø®Ø·Ø§ Ø¯Ø± Ø­Ø°Ù Ú¯Ø±ÙˆÙ‡ÛŒ');
       }
       this.showDeleteConfirm = false;
     });
@@ -210,13 +236,13 @@ loadProducts(): void {
   // ---------------------------
   onSearch() {
     this.productService.searchProducts(this.searchData).subscribe(
-      (result: ApiResult<ProductViewDto[]>) => {
-        if (result.isSucceeded) {
+      (result: ListDataResult<ProductViewDto>) => {
+        if (result.status<2) {
           this._baseResponse = result;
-          this._productsView = result.data || [];
+          this._productsView = result.listData || [];
           console.log('Ù†ØªØ§ÛŒØ¬ Ø¬Ø³ØªØ¬Ùˆ:', this._productsView);
         } else {
-          this.toastService.error(result.message || 'Ø®Ø·Ø§ Ø¯Ø± Ø¬Ø³ØªØ¬Ùˆ');
+          this.toastService.error(result.messages?.join() || 'Ø®Ø·Ø§ Ø¯Ø± Ø¬Ø³ØªØ¬Ùˆ');
         }
       },
       (error) => {
@@ -226,6 +252,11 @@ loadProducts(): void {
     );
   }
 }
+
+function OkList<T>(): ListDataResult<ProductViewDto> {
+  throw new Error('Function not implemented.');
+}
+
 
 ===== FILE: src\app\views\shop\routes.ts =====
 import { Routes } from '@angular/router';
@@ -579,12 +610,5 @@ export const routes: Routes = [
 export const environment = {
     production: true,
     apiUrl: ''   // Ø¯Ø± Ù¾Ø±ÙˆØ¯Ø§Ú©Ø´Ù† Ù…Ø¹Ù…ÙˆÙ„Ø§Ù‹ Ø®Ø§Ù„ÛŒ Ù…ÛŒâ€ŒØ°Ø§Ø±ÛŒÙ… Ú†ÙˆÙ† Ø§Ø² Ù‡Ù…ÙˆÙ† Ø¯Ø§Ù…Ù†Ù‡ Ø³Ø±Ùˆ Ù…ÛŒâ€ŒØ´Ù‡
-  };
-
-===== FILE: src\environments\environment.ts =====
-// src/environments/environment.ts
-export const environment = {
-    production: false,
-    apiUrl: 'http://localhost:90'   // ÛŒØ§ Ù‡Ø± Ù¾ÙˆØ±ØªÛŒ Ú©Ù‡ Ø¨Ú©â€ŒØ§Ù†Ø¯Øª Ø¯Ø§Ø±Ù‡ (Ù…Ø¹Ù…ÙˆÙ„Ø§Ù‹ 90 ÛŒØ§ 5000)
   };
 

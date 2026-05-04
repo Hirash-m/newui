@@ -82,9 +82,9 @@ export class CountTypeComponent implements OnInit {
     this._request.pageSize = 5;
     this.countTypeService.getRecords(this._request).subscribe({
       next: (res: ListDataResult<CountTypeDto>) => {
-        if (res.status < 300) {
+        if (res.isSuccess) {
           this._baseResponse = res;
-          this._objectsView = res.listData ?? [];
+          this._objectsView = res.data ?? [];
         } else {
           this.toastService.error(res.messages?.join() || 'خطا در بارگذاری انواع شمارش');
         }
@@ -109,7 +109,7 @@ export class CountTypeComponent implements OnInit {
 
       request$.subscribe({
         next: (res: StatusResult) => {
-          if (res.status < 300) {
+          if (res.isSuccess) {
             this.afterSubmit();
             this.toastService.success(
               this.editMode ? 'نوع شمارش با موفقیت ویرایش شد' : 'نوع شمارش با موفقیت ایجاد شد'
@@ -143,8 +143,8 @@ export class CountTypeComponent implements OnInit {
 
     this.countTypeService.getRecordById(id).subscribe({
       next: (res: SingleDataResult<CountTypeDto>) => {
-        if (res.status < 300 && res.data) {
-          this.ObjectForm.patchValue(res.data);
+        if (res.isSuccess && res.singleData) {
+          this.ObjectForm.patchValue(res.singleData);
           this.showModal = true;
         } else {
           this.toastService.error('مورد پیدا نشد');

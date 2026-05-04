@@ -21,9 +21,11 @@ src
 |   |   |   +-- InventoryDto.ts
 |   |   |   +-- ProductDto.ts
 |   |   +-- api-result.ts
-|   |   +-- baseResponse.ts
 |   |   +-- ListRequestDto.ts
 |   |   +-- metadataField.ts
+|   |   +-- result.ts
+|   +-- helper
+|   |   +-- result.helper.ts
 |   +-- icons
 |   |   +-- icon-subset.ts
 |   |   +-- logo.ts
